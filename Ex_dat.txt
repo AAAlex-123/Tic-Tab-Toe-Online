@@ -1,0 +1,56 @@
+#file									random lines; lines starting with # cause syntactic error if # is omitted 
+
+ELEMENT_LIST
+										aaa
+										#code
+										{bbb}
+
+
+										percc
+										#perc
+{
+										#{
+										ccc
+
+										#element_list
+	ELEMENT                       
+	{            
+										elementdescr
+										ddd
+
+										desc
+										#descr
+		ELEMENT_TYPE TA                 
+		CODE 1001          
+										#{
+										eee
+										random_tag
+										DESCR
+		DESCR "HMERES ERGASIAS"
+										AM T 
+		AMT 500
+										#element
+		PERC 10
+	}
+										fff
+										#}
+	ELEMENT
+	{
+		ELEMENT_TYPE
+		CODE
+		DESCR "YPERORIES"
+		AMT 100
+		PERC 20
+	}
+	ELEMENT
+	{
+		ELEMENT_TYPE PA
+		CODE 1201
+		DESCR "BONUS"
+		AMT 500
+		PERC 5
+	}
+										yyy
+}
+										#}
+										zzz
