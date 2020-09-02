@@ -9,9 +9,10 @@ public class GameUI extends JFrame{
 	
 	private String curr_game;
 	private final char name;
+	private String answer = null;
 	private final JTextArea log, screen;
 	private final JTextField player,move;
-	private final JButton submit;
+	private final JButton submitB,disconnectB;
 	private final JPanel autismPanel,inputPanel;
 	//private final JPanel gamePanel;
 	
@@ -31,14 +32,25 @@ public class GameUI extends JFrame{
 		inputPanel = new JPanel();
 		inputPanel.setLayout(new FlowLayout());
 		move = new JTextField("Your next move",10); inputPanel.add(move);
-		submit = new JButton("Submit"); inputPanel.add(submit);
-		submit.addActionListener(new ActionListener() {
-			
+		submitB = new JButton("Submit"); inputPanel.add(submitB);
+		submitB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				GameEngine.turnReceived(curr_game);
+				answer = move.getText();
 				pushMessage("Player "+ name +" played "+ move.getText());
+				move.setText("");
 			}
+		});
+		
+		disconnectB = new JButton("Resign");
+		disconnectB.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				answer = "Resign";
+				pushMessage("Player "+ name +" resigned the game!");
+			}
+			
 		});
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(autismPanel);
@@ -48,6 +60,7 @@ public class GameUI extends JFrame{
 		add(Box.createRigidArea(new Dimension(50,15)));
 		add(log);
 		add(Box.createRigidArea(new Dimension(50,35)));
+		add(disconnectB);
 		
 	}
 	
@@ -58,6 +71,16 @@ public class GameUI extends JFrame{
 	public void setScreen(String game_obj) {
 		curr_game = game_obj;
 		screen.setText(game_obj);
+	}
+	
+	public String getAnswer() {
+		//If the player has given an answer, return it and set it to null
+		String ans;
+		if(answer!=null) { 
+			ans = this.answer;
+			this.answer = null;
+		}else ans = null;
+		return ans;
 	}
 	
 	
