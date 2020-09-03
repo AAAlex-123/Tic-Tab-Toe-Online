@@ -7,9 +7,9 @@ import javax.swing.*;
 @SuppressWarnings("serial")
 public class GameUI extends JFrame{
 	
-	private String curr_game;
 	private final char name;
-	private String answer = null;
+	private int answer = -1;
+	private final JLabel error_msg;
 	private final JTextArea log, screen;
 	private final JTextField player,move;
 	private final JButton submitB,disconnectB;
@@ -28,6 +28,8 @@ public class GameUI extends JFrame{
 		player.setEditable(false);
 		autismPanel.add(player);
 		
+		error_msg = new JLabel("Invalid input: Insert [letter][number]");
+		error_msg.setVisible(false);
 		
 		inputPanel = new JPanel();
 		inputPanel.setLayout(new FlowLayout());
@@ -36,9 +38,15 @@ public class GameUI extends JFrame{
 		submitB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				answer = move.getText();
+				String input = move.getText().toUpperCase().strip();
+				if (!input.matches("[A-Ε][1-5]")) {
+					error_msg.setVisible(true);
+					return;
+				}
+				answer = convertInput(input);
 				pushMessage("Player "+ name +" played "+ move.getText());
 				move.setText("");
+				error_msg.setVisible(false);
 			}
 		});
 		
@@ -47,7 +55,7 @@ public class GameUI extends JFrame{
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				answer = "Resign";
+				answer = -2;
 				pushMessage("Player "+ name +" resigned the game!");
 			}
 			
@@ -57,6 +65,7 @@ public class GameUI extends JFrame{
 		add(screen);
 		add(Box.createRigidArea(new Dimension(50,15)));
 		add(inputPanel);
+		add(error_msg);
 		add(Box.createRigidArea(new Dimension(50,15)));
 		add(log);
 		add(Box.createRigidArea(new Dimension(50,35)));
@@ -69,19 +78,48 @@ public class GameUI extends JFrame{
 	}
 	
 	public void setScreen(String game_obj) {
-		curr_game = game_obj;
 		screen.setText(game_obj);
 	}
 	
-	public String getAnswer() {
-		//If the player has given an answer, return it and set it to null
-		String ans;
-		if(answer!=null) { 
+	public int getAnswer() {
+		/*
+		 * Returns: -1 if no answer
+		 * 			-2 if resigned
+		 * 			int between 0,55 if correct answer
+		 */
+		int ans;
+		if(answer!=-1) { 
 			ans = this.answer;
-			this.answer = null;
-		}else ans = null;
+			this.answer = -1;
+		}else ans = -1;
 		return ans;
 	}
 	
+	private int convertInput(String str) {
+		char row = str.charAt(0);
+		int index;
+		switch (row){
+		case'\u0041':{
+			index = 0; 
+			break;
+		}
+		case'\u0042': {
+			index = 10;
+			break;
+		}
+		case'\u0043': {
+			index = 20;
+			break;
+		}
+		case'\u0044':{
+			index = 30;
+			break;
+		}
+		default: index = 40;
+		}
+		index += Integer.parseInt(Character.toString(str.charAt(1)));
+		System.out.println(index);
+		return index;
+	}
 	
 }
