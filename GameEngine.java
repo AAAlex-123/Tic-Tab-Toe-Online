@@ -1,8 +1,9 @@
 import javax.swing.JFrame;
 
 public class GameEngine {
-	private final static char X = '\u0058';
-	private final static char O = '\u004F';
+	public final static char X = '\u0058';
+	public final static char O = '\u004F';
+	public final static char DASH ='\u002D';
 	public static void main(String[] args) {
 		GameUI ui = new GameUI(X);
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -13,10 +14,10 @@ public class GameEngine {
 	  	
 	  	
 	  	//this will have to be done for all UIs
-	  	String move = null;
-	  	while (move==null) {
+	  	int move = -1;
+	  	while (move==-1) {
 	  		move = ui.getAnswer();
-	  		if (move == null) {
+	  		if (move == -1) {
 	  			try {
 	  				Thread.sleep(250); //wait 1/4 sec before checking 
 	  			}catch (InterruptedException e){
@@ -25,7 +26,7 @@ public class GameEngine {
 	  		}
 	  	}
 	  	System.out.print(move);
-	  	if(move.equals("Resign")) {
+	  	if(move==-2) {
 	  		System.out.println("Game over");
 	  		System.exit(0);
 	  	}
