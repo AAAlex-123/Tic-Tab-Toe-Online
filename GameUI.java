@@ -117,7 +117,7 @@ public class GameUI extends JFrame{
 		}
 		default: index = 40;
 		}
-		index += Integer.parseInt(Character.toString(str.charAt(1)));
+		index += Integer.parseInt(Character.toString(str.charAt(1)))-1;
 		System.out.println(index);
 		return index;
 	}
