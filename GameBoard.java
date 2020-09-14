@@ -1,4 +1,3 @@
-
 public class GameBoard {
 	
 	private char[][] board = new char[5][5];
@@ -11,9 +10,14 @@ public class GameBoard {
 		}
 	}
 	
-	public void markSquare(int coord,char mark) throws RuntimeException{
-		if(coord>55) throw new RuntimeException("Invalid coordinates");
-		board[coord/10][coord%10] = mark;
+	public boolean markSquare(int coord,char mark){
+		//true if successfull, false if square already marked
+		if (board[coord/10][coord%10]==GameEngine.X||board[coord/10][coord%10]==GameEngine.O) return false;
+		else if(coord>55) return false;
+		else{
+			board[coord/10][coord%10] = mark;
+			return true;		
+		}
 	}
 	public boolean hasWon() {
 		return (diagWin()||horizWin(board)||vertWin(board));
@@ -52,7 +56,7 @@ public class GameBoard {
 	}
 	
 	private boolean diagWin() {
-		int[][] directions = {{1,0}, {1,-1}, {1,1}, {0,1}};
+		int[][] directions = { {1,-1}, {1,1}};//{1,0}, {0,1} to replace all other checks as well
 	    for (int[] d : directions) {
 	        int dx = d[0];
 	        int dy = d[1];
