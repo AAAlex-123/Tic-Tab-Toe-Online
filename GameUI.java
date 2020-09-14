@@ -77,8 +77,8 @@ public class GameUI extends JFrame{
 		log.setText(log.getText()+"\n"+mes);
 	}
 	
-	public void setScreen(String game_obj) {
-		screen.setText(game_obj);
+	public void setScreen(GameBaord game_obj) {
+		screen.setText(game_obj.toString());
 	}
 	
 	public int getAnswer() {
@@ -121,5 +121,8 @@ public class GameUI extends JFrame{
 		System.out.println(index);
 		return index;
 	}
-	
+	public void setPlayer(char c) {
+		name = c;
+		player.setText("You are player "+ Character.toString(c));
+	}
 }
