@@ -7,7 +7,7 @@ import javax.swing.*;
 @SuppressWarnings("serial")
 public class GameUI extends JFrame{
 	
-	private final char name;
+	private char name;
 	private int answer = -1;
 	private final JLabel error_msg;
 	private final JTextArea log, screen;
