@@ -1,3 +1,5 @@
+package ttt_online;
+
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -15,13 +17,16 @@ public class GameUI extends JFrame{
 	private final JButton submitB,disconnectB;
 	private final JPanel autismPanel,inputPanel;
 	//private final JPanel gamePanel;
-	
+
 	public GameUI(char xo) {
 		super("Naughts & Crosses Online");
 		name = xo;
 		setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
 		screen = new JTextArea("This is the screen that will display the game");
 		log = new JTextArea("This is a message log");
+
+		screen.setEditable(false);
+		log.setEditable(false);
 		
 		autismPanel = new JPanel(); autismPanel.setLayout(new FlowLayout()); //because there is no other way to force Layout to cooperate
 		player = new JTextField("You are player "+name);
@@ -33,7 +38,7 @@ public class GameUI extends JFrame{
 		
 		inputPanel = new JPanel();
 		inputPanel.setLayout(new FlowLayout());
-		move = new JTextField("Your next move",10); inputPanel.add(move);
+		move = new JTextField("Your next move", 10); inputPanel.add(move);
 		submitB = new JButton("Submit"); inputPanel.add(submitB);
 		submitB.addActionListener(new ActionListener() {
 			@Override
@@ -44,7 +49,6 @@ public class GameUI extends JFrame{
 					return;
 				}
 				answer = convertInput(input);
-				pushMessage("Player "+ name +" played "+ move.getText());
 				move.setText("");
 				error_msg.setVisible(false);
 			}
@@ -52,14 +56,12 @@ public class GameUI extends JFrame{
 		
 		disconnectB = new JButton("Resign");
 		disconnectB.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				answer = -2;
-				pushMessage("Player "+ name +" resigned the game!");
 			}
-			
 		});
+		setEnableTurn(false);
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(autismPanel);
 		add(screen);
@@ -70,15 +72,20 @@ public class GameUI extends JFrame{
 		add(log);
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(disconnectB);
-		
 	}
 	
 	public void pushMessage(String mes) {
-		log.setText(log.getText()+"\n"+mes);
+		log.setText(String.format("%s\n%s", log.getText(), mes));
 	}
 	
-	public void setScreen(GameBaord game_obj) {
-		screen.setText(game_obj.toString());
+	public void setScreen(String game_obj_str) {
+		screen.setText(game_obj_str);
+	}
+	
+	public void resetMove() {
+		move.setText("Your next move");
+		move.setSelectionStart(0);
+		move.setSelectionEnd(move.getText().length()-1);
 	}
 	
 	public int getAnswer() {
@@ -88,41 +95,46 @@ public class GameUI extends JFrame{
 		 * 			int between 0,55 if correct answer
 		 */
 		int ans;
-		if(answer!=-1) { 
+		if (this.answer != -1) { 
 			ans = this.answer;
 			this.answer = -1;
-		}else ans = -1;
+		} else ans = -1;
 		return ans;
 	}
 	
-	private int convertInput(String str) {
+	public void setEnableTurn(boolean enable) {
+		submitB.setEnabled(enable);
+		disconnectB.setEnabled(enable);
+		move.setEnabled(enable);
+	}
+	
+	public char getSymbol() {
+		return this.name;
+	}
+	
+	private static int convertInput(String str) {
 		char row = str.charAt(0);
 		int index;
-		switch (row){
-		case'\u0041':{
-			index = 0; 
-			break;
+		switch (row) {
+			case '\u0041':
+				index = 0; 
+				break;
+
+			case '\u0042':
+				index = 10;
+				break;
+
+			case '\u0043':
+				index = 20;
+				break;
+
+			case '\u0044':
+				index = 30;
+				break;
+			
+			default: index = 40;
 		}
-		case'\u0042': {
-			index = 10;
-			break;
-		}
-		case'\u0043': {
-			index = 20;
-			break;
-		}
-		case'\u0044':{
-			index = 30;
-			break;
-		}
-		default: index = 40;
-		}
-		index += Integer.parseInt(Character.toString(str.charAt(1)))-1;
-		System.out.println(index);
-		return index;
-	}
-	public void setPlayer(char c) {
-		name = c;
-		player.setText("You are player "+ Character.toString(c));
+		index += Integer.parseInt(Character.toString(str.charAt(1)));
+		return index-1;
 	}
 }
