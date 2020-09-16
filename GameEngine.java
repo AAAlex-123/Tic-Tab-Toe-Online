@@ -158,7 +158,6 @@ public class GameEngine { // aka client
   				if (printStackTrace) e.printStackTrace();
   			}
 	  	}
-	  	
 		ui.pushMessage(String.format("You played %c%s", 65+move/10, move%10+1));
 	  	
 	  	// send the move
