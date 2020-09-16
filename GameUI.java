@@ -1,7 +1,6 @@
 package ttt_online;
 
-
-//new import java.awt.Color;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -14,13 +13,16 @@ import javax.swing.*;
 @SuppressWarnings("serial")
 public class GameUI extends JFrame{
 	/*
-	 * Use the public method setCustomOptions by giving a char and color array such that ```char of player i -> color of player i```
+	 * THE CONSTRUCTOR NO LONGER TAKES ANY ARGUMENTS
+	 * Use getSymbol, getColor to get the char/color of each UI
+	 * Then use the public method setCustomOptions by giving a char and color array such that ```char of player i -> color of player i```
 	 * In any other case the game will use a blue X and a red O for the players
 	 * The game graphics glitch out occasionally. Slightly resize the window if it happens. It's annoying but idk what else to do.
 	 * Also the game has to take a GameBoard object *not* a String to draw the graphics.
 	 */
 	
 	private char name;
+	private Color color;
 	private char[] charArr = null;
 	private Color[] colorArr = null;
 	private int answer = -1;
@@ -31,20 +33,19 @@ public class GameUI extends JFrame{
 	private final JButton submitB,disconnectB;
 	private final JPanel autismPanel,inputPanel;
 	private final JScrollPane scroll;
-	public GameUI(char xo) {
+	
+	public GameUI() {
 		super("Naughts & Crosses Online");
-		name = xo;
+		
+		getOptions();
 		setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
 		if(charArr==null||colorArr==null) screen = new Screen();
 		else screen = new Screen(charArr,colorArr);
 		screen.setPreferredSize(new Dimension(500,500));
 
 		log = new JTextArea("This is a message log");
-
-		//old screen.setEditable(false);
-		//new log.setPreferredSize(new Dimension(100,250));
-		//new scroll = new JScrollPane (log,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        
+		log.setPreferredSize(new Dimension(100,250));
+		scroll = new JScrollPane (log,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		log.setEditable(false);
 		
 		autismPanel = new JPanel(); autismPanel.setLayout(new FlowLayout()); //because there is no other way to force Layout to cooperate
@@ -57,7 +58,7 @@ public class GameUI extends JFrame{
 		
 		inputPanel = new JPanel();
 		inputPanel.setLayout(new FlowLayout());
-		move = new JTextField("Your next move", 10); inputPanel.add(move);
+		move = new JTextField("Your next move",10); inputPanel.add(move);
 		submitB = new JButton("Submit"); inputPanel.add(submitB);
 		submitB.addActionListener(new ActionListener() {
 			@Override
@@ -68,6 +69,7 @@ public class GameUI extends JFrame{
 					return;
 				}
 				answer = convertInput(input);
+				pushMessage(String.format("Player %s played %s", name, move.getText()));
 				move.setText("");
 				error_msg.setVisible(false);
 			}
@@ -75,12 +77,15 @@ public class GameUI extends JFrame{
 		
 		disconnectB = new JButton("Resign");
 		disconnectB.addActionListener(new ActionListener() {
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				answer = -2;
+				pushMessage("Player "+ name +" resigned the game!");
 			}
+			
 		});
-		setEnableTurn(false);
+		
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(autismPanel);
 		add(screen);
@@ -95,11 +100,7 @@ public class GameUI extends JFrame{
 	
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s\n%s", log.getText(), mes));
-
-	public void resetMove() {
-		move.setText("Your next move");
-		move.setSelectionStart(0);
-		move.setSelectionEnd(move.getText().length()-1);
+	}
 	
 	public void setScreen(GameBoard gboard) {
 		screen.repaint(gboard);
@@ -122,13 +123,15 @@ public class GameUI extends JFrame{
 	public void setEnableTurn(boolean enable) {
 		submitB.setEnabled(enable);
 		disconnectB.setEnabled(enable);
-		move.setEnabled(enable);
 	}
 	
 	public char getSymbol() {
 		return this.name;
 	}
 	
+	public Color getColor() {
+		return this.color;
+	}
 	private static int convertInput(String str) {
 		char row = str.charAt(0);
 		int index;
@@ -155,11 +158,28 @@ public class GameUI extends JFrame{
 		return index;
 	}
 	
+	private void getOptions() {
+		
+		Object [] chars = {'\u0021' ,'\u0022' ,'\u0023' ,'\u0024' ,'\u0025' ,'\u002A','\u002B','\u0041' ,'\u0042' ,'\u0043' ,'\u0044' ,'\u0045' ,'\u0046' ,'\u0047' ,'\u0048' ,'\u0049' ,'\u0050' ,'\u0051' 
+				,'\u0052' ,'\u0053' ,'\u0054' ,'\u0055' ,'\u0056' ,'\u0057' ,'\u0058','\u003C','\u003F','\u007E'};
+		char answer = (Character)JOptionPane.showInputDialog(null,"Select one of the following characters","Test",JOptionPane.PLAIN_MESSAGE,null,chars,chars[0]);
+		this.name = answer;
+		
+		Color col;
+		do {
+			col = JColorChooser.showDialog(this, "Choose a color", Color.BLACK);
+			if (col==null) JOptionPane.showMessageDialog(this, "Please select a color", "Error", JOptionPane.ERROR_MESSAGE);;
+		}while(col==null);
+		this.color = col;
+		System.out.printf("Character: %s Color: %s",answer,col);
+		
+	}
 	public void setCustomOptions(char[] charArr, Color[] colorArr) {
 		this.charArr=charArr;
 		this.colorArr=colorArr;
 	}
 	
+
 	private class Screen extends JPanel{
 		private GameBoard board;
 		private final HashMap<Character,Color> colorMap = new HashMap<Character,Color>();
@@ -212,6 +232,9 @@ public class GameUI extends JFrame{
 			this.board = board;
 			this.repaint();
 		}
+		
+		
+		
 	}
 	
 }
