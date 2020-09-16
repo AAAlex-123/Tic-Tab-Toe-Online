@@ -5,6 +5,11 @@ import java.io.Serializable;
 public class GameBoard implements Serializable {
 	
 	/**
+	 * pls work now
+	 */
+	private static final long serialVersionUID = 42L;
+
+	/**
 	 * Dummy main method for testing
 	 * @param args
 	 */
@@ -27,7 +32,7 @@ public class GameBoard implements Serializable {
 		System.out.println(gb.win());
 	}
 	
-	private final static char EMPTY ='\u002D';
+	final static char EMPTY ='\u002D';
 	private final int consecutive = 3;
 	private final int boardSize = 5;
 	private final char[][] board = new char[boardSize][boardSize];
@@ -40,6 +45,16 @@ public class GameBoard implements Serializable {
 			for(int j=0; j<boardSize; j++)
 				board[i][j] = EMPTY;
 	}
+	
+	/**
+	 * Initialise board by coping board <code>table</code>
+	 * @param table char[][], the table to be copied
+	 */
+	public GameBoard(char[][] table) {
+		for(int i=0; i<boardSize; i++)
+			for(int j=0; j<boardSize; j++)
+				board[i][j] = table[i][j];
+	}
 
 	/**
 	 * Marks square a square of the board with the given mark.<br>
@@ -48,13 +63,21 @@ public class GameBoard implements Serializable {
 	 * @param coord int, the coordinate of the square to be marked, in the form of 10*row + col
 	 * @param mark char, the symbol used to mark the board
 	 * @return boolean, true if square is empty, false if full, meaning can't be marked
+	 * @see GameBoard#isValid(int) isValid()
 	 */
 	public boolean markSquare(int coord, char mark){
-		//true if successful, false if square already marked
-		if (board[coord/10][coord%10] != EMPTY || coord > 55)
-			return false;
+		if (!isValid(coord)) return false;
 		board[coord/10][coord%10] = mark;
 		return true;
+	}
+	
+	/**
+	 * Checks if a move can be played at square <code>coord</code>
+	 * @param coord int, the coordinate to check
+	 * @return boolean, true if valid, false if not
+	 */
+	public boolean isValid(int coord) {
+		return board[coord/10][coord%10] == EMPTY && 0 <= coord && coord <= 55 ;
 	}
 
 	/**
@@ -77,7 +100,7 @@ public class GameBoard implements Serializable {
 	 */
 	private boolean horizontalWin(char[][] table) {
 		for (char[] row: table) {
-			short consec = 1;
+			short consec = 0;
 			char current = row[0];
 			
 			for (char c : row) {
@@ -147,6 +170,15 @@ public class GameBoard implements Serializable {
 	}
 	
 	/**
+	 * Clears the board; fills all squares with <code>EMPTY</code>
+	 */
+	public void clear() {
+		for(int i=0; i<boardSize; i++)
+			for(int j=0; j<boardSize; j++)
+				board[i][j] = EMPTY;
+	}
+	
+	/**
 	 * Returns the String representation of the board
 	 */
 	@Override
@@ -200,5 +232,9 @@ public class GameBoard implements Serializable {
 	        }
 	    }
 	    return false; // no winner
+	}
+
+	public char[][] getBoard() {
+		return board;
 	}
 }
