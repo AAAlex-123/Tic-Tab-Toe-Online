@@ -160,18 +160,26 @@ public class GameUI extends JFrame{
 	
 	private void getOptions() {
 		
-		Object [] chars = {'\u0021' ,'\u0022' ,'\u0023' ,'\u0024' ,'\u0025' ,'\u002A','\u002B','\u0041' ,'\u0042' ,'\u0043' ,'\u0044' ,'\u0045' ,'\u0046' ,'\u0047' ,'\u0048' ,'\u0049' ,'\u0050' ,'\u0051' 
-				,'\u0052' ,'\u0053' ,'\u0054' ,'\u0055' ,'\u0056' ,'\u0057' ,'\u0058','\u003C','\u003F','\u007E'};
-		char answer = (Character)JOptionPane.showInputDialog(null,"Select one of the following characters","Test",JOptionPane.PLAIN_MESSAGE,null,chars,chars[0]);
-		this.name = answer;
+		Object [] chars = {GameEngine.X,GameEngine.O,'\u2654' ,'\u2655' ,'\u2656' ,'\u2657' ,'\u2658','\u0021' ,'\u0022' ,'\u0023' ,'\u0024' ,'\u0025' ,'\u002A','\u002B','\u0041' ,'\u0042' ,'\u0043' ,'\u0044' ,'\u0045' ,'\u0046' ,'\u0047' ,'\u0048' ,'\u0049' ,'\u0050' ,'\u0051' 
+				,'\u0052' ,'\u0053' ,'\u0054' ,'\u0055' ,'\u0056' ,'\u0057' ,'\u003C','\u003F','\u007E'};
+		
+		boolean correct;
+		do {
+			try {
+				this.name = (Character)JOptionPane.showInputDialog(null,"Select one of the following characters","Test",JOptionPane.PLAIN_MESSAGE,null,chars,chars[0]);
+				correct = true;
+			}catch (NullPointerException e) {
+				JOptionPane.showMessageDialog(this, "Please select a character", "Error", JOptionPane.ERROR_MESSAGE);
+				correct = false;
+			}
+		}while(!correct);
 		
 		Color col;
 		do {
 			col = JColorChooser.showDialog(this, "Choose a color", Color.BLACK);
-			if (col==null) JOptionPane.showMessageDialog(this, "Please select a color", "Error", JOptionPane.ERROR_MESSAGE);;
+			if (col==null) JOptionPane.showMessageDialog(this, "Please select a color", "Error", JOptionPane.ERROR_MESSAGE);
 		}while(col==null);
 		this.color = col;
-		System.out.printf("Character: %s Color: %s",answer,col);
 		
 	}
 	public void setCustomOptions(char[] charArr, Color[] colorArr) {
