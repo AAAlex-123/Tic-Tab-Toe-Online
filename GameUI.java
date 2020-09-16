@@ -1,6 +1,7 @@
 package ttt_online;
 
-import java.awt.Color;
+
+//new import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -30,7 +31,6 @@ public class GameUI extends JFrame{
 	private final JButton submitB,disconnectB;
 	private final JPanel autismPanel,inputPanel;
 	private final JScrollPane scroll;
-	
 	public GameUI(char xo) {
 		super("Naughts & Crosses Online");
 		name = xo;
@@ -40,8 +40,11 @@ public class GameUI extends JFrame{
 		screen.setPreferredSize(new Dimension(500,500));
 
 		log = new JTextArea("This is a message log");
-		log.setPreferredSize(new Dimension(100,250));
-		scroll = new JScrollPane (log,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+		//old screen.setEditable(false);
+		//new log.setPreferredSize(new Dimension(100,250));
+		//new scroll = new JScrollPane (log,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        
 		log.setEditable(false);
 		
 		autismPanel = new JPanel(); autismPanel.setLayout(new FlowLayout()); //because there is no other way to force Layout to cooperate
@@ -54,7 +57,7 @@ public class GameUI extends JFrame{
 		
 		inputPanel = new JPanel();
 		inputPanel.setLayout(new FlowLayout());
-		move = new JTextField("Your next move",10); inputPanel.add(move);
+		move = new JTextField("Your next move", 10); inputPanel.add(move);
 		submitB = new JButton("Submit"); inputPanel.add(submitB);
 		submitB.addActionListener(new ActionListener() {
 			@Override
@@ -65,7 +68,6 @@ public class GameUI extends JFrame{
 					return;
 				}
 				answer = convertInput(input);
-				pushMessage(String.format("Player %s played %s", name, move.getText()));
 				move.setText("");
 				error_msg.setVisible(false);
 			}
@@ -73,15 +75,12 @@ public class GameUI extends JFrame{
 		
 		disconnectB = new JButton("Resign");
 		disconnectB.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				answer = -2;
-				pushMessage("Player "+ name +" resigned the game!");
 			}
-			
 		});
-		
+		setEnableTurn(false);
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(autismPanel);
 		add(screen);
@@ -92,13 +91,15 @@ public class GameUI extends JFrame{
 		add(scroll);
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(disconnectB);
-		
-		
 	}
 	
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s\n%s", log.getText(), mes));
-	}
+
+	public void resetMove() {
+		move.setText("Your next move");
+		move.setSelectionStart(0);
+		move.setSelectionEnd(move.getText().length()-1);
 	
 	public void setScreen(GameBoard gboard) {
 		screen.repaint(gboard);
@@ -121,6 +122,7 @@ public class GameUI extends JFrame{
 	public void setEnableTurn(boolean enable) {
 		submitB.setEnabled(enable);
 		disconnectB.setEnabled(enable);
+		move.setEnabled(enable);
 	}
 	
 	public char getSymbol() {
@@ -210,7 +212,6 @@ public class GameUI extends JFrame{
 			this.board = board;
 			this.repaint();
 		}
-		
 	}
 	
 }
