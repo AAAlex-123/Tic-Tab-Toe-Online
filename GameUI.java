@@ -7,21 +7,16 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import javax.swing.*;
 
-/**
- * The UI, what the players see and interact with during the game
- */
 @SuppressWarnings("serial")
 public class GameUI extends JFrame{
 	/*
-	 * THE CONSTRUCTOR NO LONGER TAKES ANY ARGUMENTS
 	 * Use getSymbol, getColor to get the char/color of each UI
 	 * Then use the public method setCustomOptions by giving a char and color array such that ```char of player i -> color of player i```
 	 * In any other case the game will use a blue X and a red O for the players
-	 * The game graphics glitch out occasionally. Slightly resize the window if it happens. It's annoying but idk what else to do.
-	 * Also the game has to take a GameBoard object *not* a String to draw the graphics.
 	 */
 	
 	private char name;
@@ -38,9 +33,7 @@ public class GameUI extends JFrame{
 	private final JPanel autismPanel,inputPanel;
 	private final JScrollPane scroll;
 	
-	/**
-	 * Initialises the UI
-	 */
+	
 	public GameUI() {
 		super("Naughts & Crosses Online");
 		
@@ -67,15 +60,15 @@ public class GameUI extends JFrame{
 		inputPanel = new JPanel();
 		inputPanel.setLayout(new FlowLayout());
 		move = new JTextField("Your next move",10); inputPanel.add(move);
-		submitB = new JButton("Submit"); inputPanel.add(submitB);
+		submitB = new JButton("Submit"); inputPanel.add(submitB); submitB.setMnemonic(KeyEvent.VK_SPACE);
 		submitB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				/*
+				
 				if(!dataReceived) {
 					JOptionPane.showMessageDialog(getContentPane(), "Please wait for the other players to finish picking their characters","Error",JOptionPane.ERROR_MESSAGE);
 					return;
-				}*/
+				}
 				
 				String input = move.getText().toUpperCase().strip();
 				if (!input.matches("[A-E][1-5]")) {
@@ -89,16 +82,16 @@ public class GameUI extends JFrame{
 			}
 		});
 		
-		disconnectB = new JButton("Resign");
+		disconnectB = new JButton("Resign"); disconnectB.setMnemonic(KeyEvent.VK_R);
 		disconnectB.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				/*
+				
 				if(!dataReceived) {
 					JOptionPane.showMessageDialog(getContentPane(), "Please wait for the other players to finish picking their characters","Error",JOptionPane.ERROR_MESSAGE);
 					return;
-				}*/
+				}
 				answer = -2;
 				pushMessage("Player "+ name +" resigned the game!");
 			}
@@ -118,19 +111,12 @@ public class GameUI extends JFrame{
 		pushMessage("Waiting for all other players to choose a character");
 	}
 	
-	/**
-	 * Adds message <code>mes</code> to the <code>log JTextArea</code>
-	 * 
-	 * @param mes String, the message to add
-	 */
+	
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s\n%s", log.getText(), mes));
 	}
 
-	/**
-	 * Updates the <code>screen JTextArea</code> to show the <code>gameBoard</code>
-	 * @param gameBoard GameBoard, the board to show
-	 */
+	
 	public void setScreen(GameBoard gboard) {
 		screen.board = gboard;
 		screen.repaint();
@@ -144,41 +130,21 @@ public class GameUI extends JFrame{
 		this.update(this.getGraphics());
 	}
 	
-	/**
-	 * Gets the player's move and resets it to -1
-	 * @return int, the player's move, -1 no answer, -2 resign, 0-55 valid
-	 */
+	
 	public int getAnswer() {
-		int ans;
+		int ans = -1;
 		if (this.answer != -1) { 
 			ans = this.answer;
 			this.answer = -1;
-		} else ans = -1;
+		} 
 		return ans;
 	}
-	
-	/**
-	 * Enables and disables the buttons at the start and
-	 * at the end of the player's move respectively
-	 * @param enable
-	 */
-	public void setEnableTurn(boolean enable) {
-		submitB.setEnabled(enable);
-		disconnectB.setEnabled(enable);
-	}
-	
-	/**
-	 * Returns the <code>symbol</code> of this player's UI
-	 * @return char, the player's symbol
-	 */
+		
 	public char getSymbol() {
 		return this.name;
 	}
 
-	/**
-	 * Returns the <code>color</code> of this player's UI
-	 * @return Color, the player's color
-	 */
+	
 	public Color getColor() {
 		return this.color;
 	}
