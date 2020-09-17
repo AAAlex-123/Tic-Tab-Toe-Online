@@ -88,69 +88,9 @@ public class GameBoard implements Serializable {
 	 * @see GameBoard#verticalWin(char[][] table) verticalWin()
 	 * @return boolean, true if someone has won, false otherwise
 	 */
+	
 	public boolean hasWon() {
-		return (diagonalWin() || horizontalWin(board) || verticalWin(board));
-	}
-
-	/**
-	 * Determines if any row contains a winning sequence of characters
-	 * 
-	 * @param table the table for which to check is someone has won
-	 * @return boolean, true if it someone has won, false otherwise
-	 */
-	private boolean horizontalWin(char[][] table) {
-		for (char[] row: table) {
-			short consec = 0;
-			char current = row[0];
-			
-			for (char c : row) {
-				// for every row count how many consecutive characters there are
-				// if target is reached, return true
-				if (c == current && current != EMPTY) consec++;
-				else {
-					current = c;
-					consec = 1;
-				}
-				if (consec >= consecutive) return true;
-			} // row
-		}
-		return false;
-	}
-
-	/**
-	 * Inverts the table <code>table</code><br>
-	 * <code>table[i][j]</code> becomes <code>table[j][i]</code>
-	 * 
-	 * @param table the table to invert
-	 * @return table, the inverted table
-	 */
-	private char[][] invertTable(char[][] table){
-		char[][] newTable = new char[boardSize][boardSize];
-		
-		for (int i=0; i<newTable.length; i++)
-			for (int j=0; j<newTable.length; j++)
-				newTable[i][j] = table[j][i];
-		return newTable;
-	}
-	
-	/**
-	 * Determines if any column contains a winning sequence of characters.<br>
-	 * Inverts the table using the {@link GameBoard#invertTable(char[][] table) invertTable} method
-	 * then uses the {@link GameBoard#horizontalWin(char[][] table) horizontalWin} method to return the result
-	 * 
-	 * @return boolean, true if someone has won, false otherwise
-	 */
-	private boolean verticalWin(char[][] table) {
-		return horizontalWin(invertTable(table));
-	}
-	
-	/**
-	 * spaghetti mess
-	 * 
-	 * @return boolean, true if someone has won, false otherwise
-	 */
-	private boolean diagonalWin() {
-		int[][] directions = {{1, -1}, {1, 1}};		//{1,0}, {0,1} to replace all other checks as well
+		int[][] directions = {{1, -1}, {1, 1},{1,0}, {0,1}};
 	    for (int[] d : directions) {
 	        int dx = d[0];
 	        int dy = d[1];
@@ -194,13 +134,18 @@ public class GameBoard implements Serializable {
 		return repr.toString();	
 	}	
 	
-	/**
+	public char[][] getBoard() {
+		return board;
+	}
+}
+/* Unused code
+
 	 * One glorious method to check if the board is has a win.<br>
 	 * Supports custom <code>directions</code> (i.e. steps to take on the board).<br>
 	 * Supports any amount of <code>consecutive</code> squares.
 	 * 
 	 * @return boolean, true if someone has won, false otherwise
-	 */
+	 
 	private boolean win() {
 		int[][] directions = {{1, 0}, {0, 1}, {1, -1}, {1, 1}};
 	    for (int[] direction : directions) {
@@ -233,8 +178,4 @@ public class GameBoard implements Serializable {
 	    }
 	    return false; // no winner
 	}
-
-	public char[][] getBoard() {
-		return board;
-	}
-}
+*/
