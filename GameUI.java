@@ -65,10 +65,11 @@ public class GameUI extends JFrame{
 		submitB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				/*
 				if(!dataReceived) {
 					JOptionPane.showMessageDialog(getContentPane(), "Please wait for the other players to finish picking their characters","Error",JOptionPane.ERROR_MESSAGE);
 					return;
-				}
+				}*/
 				
 				String input = move.getText().toUpperCase().strip();
 				if (!input.matches("[A-E][1-5]")) {
@@ -87,10 +88,11 @@ public class GameUI extends JFrame{
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				/*
 				if(!dataReceived) {
 					JOptionPane.showMessageDialog(getContentPane(), "Please wait for the other players to finish picking their characters","Error",JOptionPane.ERROR_MESSAGE);
 					return;
-				}
+				}*/
 				answer = -2;
 				pushMessage("Player "+ name +" resigned the game!");
 			}
@@ -115,7 +117,16 @@ public class GameUI extends JFrame{
 	}
 	
 	public void setScreen(GameBoard gboard) {
-		screen.repaint(gboard);
+		screen.board = gboard;
+		screen.repaint();
+		//Wait until it loads then update the whole thing.
+		//JVM has forced my hand
+		try {
+			Thread.sleep(10);  
+		}catch (InterruptedException e){
+			e.printStackTrace();
+		}
+		this.update(this.getGraphics());
 	}
 	
 	public int getAnswer() {
@@ -251,16 +262,7 @@ public class GameUI extends JFrame{
 					}
 				}
 			}
-		}
-		
-		
-		public void repaint(GameBoard board) {
-			this.board = board;
-			this.repaint();
-		}
-		
-		
-		
+		}		
 	}
 	
 }
