@@ -9,9 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import javax.swing.*;
-/**
- * The UI, what the players see and interact with during the game
- */
+
 @SuppressWarnings("serial")
 public class GameUI extends JFrame{
 	/*
@@ -25,6 +23,7 @@ public class GameUI extends JFrame{
 	
 	private char name;
 	private Color color;
+	private boolean dataReceived = false;
 	private char[] charArr = null;
 	private Color[] colorArr = null;
 	private int answer = -1;
@@ -36,13 +35,11 @@ public class GameUI extends JFrame{
 	private final JPanel autismPanel,inputPanel;
 	private final JScrollPane scroll;
 	
-	/**
-	 * Initialises the UI
-	 */
 	public GameUI() {
 		super("Naughts & Crosses Online");
 		
 		getOptions();
+		
 		setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
 		if(charArr==null||colorArr==null) screen = new Screen();
 		else screen = new Screen(charArr,colorArr);
@@ -68,6 +65,11 @@ public class GameUI extends JFrame{
 		submitB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if(!dataReceived) {
+					JOptionPane.showMessageDialog(getContentPane(), "Please wait for the other players to finish picking their characters","Error",JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
 				String input = move.getText().toUpperCase().strip();
 				if (!input.matches("[A-E][1-5]")) {
 					error_msg.setVisible(true);
@@ -85,6 +87,10 @@ public class GameUI extends JFrame{
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				if(!dataReceived) {
+					JOptionPane.showMessageDialog(getContentPane(), "Please wait for the other players to finish picking their characters","Error",JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				answer = -2;
 				pushMessage("Player "+ name +" resigned the game!");
 			}
@@ -101,30 +107,23 @@ public class GameUI extends JFrame{
 		add(scroll);
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(disconnectB);
+		pushMessage("Waiting for all other players to choose a character");
 	}
-
-	/**
-	 * Adds message <code>mes</code> to the <code>log JTextArea</code>
-	 * 
-	 * @param mes String, the message to add
-	 */
+	
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s\n%s", log.getText(), mes));
 	}
 	
-	/**
-	 * Updates the <code>screen JTextArea</code> to show the <code>gameBoard</code>
-	 * @param gameBoard GameBoard, the board to show
-	 */
 	public void setScreen(GameBoard gboard) {
 		screen.repaint(gboard);
 	}
 	
-	/**
-	 * Gets the player's move and resets it to -1
-	 * @return int, the player's move, -1 no answer, -2 resign, 0-55 valid
-	 */
 	public int getAnswer() {
+		/*
+		 * Returns: -1 if no answer
+		 * 			-2 if resigned
+		 * 			int between 0,55 if correct answer
+		 */
 		int ans;
 		if (this.answer != -1) { 
 			ans = this.answer;
@@ -133,39 +132,21 @@ public class GameUI extends JFrame{
 		return ans;
 	}
 	
-	/**
-	 * Enables and disables the buttons at the start and
-	 * at the end of the player's move respectively
-	 * @param enable
-	 */
+	/*
 	public void setEnableTurn(boolean enable) {
 		submitB.setEnabled(enable);
 		disconnectB.setEnabled(enable);
 	}
+	*/
 	
-	/**
-	 * Returns the <code>symbol</code> of this player's UI
-	 * @return char, the player's symbol
-	 */
 	public char getSymbol() {
 		return this.name;
 	}
-
-	/**
-	 * Returns the <code>color</code> of this player's UI
-	 * @return Color, the player's color
-	 */
+	
 	public Color getColor() {
 		return this.color;
 	}
 	
-	/**
-	 * Converts the player's input from <code>Char-Int</code> to <code>Int-Int</code>
-	 * so that the GameBoard can understand it
-	 * 
-	 * @param str String, the player's input
-	 * @return int, the data the GameBoard understands
-	 */
 	private static int convertInput(String str) {
 		char row = str.charAt(0);
 		int index;
@@ -216,9 +197,12 @@ public class GameUI extends JFrame{
 		this.color = col;
 		
 	}
+	
 	public void setCustomOptions(char[] charArr, Color[] colorArr) {
 		this.charArr=charArr;
 		this.colorArr=colorArr;
+		dataReceived = true;
+		pushMessage("All players ready, starting new match!");
 	}
 	
 
