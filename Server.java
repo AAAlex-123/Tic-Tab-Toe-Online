@@ -1,5 +1,6 @@
 package ttt_online;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,7 +8,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-
+/**
+ * Server-side application to handle communications with the clients
+ */
 public class Server {
 	private final int playerCount;
 	private boolean printStackTrace;
@@ -16,7 +19,9 @@ public class Server {
 	private final Socket[] sockets;
 	private final ObjectInputStream[] inputs;
 	private final ObjectOutputStream[] outputs;
+
 	private final char[] symbols;
+	private final Color[] colors;
 	
 	private final GameBoard gameBoard = new GameBoard();
 	private int currentPlayer = 0;
@@ -25,6 +30,7 @@ public class Server {
 	 * Constructor to initialise fields
 	 * 
 	 * @param playerCount int, the number of players
+	 * @param printStackTrace boolean, whether or not to print full Stack Trace when exceptions occur
 	 */
 	public Server(int playerCount, boolean printStackTrace) {
 		this.printStackTrace = printStackTrace;
@@ -32,7 +38,8 @@ public class Server {
 		sockets = new Socket[playerCount];                        
 		inputs = new ObjectInputStream[playerCount];   
 		outputs = new ObjectOutputStream[playerCount];
-		symbols = new char[playerCount];                            
+		symbols = new char[playerCount];   
+		colors = new Color[playerCount];                            
 	}
 	
 	/**
@@ -49,27 +56,21 @@ public class Server {
 		log("Starting game");
 		while (true) {
 			makeTurn();
-			// if stuck in infinite loop printing stuff, remove comments to slow things down
-//			try {Thread.sleep(5000);}
-//			catch (InterruptedException e) {;}
 		}
 	}
 
 	/**
 	 * Initialises the server on port 12345 with <code>playerCount</code> of connections.
 	 * 
-	 * @return int, 0 or 1 success or fail
 	 */
-	private int initialiseServer() {
+	private void initialiseServer() {
 		try {
 			server = new ServerSocket(12345, playerCount);
 			log("\n\nServer ready, waiting for %d players", playerCount);
-			return 0;
 		} 
 		catch (IOException e) {
 			logerr("Error while setting up server");
 			if (printStackTrace) e.printStackTrace();
-			return 1;
 		}
 	}
 	
@@ -82,6 +83,7 @@ public class Server {
 	private void getConnections() {
 		boolean reset = false;
 		try {
+			// connect to every player
 			for (int i=0; i<playerCount; i++) {
 				// get connections
 				sockets[i] = server.accept();
@@ -93,13 +95,16 @@ public class Server {
 
 				// get player symbol
 				symbols[i] = (char) inputs[i].readObject();
+				colors[i] = (Color) inputs[i].readObject();
 
 				log("Player #%d connected", i);
 			}
 			
-			// send ready message
+			// send ready message and symbol and color array
 			for (int j=0; j<playerCount; j++) {
 				outputs[j].writeObject("Everyone has joined; get ready to start the game!");
+				outputs[j].writeObject(symbols);
+				outputs[j].writeObject(colors);
 			}
 
 		} catch (IOException e) {
@@ -139,37 +144,44 @@ public class Server {
 			outputs[currentPlayer].writeObject("Make your move!");
 
 			// send board
-			sendBoard();
+			sendBoard(currentPlayer);
 		
-			// get and register move
+			// get, register and respond to move
 			move = (int) inputs[currentPlayer].readObject();
 		
 			if (move == -2) {
-				;
-			} else {
-				gameBoard.markSquare(move, symbols[currentPlayer]);
-				if (gameBoard.hasWon()) {
-					log("%s", gameBoard);
-					broadcast("Player '%c' won!", symbols[currentPlayer]);
-					log("Player '%c' won!\nGame over", symbols[currentPlayer]);
-					sendBoard();
-					while (true) {;}
+				log("Final board:\n%s", gameBoard);
+				broadcast("Player '%c' resigned", symbols[currentPlayer]);				
+				log("Player '%c' resigned!\nGame over", symbols[currentPlayer]);
+				for (int i=0; i<playerCount; i++) {
+					sendBoard(i);
 				}
+				log("Server will now reset");
+				reset();
+				run();
+			}
+
+			gameBoard.markSquare(move, symbols[currentPlayer]);
+			if (gameBoard.hasWon()) {
+				log("Final board:\n%s", gameBoard);
+				broadcast("Player '%c' won!", symbols[currentPlayer]);
+				log("Player '%c' won!\nGame over", symbols[currentPlayer]);
+				for (int i=0; i<playerCount; i++) {
+					sendBoard(i);
+				}
+				log("Server will now reset");
+				reset();
+				run();
 			}
 			
-			//send response to start
-			if (move == -2) {
-				response = String.format("Player '%c' resigned", symbols[currentPlayer]);
-				broadcast(response);
-			}
-			
-			else response = (String.format("Move received: [%c, %d]", 65+move/10, move%10+1));
+			//send response to move
+			response = (String.format("Move received: [%c, %d]", 65+move/10, move%10+1));
 			outputs[currentPlayer].writeObject(new String(response));
 			
 			log("Move received: %d, response sent %s", move, response);
 		
-			//send board
-			sendBoard();
+			//send board again
+			sendBoard(currentPlayer);
 			
 			currentPlayer = (currentPlayer + 1) % playerCount;
 
@@ -211,6 +223,7 @@ public class Server {
 				inputs[i].close();
 				outputs[i].close();
 				symbols[i] = '\u0000';
+				colors[i] = new Color(0, 0, 0);
 			} catch (IOException e) {
 				logerr("Error while resetting %d; player disconnected\n", i);
 			}
@@ -224,7 +237,7 @@ public class Server {
 	 * and sends that copy because Java (:
 	 * @throws SocketException Thrown if client disconnects while trying to send board
 	 */
-	private void sendBoard() throws SocketException {
+	private void sendBoard(int currentPlayer) throws SocketException {
 		char[][] newBoard = new char[5][5];
 		char[][] currentBoard = gameBoard.getBoard();
 		for (int i=0; i<5; i++)
@@ -237,9 +250,11 @@ public class Server {
 	}
 	
 	/**
-	 * Sends msg
-	 * @param msg
-	 * @param args
+	 * Sends message <code>msg</code> to every client connected<br><code>System.out.printf(text, args)</code>
+	 * 
+	 * 
+	 * @param text String, text to send
+	 * @param args Object[], arguments
 	 */
 	private void broadcast(String msg, Object... args) {
 		for (int i=0; i<playerCount; i++) {
@@ -277,6 +292,7 @@ public class Server {
 	 * Main method. Run to create and run a server
 	 * 
 	 * @param args args[0] is used for the number of players expected to connect
+	 * @param args args[1] is used to determine <code>printStackTrace</code> field, '1' for true, other for false
 	 */
 	public static void main(String[] args) {
 		int playerCount;
@@ -291,7 +307,7 @@ public class Server {
 		boolean printStackTrace;
 		try {printStackTrace = args[1].equals("1") ? true : false;}
 		catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Error: No <printStackTrace> argument provided;\nInitialised to false;");
+			logerr("Warning: No <printStackTrace> argument provided;\nInitialised to false;");
 			printStackTrace = false;
 		}
 		Server server = new Server(playerCount, printStackTrace);

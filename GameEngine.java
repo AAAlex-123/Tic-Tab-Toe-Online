@@ -1,5 +1,6 @@
 package ttt_online;
 
+import java.awt.Color;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -9,8 +10,17 @@ import java.net.Socket;
 
 import javax.swing.JFrame;
 
+/**
+ * Client-side application to handle communications with the server
+ */
 public class GameEngine { // aka client
+	public final static char X = 'X';
+	public final static char O = 'O';
+	public final static char DASH = '-';
+	
+	private String address;
 	private boolean printStackTrace;
+	private boolean pushErrorMessages = true;
 	
 	private GameUI ui;
 
@@ -20,10 +30,37 @@ public class GameEngine { // aka client
 
 	private GameBoard localGameBoard;
 	private char[][] localGameBoardConstructor;
+	
+	/**
+	 * Constructor with parameters <code>address, symbol</code>
+	 * <code>printStackTrace</code> will be <code>false</code>
+	 * Also sets up the UI
+	 * @param address String, the IP address of the server
+	 * @param symbol char, the symbol the player will use when they play
+	 */
+	public GameEngine(String address, char symbol) {
+		this.address = address;
+		this.printStackTrace = false;
+		setUI(symbol);
+	}
 
-	public void run(char symbol, boolean printStackTrace) {
+	/**
+	 * Constructor with parameters <code>address, symbol</code> and <code>printStackTrace</code>
+	 * Also sets up the UI
+	 * @param address String, the IP address of the server
+	 * @param symbol char, the symbol the player will use when they play
+	 * @param printStackTrace boolean, whether or not to print stack trace when Exceptions occur
+	 */
+	public GameEngine(String address, char symbol, boolean printStackTrace) {
+		this.address = address;
 		this.printStackTrace = printStackTrace;
 		setUI(symbol);
+	}
+
+	/**
+	 * Runs the GameEngine
+	 */
+	private void run() {
 		getConnection();
 		while (true) {
 			setup(true);
@@ -35,14 +72,14 @@ public class GameEngine { // aka client
 	/**
 	 * Sets up the UI
 	 * 
-	 * @param symbol
+	 * @param symbol char, the player's symbol
 	 */
 	private void setUI(char symbol) {
-		ui = new GameUI(symbol);
+		ui = new GameUI();
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ui.setSize(400, 550);
+		ui.setSize(320, 720);
 		ui.setVisible(true);
-	  	ui.setResizable(false);
+	  	ui.setResizable(true);
 	}
 
 	/**
@@ -52,34 +89,36 @@ public class GameEngine { // aka client
 	 * If at any point something goes wrong, exit :)
 	 */
 	private void getConnection() {
-		boolean exit = false;
 		try {
 			// get connection
-			socket = new Socket(InetAddress.getByName("127.0.0.1"), 12345);
+			socket = new Socket(InetAddress.getByName(address), 12345);
 			output = new ObjectOutputStream(socket.getOutputStream());
 			input =  new ObjectInputStream(socket.getInputStream());
 			
 			// exchange messages
 			ui.pushMessage(String.format("server said: %s", input.readObject()));
 			output.writeObject(ui.getSymbol());
+			output.writeObject(ui.getColor());
 			
-			// wait for ready message
+			// wait for ready message and for updated symbols/colors
 			ui.pushMessage((String) input.readObject());
+
+			char[] symbols = (char[]) input.readObject();
+			Color[] colors = (Color[]) input.readObject();
+			ui.setCustomOptions(symbols, colors);
 			
-			log("Connected to server successfully as player '%c'", ui.getSymbol());
+			log("Connected to server successfully as player '%c' with color %s", ui.getSymbol(), ui.getColor());
 			
 		} catch (IOException e) {
 			logerr("IOException while getting connections or sending messages\nExiting...\n");
 			if (printStackTrace) e.printStackTrace();
-			exit = true;
+			if (pushErrorMessages) ui.pushMessage("Couldn't connect to server; please exit\n\nIf you don't know why this happened, please inform the developers");
+			while (true) {;}
 		} catch (ClassNotFoundException e) {
 			logerr("ClassNotFoundException while reading messages\nExiting...\n");
 			if (printStackTrace) e.printStackTrace();
-			exit = true;
-		}
-		
-		if (exit) {
-			System.exit(1);
+			if (pushErrorMessages) ui.pushMessage("Couldn't connect to server; please exit\n\nIf you don't know why this happened, please inform the developers");
+			while (true) {;}
 		}
 	}
 
@@ -91,7 +130,7 @@ public class GameEngine { // aka client
 	private void setup(boolean starting) {
 		try {
 			if (starting) {
-				ui.resetMove();
+				ui.setEnableTurn(false);
 				ui.pushMessage("");
 				log("\nStarting turn");
 			}
@@ -99,19 +138,23 @@ public class GameEngine { // aka client
 			// get ready message
 			String response = (String) input.readObject();
 			
-			// if message is resignation (only when starting==false) do something
-			if (response.matches("Player '.' resigned")) {
+			// if message is resignation (can only happen when starting==false) do something
+			if (response.matches("Player '\\X' resigned")) {
 				ui.pushMessage(String.format("\n%s\n\nGame ended; please exit",
 						response.charAt(8) == ui.getSymbol() ? "You resigned :(" : response+" :)"));
+				updateBoard();
 				ui.setEnableTurn(false);
+				pushErrorMessages = false;
 				while(true) {;}
-			} else if (response.matches("Player '.' won!")) {
+			} else if (response.matches("Player '\\X' won!")) {
 				ui.pushMessage(String.format("\n%s\n\nGame ended; please exit",
 						response.charAt(8) == ui.getSymbol() ? "You won :)" : response+" :("));
-				ui.setEnableTurn(false);
 				updateBoard();
+				ui.setEnableTurn(false);
+				pushErrorMessages = false;
 				while(true) {;}
 			}
+			
 			log("Got response: '%s'", response);
 			ui.pushMessage(response);
 			
@@ -125,17 +168,17 @@ public class GameEngine { // aka client
 		} catch (EOFException e) {
 			logerr("EOFException while getting server message");
 			if (printStackTrace) e.printStackTrace();
-			ui.pushMessage("Another player unexpectedly disconnected; please exit\n\nIf you don't know why this happened, please inform the developers");
+			if (pushErrorMessages) ui.pushMessage("Another player unexpectedly disconnected; please exit\n\nIf you don't know why this happened, please inform the developers");
 			while (true) {;}
 		} catch (IOException e) {
 			logerr("IOException while getting server message");
 			if (printStackTrace) e.printStackTrace();
-			ui.pushMessage("Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
+			if (pushErrorMessages) ui.pushMessage("Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
 			while (true) {;}
 		} catch (ClassNotFoundException e) {
 			logerr("ClassNotFoundException while getting server message");
 			if (printStackTrace) e.printStackTrace();
-			ui.pushMessage("Something went wrong; please exit and inform the developers");
+			if (pushErrorMessages) ui.pushMessage("Something went wrong; please exit and inform the developers");
 			while (true) {;}
 		}
 	}
@@ -158,6 +201,7 @@ public class GameEngine { // aka client
   				if (printStackTrace) e.printStackTrace();
   			}
 	  	}
+	  	
 		ui.pushMessage(String.format("You played %c%s", 65+move/10, move%10+1));
 	  	
 	  	// send the move
@@ -165,16 +209,23 @@ public class GameEngine { // aka client
 	  	catch (IOException e) {
 			logerr("IOException while getting server message");
 			if (printStackTrace) e.printStackTrace();
-			ui.pushMessage("Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
+			if (pushErrorMessages) ui.pushMessage("Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
 			while (true) {;}
 		}
 	  	log("Got and sent move: [%d, %d]", move/10, move%10);
 	}
 	
+	/**
+	 * Updates the board on the UI
+	 * 
+	 * @throws ClassNotFoundException idk when it's thrown
+	 * @throws IOException thrown when server disconnects (?)
+	 * @throws EOFException thrown when server disconnects (?)
+	 */
 	private void updateBoard() throws ClassNotFoundException, IOException, EOFException {
 		localGameBoardConstructor = (char[][]) input.readObject();
 		localGameBoard = new GameBoard(localGameBoardConstructor);
-		ui.setScreen(localGameBoard.toString());
+		ui.setScreen(localGameBoard);
 	}
 	
 	/**
@@ -201,21 +252,35 @@ public class GameEngine { // aka client
 	 * Main method. Run to create and run a client
 	 * 
 	 * @param args args[0] is used for the player's symbol
+	 * @param args args[1] is used to determine <code>printStackTrace</code> field, '1' for true, other for false
 	 */
 	public static void main(String[] args) {
+		log("Getting symbol and color options");
+		GameEngine gameEngine;
+
 		char symbol;
 		try {symbol = args[0].charAt(0);}
 		catch (ArrayIndexOutOfBoundsException e) {
 			logerr("Error: No <symbol> argument provided;\nPlease exit;");
 			while (true) {;}
 		}
-		boolean printStackTrace;
-		try {printStackTrace = args[1].equals("1") ? true : false;}
+
+		String address;
+		try {address = args[1];}
 		catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Error: No <printStackTrace> argument provided;\nInitialised to false;");
-			printStackTrace = false;
+			logerr("Warning: No <address> argument provided;\nInitialised to '127.0.0.1';");
+			address = "127.0.0.1";
 		}
-		GameEngine gameEngine = new GameEngine();
-		gameEngine.run(symbol, printStackTrace);
+
+		boolean printStackTrace;
+		try {
+			printStackTrace = args[2].equals("1") ? true : false;
+			gameEngine = new GameEngine(address, symbol, printStackTrace);
+		}
+		catch (ArrayIndexOutOfBoundsException e) {
+			logerr("Warning: No <printStackTrace> argument provided;\nInitialised to false;");
+			gameEngine = new GameEngine(address, symbol);
+		}
+		gameEngine.run();
 	}
 }
