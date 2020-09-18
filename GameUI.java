@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 
 @SuppressWarnings("serial")
 public class GameUI extends JFrame{
@@ -31,21 +32,22 @@ public class GameUI extends JFrame{
 	private final JPanel autismPanel,inputPanel;
 	private final JScrollPane scroll;
 	
-	
 	/**
 	 * 
 	 */
 	public GameUI() {
 		super("Naughts & Crosses Online");
-		
+
 		getOptions();		
 		setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
 		screen = new Screen();
 		screen.setPreferredSize(new Dimension(500,500));
 
 		log = new JTextArea("This is a message log");
-		log.setPreferredSize(new Dimension(100,250));
-		scroll = new JScrollPane (log,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		// always scroll when text is added
+		((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		scroll = new JScrollPane(log, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		scroll.setPreferredSize(new Dimension(100, 250));
 		log.setEditable(false);
 		
 		autismPanel = new JPanel(); autismPanel.setLayout(new FlowLayout()); //because there is no other way to force Layout to cooperate
@@ -113,6 +115,9 @@ public class GameUI extends JFrame{
 	
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s\n%s", log.getText(), mes));
+		
+		// scroll to bottom
+		
 	}
 
 	
@@ -129,6 +134,11 @@ public class GameUI extends JFrame{
 		this.update(this.getGraphics());
 	}
 	
+	public void setEnableTurn(boolean enable) {
+		submitB.setEnabled(enable);
+		disconnectB.setEnabled(enable);
+		move.setEnabled(enable);
+	}
 	
 	public int getAnswer() {
 		int ans = -1;
@@ -189,7 +199,7 @@ public class GameUI extends JFrame{
 		boolean correct;
 		do {
 			try {
-				this.name = (Character)JOptionPane.showInputDialog(null,"Select one of the following characters","Test",JOptionPane.PLAIN_MESSAGE,null,chars,chars[0]);
+				this.name = (Character)JOptionPane.showInputDialog(null,"Select one of the following characters","Character Selection",JOptionPane.PLAIN_MESSAGE,null,chars,chars[0]);
 				correct = true;
 			}catch (NullPointerException e) {
 				JOptionPane.showMessageDialog(this, "Please select a character", "Error", JOptionPane.ERROR_MESSAGE);
