@@ -22,8 +22,6 @@ public class GameUI extends JFrame{
 	private char name;
 	private Color color;
 	private boolean dataReceived = false;
-	private char[] charArr = null;
-	private Color[] colorArr = null;
 	private int answer = -1;
 	private final JLabel error_msg;
 	private final Screen screen;
@@ -34,14 +32,15 @@ public class GameUI extends JFrame{
 	private final JScrollPane scroll;
 	
 	
+	/**
+	 * 
+	 */
 	public GameUI() {
 		super("Naughts & Crosses Online");
 		
-		getOptions();
-		
+		getOptions();		
 		setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
-		if(charArr==null||colorArr==null) screen = new Screen();
-		else screen = new Screen(charArr,colorArr);
+		screen = new Screen();
 		screen.setPreferredSize(new Dimension(500,500));
 
 		log = new JTextArea("This is a message log");
@@ -182,7 +181,7 @@ public class GameUI extends JFrame{
 		return index;
 	}
 	
-	private void getOptions() {
+	private void getOptions() { //gets character player and color
 		
 		Object [] chars = {GameEngine.X,GameEngine.O,'\u2654' ,'\u2655' ,'\u2656' ,'\u2657' ,'\u2658','\u0021' ,'\u0022' ,'\u0023' ,'\u0024' ,'\u0025' ,'\u002A','\u002B','\u0041' ,'\u0042' ,'\u0043' ,'\u0044' ,'\u0045' ,'\u0046' ,'\u0047' ,'\u0048' ,'\u0049' ,'\u0050' ,'\u0051' 
 				,'\u0052' ,'\u0053' ,'\u0054' ,'\u0055' ,'\u0056' ,'\u0057' ,'\u003C','\u003F','\u007E'};
@@ -207,11 +206,13 @@ public class GameUI extends JFrame{
 		
 	}
 	
-	public void setCustomOptions(char[] charArr, Color[] colorArr) {
-		this.charArr=charArr;
-		this.colorArr=colorArr;
+	public void setCustomOptions(char[] chars, Color[] colors) {
+		if(colors.length!=chars.length) throw new RuntimeException("Color and character arrays must be of same length");
+		
+		for(int i=0;i<colors.length;i++) {
+			screen.colorMap.put(chars[i], colors[i]);
+		}
 		dataReceived = true;
-		pushMessage("All players ready, starting new match!");
 	}
 	
 
@@ -220,18 +221,7 @@ public class GameUI extends JFrame{
 		private final HashMap<Character,Color> colorMap = new HashMap<Character,Color>();
 		private String[] letters = {"A","B","C","D","E"};
 		
-		public Screen(char[] chars, Color[] colors) {
-			if(colors.length!=chars.length) throw new RuntimeException("Color and character arrays must be of same length");
-			
-			for(int i=0;i<colors.length;i++) {
-				colorMap.put(chars[i], colors[i]);
-			}
-			board = new GameBoard();
-		}
-		
 		public Screen() {
-			colorMap.put(GameEngine.X, Color.BLUE);
-			colorMap.put(GameEngine.O,Color.RED);
 			board = new GameBoard();
 		}
 		
