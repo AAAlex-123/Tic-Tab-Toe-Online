@@ -77,7 +77,7 @@ public class GameUI extends JFrame{
 					return;
 				}
 				answer = convertInput(input);
-				pushMessage(String.format("Player %s played %s", name, move.getText()));
+				// pushMessage(String.format("Player %s played %s", name, move.getText()));
 				move.setText("");
 				error_msg.setVisible(false);
 			}
@@ -94,7 +94,7 @@ public class GameUI extends JFrame{
 					return;
 				}
 				answer = -2;
-				pushMessage("Player "+ name +" resigned the game!");
+				// pushMessage("Player "+ name +" resigned the game!");
 			}
 			
 		});
