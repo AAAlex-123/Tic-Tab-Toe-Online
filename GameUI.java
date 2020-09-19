@@ -61,8 +61,8 @@ public class GameUI extends JFrame{
 		});
 		
 		log = new JTextArea("This is a message log");
-		log.setPreferredSize(new Dimension(100,250));
 		scroll = new JScrollPane (log,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		scroll.setPreferredSize(new Dimension(100,250));
 		log.setEditable(false);
 		chatPanel.add(chatField); chatPanel.add(chatButton);
 		logPanel.add(scroll); logPanel.add(chatPanel);
