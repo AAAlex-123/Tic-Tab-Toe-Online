@@ -127,7 +127,7 @@ public class GameUI extends JFrame{
 		//Wait until it loads then update the whole thing.
 		//JVM has forced my hand
 		try {
-			Thread.sleep(10);  
+			Thread.sleep(100);  
 		}catch (InterruptedException e){
 			e.printStackTrace();
 		}
@@ -249,7 +249,7 @@ public class GameUI extends JFrame{
 				}
 			}
 			//paint marks
-			g.setFont(new Font("Monospaced", Font.BOLD, 80));
+			g.setFont(new Font("Monospaced", Font.BOLD, 65));
 			for(int i=0;i<5;i++) {
 				for(int j=0;j<5;j++) {
 					char c = board.getBoard()[i][j];
