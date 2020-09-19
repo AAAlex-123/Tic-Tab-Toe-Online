@@ -22,33 +22,50 @@ public class GameUI extends JFrame{
 	
 	private char name;
 	private Color color;
-	private boolean dataReceived = false;
+	private String chatText="";
+	private boolean dataReceived = true;
 	private int answer = -1;
 	private final JLabel error_msg;
 	private final Screen screen;
 	private final JTextArea log;
-	private final JTextField player,move;
-	private final JButton submitB,disconnectB;
-	private final JPanel autismPanel,inputPanel;
+	private final JTextField player,move,chatField;
+	private final JButton submitB,disconnectB,chatButton;
+	private final JPanel autismPanel,inputPanel,chatPanel,logPanel;
 	private final JScrollPane scroll;
 	
-	/**
-	 * 
-	 */
+	
 	public GameUI() {
 		super("Naughts & Crosses Online");
-
+		
 		getOptions();		
 		setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
 		screen = new Screen();
 		screen.setPreferredSize(new Dimension(500,500));
+		
+		logPanel = new JPanel();
+		logPanel.setLayout(new BoxLayout(logPanel,BoxLayout.Y_AXIS));
+		chatPanel = new JPanel();
+		chatPanel.setLayout(new BoxLayout(chatPanel,BoxLayout.X_AXIS));
+		chatButton = new JButton("Send");
+		chatField = new JTextField();
+		chatButton.addActionListener(new ActionListener() {
 
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				chatText += (chatText.equals("")? "":"\n") + chatField.getText();
+				chatField.setText("");
+				System.out.println(chatText);
+				
+			}
+		
+		});
+		
 		log = new JTextArea("This is a message log");
-		// always scroll when text is added
-		((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-		scroll = new JScrollPane(log, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		scroll.setPreferredSize(new Dimension(100, 250));
+		log.setPreferredSize(new Dimension(100,250));
+		scroll = new JScrollPane (log,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		log.setEditable(false);
+		chatPanel.add(chatField); chatPanel.add(chatButton);
+		logPanel.add(scroll); logPanel.add(chatPanel);
 		
 		autismPanel = new JPanel(); autismPanel.setLayout(new FlowLayout()); //because there is no other way to force Layout to cooperate
 		player = new JTextField("You are player "+name);
@@ -77,7 +94,7 @@ public class GameUI extends JFrame{
 					return;
 				}
 				answer = convertInput(input);
-				// pushMessage(String.format("Player %s played %s", name, move.getText()));
+				pushMessage(String.format("Player %s played %s", name, move.getText()));
 				move.setText("");
 				error_msg.setVisible(false);
 			}
@@ -94,7 +111,7 @@ public class GameUI extends JFrame{
 					return;
 				}
 				answer = -2;
-				// pushMessage("Player "+ name +" resigned the game!");
+				pushMessage("Player "+ name +" resigned the game!");
 			}
 			
 		});
@@ -106,12 +123,11 @@ public class GameUI extends JFrame{
 		add(inputPanel);
 		add(error_msg);
 		add(Box.createRigidArea(new Dimension(50,15)));
-		add(scroll);
+		add(logPanel);
 		add(Box.createRigidArea(new Dimension(50,35)));
 		add(disconnectB);
 		pushMessage("Waiting for all other players to choose a character");
 	}
-	
 	
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s\n%s", log.getText(), mes));
@@ -156,6 +172,12 @@ public class GameUI extends JFrame{
 	
 	public Color getColor() {
 		return this.color;
+	}
+	
+	public String getChatText() {
+		String temp = this.chatText;
+		chatText = "";
+		return temp;
 	}
 	
 	/**
