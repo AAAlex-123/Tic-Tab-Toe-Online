@@ -14,6 +14,8 @@ import javax.swing.JFrame;
  * Client-side application to handle communications with the server
  */
 public class GameEngine { // aka client
+	private static final int GAME_PORT = 10001;
+	private static final int CHAT_PORT = 10002;
 	public final static char X = 'X';
 	public final static char O = 'O';
 	public final static char DASH = '-';
@@ -92,7 +94,7 @@ public class GameEngine { // aka client
 	private void getServerConnection() {
 		try {
 			// get connection
-			serverSocket = new Socket(InetAddress.getByName(address), 10001);
+			serverSocket = new Socket(InetAddress.getByName(address), GAME_PORT);
 			serverOutput = new ObjectOutputStream(serverSocket.getOutputStream());
 			serverInput = new ObjectInputStream(serverSocket.getInputStream());
 
@@ -237,7 +239,7 @@ public class GameEngine { // aka client
 	private void getChatConnection() {
 		try {
 			// get connection
-			chatSocket = new Socket(InetAddress.getByName(address), 10002);
+			chatSocket = new Socket(InetAddress.getByName(address), CHAT_PORT);
 			chatOutput = new ObjectOutputStream(chatSocket.getOutputStream());
 			chatInput = new ObjectInputStream(chatSocket.getInputStream());
 
