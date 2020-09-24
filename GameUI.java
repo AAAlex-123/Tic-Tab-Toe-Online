@@ -167,6 +167,15 @@ public class GameUI extends JFrame {
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s%s\n", log.getText(), mes));
 	}
+	
+	// for future use so we can do:
+	// ui.pushMessage("player %s played %d", ui.getSymbol, move);
+	// instead of:
+	// ui.pushMessage(String.format("player %s played %d", ui.getSymbol, move));
+	// similar to how GameEngine#log works
+	public void pushMessage(String mes, Object... args) {
+		log.setText(String.format("%s%s\n", log.getText(), mes, args));
+	}
 
 	public void pushMessage(String mes, boolean newline) {
 		log.setText(String.format("%s%s%s", log.getText(), mes, newline ? "\n" : ""));
