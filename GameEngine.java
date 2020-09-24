@@ -185,7 +185,7 @@ public class GameEngine { // aka client
 			exit("Another player unexpectedly disconnected; please exit\n\nIf you don't know why this happened, please inform the developers",
 					"!game! EOFException in setup()", INFORMATION, e, true);
 		} catch (IOException e) {
-			exit("Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
+			exit("Connection to Game Server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
 					"!game! IOException in setup()", WARNING, e, true);
 		} catch (ClassNotFoundException e) {
 			exit("Something went very wrong; please exit and inform the developers",
@@ -221,7 +221,7 @@ public class GameEngine { // aka client
 		try {
 			serverOutput.writeObject(new Packet<Integer>(Server.MOVE, move));
 		} catch (IOException e) {
-			exit("Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
+			exit("Connection to Game Server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
 					"!game! IOException in play()", WARNING, e, true);
 		}
 		log("Got and sent move: [%d, %d]", move / 10, move % 10);
@@ -349,10 +349,9 @@ public class GameEngine { // aka client
 	 * Updates the board on the UI.
 	 * <p>
 	 * It works by de-constructing the GameBoard at the server
-	 * and re-construct it here using the char[][] array
+	 * and re-constructing it here using the <code>char[][] array</code>
 	 * because there is a problem when sending GameBoard objects.
 	 * 
-	 * @see GameBoard#getBoard() getBoard()
 	 * @see GameBoard#GameBoard(char[][]) GameBoard(char[][])
 	 * 
 	 * @throws ClassNotFoundException idk when it's thrown
