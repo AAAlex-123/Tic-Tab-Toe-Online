@@ -12,14 +12,9 @@ import java.net.SocketException;
  * Server-side application to handle communications with the clients
  */
 public class GameServer extends Server {
-	private static int playerCount;
-	private static boolean printStackTrace, argumentsPassed = false;
 	private static final int GAME_PORT = 10001;
 	
-	
 	private final Socket[] sockets;
-	private final ObjectInputStream[] inputs;
-	private final ObjectOutputStream[] outputs;
 
 	private final char[] symbols;
 	private final Color[] colors;
