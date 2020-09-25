@@ -7,6 +7,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 
@@ -28,9 +29,14 @@ public abstract class Server {
 	protected final ObjectOutputStream[] outputs;
 	protected ServerSocket server;
 
-	public Server(int playerCount, boolean printStackTrace) {
-		Server.printStackTrace = printStackTrace;
-		Server.playerCount = playerCount;
+	public Server() {
+		getServerOptions();
+		while(!argumentsPassed) {
+			try {Thread.sleep(500);}
+			catch(InterruptedException e) {e.printStackTrace();}
+		}
+                     
+		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 	}
 	
@@ -42,8 +48,9 @@ public abstract class Server {
 	 * Gets server options from player using GUI.
 	 * Assigns values to the playerCount and printStackTrace variables
 	 * 
+	 * FIXME
 	 */
-	protected static void getServerOptions() {
+	protected void getServerOptions() {
 		
 		JFrame optWind = new JFrame("Select Server Options");
 		JPanel optPanel = new JPanel();
@@ -98,21 +105,20 @@ public abstract class Server {
 	 * Sends message <code>msg</code> to every client connected<br>
 	 * <code>System.out.printf(text, args)</code>
 	 * 
-	 * @param boolean isServer, whether the message was sent by the server
 	 * @param text    String, text to send
 	 * @param args    Object[], arguments
 	 */
 	protected void broadcast(String msg, Object... args) {
 		for (int i = 0; i < playerCount; i++) {
 			try {
-				outputs[i].writeObject(msg);
+				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
 				logerr("Error while broadcasting");
 				if (printStackTrace)
 					e.printStackTrace();
 			}
 		}
-		log("!chatServer! Broadcasted: %s", String.format(msg, args));
+		log("Broadcasted: %s", String.format(msg, args));
 	}
 	
 	/**
@@ -134,5 +140,4 @@ public abstract class Server {
 	protected static void logerr(String text, Object... args) {
 		System.err.printf(text+"\n", args);
 	}
-
 }
