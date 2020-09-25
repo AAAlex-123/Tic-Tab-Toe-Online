@@ -10,10 +10,11 @@ import java.net.SocketException;
 /**
  * Server-side application to handle communications with the clients
  */
-public class ChatServer extends Server{
-	private static final int CHAT_PORT = 10002;	
+public class ChatServer extends Server {
+	private static final int CHAT_PORT = 10002;
+	
 	public ChatServer(int playerCount, boolean printStackTrace) {
-		super(playerCount,printStackTrace);
+		super(playerCount, printStackTrace);
 	}
 
 	protected void run() {
