@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 /**
  * Client-side application to handle communications with the server
@@ -19,21 +20,23 @@ public class GameEngine { // aka client
 	public final static char X = 'X';
 	public final static char O = 'O';
 	public final static char DASH = '-';
+	private static final int INFORMATION = JOptionPane.INFORMATION_MESSAGE;
+	private static final int WARNING = JOptionPane.WARNING_MESSAGE;
+	private static final int ERROR = JOptionPane.ERROR_MESSAGE;
 
 	private final String address;
 	private final boolean printStackTrace;
 	private final int servers;
 
-	private boolean pushErrorMessages = true;
-
 	private final GameUI ui;
+	private boolean gameEnded = false;
 
 	private Socket serverSocket, chatSocket;
 	private ObjectOutputStream serverOutput, chatOutput;
 	private ObjectInputStream serverInput, chatInput;
 
-	private chatReader chr;
-	private chatWriter chw;
+	private ChatReader chatReader;
+	private ChatWriter chatWriter;
 
 	private GameBoard localGameBoard;
 	private char[][] localGameBoardConstructor;
@@ -47,6 +50,7 @@ public class GameEngine { // aka client
 	 *                        Exceptions occur
 	 */
 	public GameEngine(String address, boolean printStackTrace, int servers) {
+		log("Started client for %s", servers == 0 ? "chat" : servers == 1 ? "game" : "game and chat");
 		this.address = address;
 		this.printStackTrace = printStackTrace;
 		this.servers = servers;
@@ -59,11 +63,14 @@ public class GameEngine { // aka client
 	 * according to the <code>servers</code>field
 	 */
 	private void run() {
-		if (servers == 2 || servers == 0) getChatConnection();
-		if (servers == 2 || servers == 0) initChat();
-		if (servers == 2 || servers == 1) getServerConnection();
+		if (servers == 2 || servers == 0) {
+			getChatConnection();
+			initChat();
+			ui.setEnableChat(true);
+		}
 		if (servers == 2 || servers == 1) {
-			while (true) {
+			getServerConnection();
+			while (!gameEnded) {
 				setup(true);
 				play();
 				setup(false);
@@ -72,7 +79,7 @@ public class GameEngine { // aka client
 	}
 
 	/**
-	 * Sets up the UI
+	 * Sets up the UI.
 	 * 
 	 * @param symbol char, the player's symbol
 	 */
@@ -81,6 +88,9 @@ public class GameEngine { // aka client
 		ui.setSize(320, 720);
 		ui.setVisible(true);
 		ui.setResizable(true);
+		ui.setEnableTurn(false);
+		ui.setEnableChat(false);
+		ui.pushMessage("Please wait to connect to servers");
 	}
 
 	/**
@@ -88,9 +98,8 @@ public class GameEngine { // aka client
 	 * Gets its input and output streams.<br>
 	 * Exchanges some messages.<br>
 	 * <br>
-	 * If at any point something goes wrong, exit :)
+	 * If at any point something goes wrong, show pop-up message then exit.
 	 */
-	@SuppressWarnings("unchecked")
 	private void getServerConnection() {
 		try {
 			// get connection
@@ -99,31 +108,26 @@ public class GameEngine { // aka client
 			serverInput = new ObjectInputStream(serverSocket.getInputStream());
 
 			// exchange messages
-			ui.pushMessage(String.format("server said: %s", ((Packet<String>) serverInput.readObject()).value));
-			serverOutput.writeObject(new Packet<Character>(Server.DATA, ui.getSymbol()));
-			serverOutput.writeObject(new Packet<Color>(Server.DATA, ui.getColor()));
+			ui.pushMessage(String.format("\nGame Server said: %s", ((String) serverInput.readObject())));
+			serverOutput.writeObject(ui.getSymbol());
+			serverOutput.writeObject(ui.getColor());
+
+			log("Connected to Game Server successfully as player '%c' with color (r, g, b): (%d, %d %d)",
+					ui.getSymbol(), ui.getColor().getRed(), ui.getColor().getGreen(), ui.getColor().getBlue());
 
 			// wait for ready message and for updated symbols/colors
-			ui.pushMessage(((Packet<String>) serverInput.readObject()).value);
+			ui.pushMessage((String) serverInput.readObject());
 
-			char[] symbols = ((Packet<char[]>) serverInput.readObject()).value;
-			Color[] colors = ((Packet<Color[]>) serverInput.readObject()).value;
+			char[] symbols = ((char[]) serverInput.readObject());
+			Color[] colors = ((Color[]) serverInput.readObject());
 			ui.setCustomOptions(symbols, colors);
 
-			log("Connected to server successfully as player '%c' with color %s", ui.getSymbol(), ui.getColor());
-
 		} catch (IOException e) {
-			logerr("IOException while getting connections or sending messages\nExiting...\n");
-			if (printStackTrace) e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage(
-						"Couldn't connect to server; please exit\n\nIf you don't know why this happened, please inform the developers");
-			while (true) {;}
+			exit("Couldn't connect to Game Server; please exit\n\nIf you don't know why this happened, please inform the developers",
+					"!game! IOException in getServerConnection()\nExiting...\n", WARNING, e, true);
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException while reading messages\nExiting...\n");
-			if (printStackTrace) e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage(
-						"Couldn't connect to server; please exit\n\nIf you don't know why this happened, please inform the developers");
-			while (true) {;}
+			exit("Something went very wrong; please exit and inform the developers",
+					"!game! ClassNotFoundException while reading messages\nExiting...\n", ERROR, e, true);
 		}
 	}
 
@@ -134,7 +138,6 @@ public class GameEngine { // aka client
 	 * @param starting boolean, whether or not it is the start or the end of the
 	 *                 player's turn
 	 */
-	@SuppressWarnings("unchecked")
 	private void setup(boolean starting) {
 		try {
 			if (starting) {
@@ -144,23 +147,26 @@ public class GameEngine { // aka client
 			}
 
 			// get ready message
-			String response = ((Packet<String>) serverInput.readObject()).value;
+			String response = ((String) serverInput.readObject());
 
-			// if message is resignation (can only happen when starting==false) do something
-			if (response.matches("Player.*resigned")) {
-				ui.pushMessage(String.format("\n%s\n\nGame ended; please exit",
-						response.charAt(8) == ui.getSymbol() ? "You resigned :(" : response + " :)"));
+			// if message is "won" or "resigned" display some messages and stop game thread
+			if (response.matches("Player.*resigned") || response.matches("Player.*won!")) {
+				if (response.charAt(8) == ui.getSymbol())
+					ui.pushMessage(String.format("%c", '\u2713'));
 				updateBoard();
 				ui.setEnableTurn(false);
-				pushErrorMessages = false;
-				while (true) {;}
-			} else if (response.matches("Player.*won!")) {
-				ui.pushMessage(String.format("\n%s\n\nGame ended; please exit",
-						response.charAt(8) == ui.getSymbol() ? "You won :)" : response + " :("));
-				updateBoard();
-				ui.setEnableTurn(false);
-				pushErrorMessages = false;
-				while (true) {;}
+				gameEnded = true;
+
+				// trust the spaghetti, it just makes the correct message without 4 if statements
+				String msg = String.format("\n\n%s\n\nGame ended; %s",
+						response.charAt(8) == ui.getSymbol()
+								? response.matches("Player.*resigned") ? "You resigned :(" : "You won :)"
+								: response.matches("Player.*resigned") ? response + " :)" : response + " :(",
+						servers == 1 ? "please exit" : "you can still chat, or exit to play another game");
+				exit(msg, "!game! game ended", INFORMATION, null, false);
+				if (servers == 0)
+					System.exit(0);
+				return;
 			}
 
 			log("Got response: '%s'", response);
@@ -174,22 +180,14 @@ public class GameEngine { // aka client
 
 			log("End %s setup", starting ? "starting" : "ending");
 		} catch (EOFException e) {
-			logerr("EOFException while getting server message");
-			if (printStackTrace) e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage(
-						"Another player unexpectedly disconnected; please exit\n\nIf you don't know why this happened, please inform the developers");
-			while (true) {;}
+			exit("Another player unexpectedly disconnected; please exit\n\nIf you don't know why this happened, please inform the developers",
+					"!game! EOFException in setup()", INFORMATION, e, true);
 		} catch (IOException e) {
-			logerr("IOException while getting server message");
-			if (printStackTrace) e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage(
-						"Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
-			while (true) {;}
+			exit("Connection to Game Server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
+					"!game! IOException in setup()", WARNING, e, true);
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException while getting server message");
-			if (printStackTrace) e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage("Something went wrong; please exit and inform the developers");
-			while (true) {;}
+			exit("Something went very wrong; please exit and inform the developers",
+					"!game! ClassNotFoundException in setup()", ERROR, e, true);
 		}
 	}
 
@@ -197,7 +195,7 @@ public class GameEngine { // aka client
 	 * Gets the player's move, and sends it to the server.
 	 */
 	private void play() {
-		// get the move in the worst possible way
+		// get the move in the worst possible way (:
 		int move = -1;
 		while (move == -1) {
 			move = ui.getAnswer();
@@ -209,21 +207,20 @@ public class GameEngine { // aka client
 			try {
 				Thread.sleep(250);
 			} catch (InterruptedException e) {
-				if (printStackTrace) e.printStackTrace();
+				if (printStackTrace)
+					e.printStackTrace();
 			}
 		}
 
-		ui.pushMessage(String.format("You played %c%s", 65 + move / 10, move % 10 + 1));
+		if (move != -2)
+			ui.pushMessage(String.format("You played %c%s", 65 + move / 10, move % 10 + 1), false);
 
 		// send the move
 		try {
-			serverOutput.writeObject(new Packet<Integer>(Server.MOVE, move));
+			serverOutput.writeObject(move);
 		} catch (IOException e) {
-			logerr("IOException while getting server/player message");
-			if (printStackTrace) e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage(
-						"Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
-			while (true) {;}
+			exit("Connection to Game Server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
+					"!game! IOException in play()", WARNING, e, true);
 		}
 		log("Got and sent move: [%d, %d]", move / 10, move % 10);
 	}
@@ -233,9 +230,8 @@ public class GameEngine { // aka client
 	 * Gets its input and output streams.<br>
 	 * Exchanges some messages.<br>
 	 * <br>
-	 * If at any point something goes wrong, exit :)
+	 * If at any point something goes wrong, show pop-up message then exit.
 	 */
-	@SuppressWarnings("unchecked")
 	private void getChatConnection() {
 		try {
 			// get connection
@@ -244,61 +240,48 @@ public class GameEngine { // aka client
 			chatInput = new ObjectInputStream(chatSocket.getInputStream());
 
 			// exchange messages
-			ui.pushMessage(String.format("chat server said: %s", ((Packet<String>) chatInput.readObject()).value));
+			ui.pushMessage(String.format("\nChat Server said: %s", ((String) chatInput.readObject())));
 
-			log("Connected to chat server successfully as player '%c'", ui.getSymbol());
+			log("Connected to Chat Server successfully as player '%c'", ui.getSymbol());
 
 		} catch (IOException e) {
-			logerr("!chat! IOException while getting connections or sending messages\nExiting...\n");
-			if (printStackTrace) e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage(
-						"!chat! Couldn't connect to server; please exit\n\nIf you don't know why this happened, please inform the developers");
-			while (true) {;}
+			exit("Couldn't connect to Chat Server; please exit\n\nIf you don't know why this happened, please inform the developers",
+					"!chat! IOException in getChatConnection()\nExiting...\n", WARNING, e, true);
 		} catch (ClassNotFoundException e) {
-			logerr("!chat! ClassNotFoundException while reading messages\nExiting...\n");
-			if (printStackTrace)
-				e.printStackTrace();
-			if (pushErrorMessages) ui.pushMessage(
-						"!chat! Couldn't connect to server; please exit\n\nIf you don't know why this happened, please inform the developers");
-			while (true) {;}
+			exit("Something went very wrong; please exit and inform the developers",
+					"!chat! ClassNotFoundException in chatReader.run()", ERROR, e, true);
 		}
 	}
 
 	/**
-	 * Initialises connection to the Chat Server and starts two threads; one for
-	 * reading and one for writing to chat
+	 * Initialises connection to the Chat Server and starts two threads;
+	 * one for reading and one for writing to chat
 	 */
 	private void initChat() {
-		chr = new chatReader();
-		chw = new chatWriter();
-		chr.start();
-		chw.start();
-		log("!chat! initialised chat successfully");
+		chatReader = new ChatReader();
+		chatWriter = new ChatWriter();
+		chatReader.start();
+		chatWriter.start();
 	}
 
 	/**
 	 * Pushes any message it receives from Chat Server to the UI
 	 */
-	private class chatReader extends Thread {
-		@SuppressWarnings("unchecked")
+	private class ChatReader extends Thread {
 		public void run() {
 			boolean err = false;
 			while (!err) {
 				try {
-					Packet<String> p = (Packet<String>) chatInput.readObject();
-					log("!chat! received message: '%s'", p.value);
-					ui.pushMessage(p.value);
+					// wait to receive a chat message and push it to the log JTextArea
+					String msg = (String) chatInput.readObject();
+					log("!chat! received message: '%s'", msg);
+					ui.pushMessage(msg);
 				} catch (IOException e) {
-					logerr("!chat! IOException while getting server message");
-					if (printStackTrace) e.printStackTrace();
-					if (pushErrorMessages) ui.pushMessage(
-								"!chat! Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
-					err = true;
+					exit("Connection to Chat Server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
+							"!chat! IOException in chatReader.run()", WARNING, e, true);
 				} catch (ClassNotFoundException e) {
-					logerr("!chat! ClassNotFoundException while getting server message");
-					if (printStackTrace) e.printStackTrace();
-					if (pushErrorMessages) ui.pushMessage("!chat! Something went wrong; please exit and inform the developers");
-					err = true;
+					exit("Something went very wrong; please exit and inform the developers",
+							"!chat! ClassNotFoundException in chatReader.run()", ERROR, e, true);
 				}
 			}
 		}
@@ -307,28 +290,28 @@ public class GameEngine { // aka client
 	/**
 	 * When there is a message to send, it sends it
 	 */
-	private class chatWriter extends Thread {
+	private class ChatWriter extends Thread {
 		public void run() {
 			boolean err = false;
 			while (!err) {
 				String chatText = ui.getChatText();
+				// if no chat has been sent, try again in 1 second
 				if (chatText.equals("")) {
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
-						if (printStackTrace) e.printStackTrace();
+						if (printStackTrace)
+							e.printStackTrace();
 					}
+				// if a chat is sent, send it to the Chat Server
 				} else {
 					try {
 						String msg = String.format("%c: %s", ui.getSymbol(), chatText);
-						log("!chat! sent message %s", msg);
-						chatOutput.writeObject(new Packet<String>(Server.CHAT, msg));
+						log("!chat! sent message:     '%s'", msg);
+						chatOutput.writeObject(msg);
 					} catch (IOException e) {
-						logerr("!chat! IOException while getting server message");
-						if (printStackTrace) e.printStackTrace();
-						if (pushErrorMessages) ui.pushMessage(
-									"!chat! Connection to server lost; please exit\n\nIf you don't know why this happened, please inform the developers");
-						err = true;
+						exit("Connection to Chat Server lost; please exit\n\nIf you don't know why this happened, please inform the developers",
+								"!chat! IOException in chatWriter.run()", WARNING, e, true);
 					}
 				}
 			}
@@ -336,15 +319,43 @@ public class GameEngine { // aka client
 	}
 
 	/**
-	 * Updates the board on the UI
+	 * Exits the program when an Exception occurs.<br>
+	 * Logs the error and informs the player with a pop-up which, when closed, exits
+	 * the program.
+	 * 
+	 * @param error_msg String, the message to show the user
+	 * @param log_msg   String, the message to log to the console
+	 * @param type      int, ERROR, WARNING or INFORMATION, the type of the message
+	 * @param e         Exception, the exception that occurred
+	 * @param error		boolean, whether or not an error has occured and the application has to exit
+	 */
+	private void exit(String error_msg, String log_msg, int type, Exception e, boolean error) {
+		if (error) logerr(log_msg);
+		else log(log_msg);
+		
+		try {if (printStackTrace) e.printStackTrace();}
+		catch (NullPointerException exc) {;}
+
+		JOptionPane.showMessageDialog(this.ui, error_msg, error ? "Error" : "Message", type);
+		if (error)
+			System.exit(0);
+	}
+
+	/**
+	 * Updates the board on the UI.
+	 * <p>
+	 * It works by de-constructing the GameBoard at the server
+	 * and re-constructing it here using the <code>char[][] array</code>
+	 * because there is a problem when sending GameBoard objects.
+	 * 
+	 * @see GameBoard#GameBoard(char[][]) GameBoard(char[][])
 	 * 
 	 * @throws ClassNotFoundException idk when it's thrown
-	 * @throws IOException            thrown when server disconnects (?)
-	 * @throws EOFException           thrown when server disconnects (?)
+	 * @throws IOException            thrown when server disconnects
+	 * @throws EOFException           thrown when server closes connection
 	 */
-	@SuppressWarnings("unchecked")
 	private void updateBoard() throws ClassNotFoundException, IOException, EOFException {
-		localGameBoardConstructor = ((Packet<char[][]>) serverInput.readObject()).value;
+		localGameBoardConstructor =(char[][]) serverInput.readObject();
 		localGameBoard = new GameBoard(localGameBoardConstructor);
 		ui.setScreen(localGameBoard);
 	}
@@ -375,8 +386,8 @@ public class GameEngine { // aka client
 	 * @param args args[0] is used for the player's symbol
 	 * @param args args[1] is used to determine <code>printStackTrace</code> field,
 	 *             '1' for true, other for false
-	 * @param args args[2] is used to determine <code>servers</code> field,
-	 *             'c' for chat, 't' for game, otherwise both
+	 * @param args args[2] is used to determine <code>servers</code> field, 'c' for
+	 *             chat, 't' for game, otherwise both
 	 */
 	public static void main(String[] args) {
 		log("Getting symbol and color options");
@@ -412,7 +423,7 @@ public class GameEngine { // aka client
 				break;
 			}
 		} catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Warning: No <servers> argument provided;\nInitialised to '2';");
+			logerr("Warning: No <servers> argument provided;\nInitialised to 'ct';");
 			servers = 2;
 		}
 
