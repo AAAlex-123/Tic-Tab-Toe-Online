@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -19,7 +20,7 @@ public class GameServer extends Server {
 	private final char[] symbols;
 	private final Color[] colors;
 		
-	private final GameBoard gameBoard = new GameBoard();
+	private final GameBoard gameBoard;
 	private int currentPlayer = 0;
 	
 	/**
@@ -28,13 +29,12 @@ public class GameServer extends Server {
 	 * @param playerCount int, the number of players
 	 * @param printStackTrace boolean, whether or not to print full Stack Trace when exceptions occur
 	 */
-	public GameServer(int playerCount, boolean printStackTrace) {
-		super(playerCount,printStackTrace);
-		sockets = new Socket[playerCount];                        
-		inputs = new ObjectInputStream[playerCount];   
-		outputs = new ObjectOutputStream[playerCount];
+	public GameServer() {
+		super();
+		sockets = new Socket[playerCount];
 		symbols = new char[playerCount];   
-		colors = new Color[playerCount];                            
+		colors = new Color[playerCount];   
+		gameBoard = new GameBoard();
 	}
 	
 	/**
@@ -55,17 +55,22 @@ public class GameServer extends Server {
 	}
 
 	/**
-	 * Initialises the server on port 12345 with <code>playerCount</code> of connections.
-	 * 
+	 * Initialises the server on port <code>GAME_PORT</code> with
+	 * <code>playerCount</code> connections.
 	 */
 	protected void initialiseServer() {
 		try {
 			server = new ServerSocket(GAME_PORT, playerCount);
-			log("\n\nServer ready, waiting for %d players", playerCount);
-		} 
-		catch (IOException e) {
-			logerr("Error while setting up server");
-			if (printStackTrace) e.printStackTrace();
+			log("\n\nGame Server ready, waiting for %d players", playerCount);
+		} catch (BindException e) {
+			logerr("BindException while setting up server; a server is already running on this port; please exit");
+			if (printStackTrace)
+				e.printStackTrace();
+			while (true) {;}
+		} catch (IOException e) {
+			logerr("IOException while setting up server; if you don't know why this happened, please inform the developers");
+			if (printStackTrace)
+				e.printStackTrace();
 		}
 	}
 	
@@ -73,7 +78,8 @@ public class GameServer extends Server {
 	/**
 	 * Initialises <code>playerCount</code> connections.<br>
 	 * Gets their input and output streams.<br>
-	 * Exchanges some messages.<br><br>
+	 * Exchanges some messages.<br>
+	 * <br>
 	 * If at any point something goes wrong, reset server :)
 	 */
 	protected void getConnections() {
@@ -93,7 +99,12 @@ public class GameServer extends Server {
 				symbols[i] = (char) inputs[i].readObject();
 				colors[i] = (Color) inputs[i].readObject();
 
-				log("Player #%d connected", i);
+				log("\nPlayer #%d connected", i);
+
+				// TODO check for duplicates; if there are, replace with random chess piece from
+				// below
+				// '\u2654' ,'\u2655' ,'\u2656' ,'\u2657' ,'\u2658',
+				// chess pieces to replace duplicates
 			}
 			
 			// send ready message and symbol and color array
@@ -144,6 +155,7 @@ public class GameServer extends Server {
 		
 			// get, register and respond to move
 			move = (int) inputs[currentPlayer].readObject();
+			log("Just got '%s'", move);
 		
 			if (move == -2) {
 				log("Final board:\n%s", gameBoard);
@@ -162,9 +174,10 @@ public class GameServer extends Server {
 				log("Final board:\n%s", gameBoard);
 				broadcast("Player '%c' won!", symbols[currentPlayer]);
 				log("Player '%c' won!\nGame over", symbols[currentPlayer]);
-				for (int i=0; i<playerCount; i++) {
+				for (int i = 0; i < playerCount; i++) {
 					sendBoard(i);
 				}
+
 				log("Server will now reset");
 				reset();
 				run();
@@ -172,7 +185,7 @@ public class GameServer extends Server {
 			
 			//send response to move
 			response = (String.format("Move received: [%c, %d]", 65+move/10, move%10+1));
-			outputs[currentPlayer].writeObject(new String(response));
+			outputs[currentPlayer].writeObject(String.format("%c", '\u2713'));
 			
 			log("Move received: %d, response sent %s", move, response);
 		
@@ -228,20 +241,29 @@ public class GameServer extends Server {
 	}
 	
 	/**
-	 * Sends the board to the currentPlayer.<br>
-	 * Creates a copy of the GameBoard's board,<br>
-	 * and sends that copy because Java (:
-	 * @throws SocketException Thrown if client disconnects while trying to send board
+	 * Sends the board to the currentPlayer.
+	 * <p>
+	 * It works by de-constructing the GameBoard here and re-constructing it at the
+	 * client using the GameBoard's <code>char[][] array</code> because there is a problem when sending
+	 * GameBoard objects.
+	 * 
+	 * @see GameBoard#getBoard() getBoard()
+	 * 
+	 * @throws SocketException Thrown if client disconnects while trying to send
+	 *                         board
 	 */
 	private void sendBoard(int currentPlayer) throws SocketException {
 		char[][] newBoard = new char[5][5];
 		char[][] currentBoard = gameBoard.getBoard();
-		for (int i=0; i<5; i++)
-			for (int j=0; j<5; j++) 
+		for (int i = 0; i < 5; i++)
+			for (int j = 0; j < 5; j++)
 				newBoard[i][j] = currentBoard[i][j];
-		try {outputs[currentPlayer].writeObject(newBoard);}
-		catch (IOException e) {
-			if (printStackTrace) e.printStackTrace();
+		try {
+			outputs[currentPlayer].writeObject(newBoard);
+		} catch (IOException e) {
+			logerr("Error while sending board");
+			if (printStackTrace)
+				e.printStackTrace();
 		}
 	}
 	
@@ -249,17 +271,10 @@ public class GameServer extends Server {
 	 * Main method. Run to create and run a server
 	 * Uses static method Server.getServerOptions() to initialize server arguments
 	 * 
+	 * FIXME documentation
 	 */
 	public static void main(String[] args) {
-		GameServer.getServerOptions();
-		while(!argumentsPassed) {
-			try {
-				Thread.sleep(500);
-			}catch(InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		GameServer server = new GameServer(playerCount, printStackTrace);
+		GameServer server = new GameServer();
 		server.run();
 	}
 }
