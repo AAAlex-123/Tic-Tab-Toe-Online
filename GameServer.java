@@ -1,4 +1,4 @@
-//package ttt_online;
+package ttt_online;
 
 import java.awt.Color;
 import java.io.IOException;
