@@ -19,13 +19,15 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-public abstract class Server{
+public abstract class Server {
 
 	protected static int playerCount;
-	protected static boolean printStackTrace,argumentsPassed = false;
+	protected static boolean printStackTrace, argumentsPassed = false;
+
+	protected final ObjectInputStream[] inputs;
 	protected final ObjectOutputStream[] outputs;
 	protected ServerSocket server;
-	
+
 	public Server(int playerCount, boolean printStackTrace) {
 		Server.printStackTrace = printStackTrace;
 		Server.playerCount = playerCount;
