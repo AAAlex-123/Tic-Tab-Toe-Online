@@ -10,22 +10,13 @@ import java.net.SocketException;
 /**
  * Server-side application to handle communications with the clients
  */
-public class ChatServer {
-	private static final int CHAT_PORT = 10002;
-
-	private final int playerCount;
-	private final boolean printStackTrace;
-
-	private ServerSocket chatServer;
-	private final ObjectOutputStream[] outputs;
-
+public class ChatServer extends Server{
+	private static final int CHAT_PORT = 10002;	
 	public ChatServer(int playerCount, boolean printStackTrace) {
-		this.printStackTrace = printStackTrace;
-		this.playerCount = playerCount;
-		outputs = new ObjectOutputStream[playerCount];
+		super(playerCount,printStackTrace);
 	}
 
-	private void run() {
+	protected void run() {
 		initialiseServer();
 		getConnections();
 		log("all set");
@@ -34,9 +25,9 @@ public class ChatServer {
 	/**
 	 * Initialises the server on port 12345 with <code>playerCount</code> of connections.
 	 */
-	private void initialiseServer() {
+	protected void initialiseServer() {
 		try {
-			chatServer = new ServerSocket(CHAT_PORT, playerCount);
+			server = new ServerSocket(CHAT_PORT, playerCount);
 			log("!chatServer! \n\nChatServer ready, waiting for %d players", playerCount);
 		} catch (IOException e) {
 			logerr("!chatServer! Error while setting up chatserver");
@@ -51,20 +42,19 @@ public class ChatServer {
 	 * <br>
 	 * If at any point something goes wrong, reset server :)
 	 */
-	private void getConnections() {
+	protected void getConnections() {
 //		boolean reset = false;
 		try {
 			// connect to every player
 			for (int i = 0; i < playerCount; i++) {
 				log("!chatServer! waiting for #%d", i);
 
-				Socket chatConnection = chatServer.accept();
+				Socket chatConnection = server.accept();
 
 				outputs[i] = new ObjectOutputStream(chatConnection.getOutputStream());
 
 				// exchange send ack message
-				outputs[i].writeObject(new Packet<String>(Server.TEXT,
-						String.format("Hi player #%d, you're now connected.\nPlease wait for others to join\n", i)));
+				outputs[i].writeObject(String.format("Hi player #%d, you're now connected.\nPlease wait for others to join\n", i));
 
 				log("!chatServer! chatPlayer #%d connected", i);
 
@@ -92,19 +82,14 @@ public class ChatServer {
 			}
 		}
 
-		@SuppressWarnings("rawtypes")
+		
 		public void run() {
 			log("!chatServer! thread #%d started", count);
-			Packet p;
+			String received;
 			while (true) {
 				try {
-					p = (Packet) input.readObject();
-					log("!chatServer! tread #%d received '%s'", count, p.value);
-					if (p.attribute == Server.CHAT) {
-						broadcast((String) p.value);
-					} else {
-						logerr("!chatServer! non-chat message received from chat");
-					}
+					received = (String) input.readObject();
+					log("!chatServer! thread #%d received '%s'", count, received);
 				} catch (SocketException e) {
 					logerr("!chatServer! SocketException inside run() while receiving message\nResetting...");
 					if (printStackTrace) e.printStackTrace();
@@ -120,46 +105,6 @@ public class ChatServer {
 		}
 	}
 
-	/**
-	 * Sends message <code>msg</code> to every client connected<br>
-	 * <code>System.out.printf(text, args)</code>
-	 * 
-	 * @param boolean isServer, whether the message was sent by the server
-	 * @param text    String, text to send
-	 * @param args    Object[], arguments
-	 */
-	private void broadcast(String msg, Object... args) {
-		for (int i = 0; i < playerCount; i++) {
-			try {
-				outputs[i].writeObject(new Packet<String>(Server.CHAT, String.format(msg, args)));
-			} catch (IOException e) {
-				logerr("Error while broadcasting");
-				if (printStackTrace)
-					e.printStackTrace();
-			}
-		}
-		log("!chatServer! Broadcasted: %s", String.format(msg, args));
-	}
-
-	/**
-	 * Same as <code>System.out.printf(text, args)</code>
-	 * 
-	 * @param text String, text to send
-	 * @param args Object[], arguments
-	 */
-	private static void log(String text, Object... args) {
-		System.out.printf(text + "\n", args);
-	}
-
-	/**
-	 * Same as <code>System.err.printf(text, args)</code>
-	 * 
-	 * @param text String, text to send
-	 * @param args Object[], arguments
-	 */
-	private static void logerr(String text, Object... args) {
-		System.err.printf(text + "\n", args);
-	}
 
 	/**
 	 * Main method. Run to create and run a chat server
@@ -188,7 +133,7 @@ public class ChatServer {
 			logerr("Warning: No <printStackTrace> argument provided;\nInitialised to false;");
 			printStackTrace = false;
 		}
-
+		printStackTrace = true;//delete
 		ChatServer server = new ChatServer(playerCount, printStackTrace);
 		server.run();
 	}
