@@ -119,6 +119,7 @@ public class GameServer extends Server {
 			ArrayList<Character> chessPieces = new ArrayList<Character>(
 					Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
 			char[] found = new char[playerCount];
+			int foundIndex = 0;
 
 			// check if there are duplicates and if there are, put chess piece
 			for (int i = 0; i < playerCount; i++) {
@@ -134,11 +135,11 @@ public class GameServer extends Server {
 							symbols[i] = chessPiece;
 							break;
 						}
-						found[i] = symbols[i];
 					} catch (IndexOutOfBoundsException e) {
 						;
 					}
 				}
+				found[foundIndex++] = symbols[i];
 			}
 
 			for (int i = 0; i < playerCount; i++)
