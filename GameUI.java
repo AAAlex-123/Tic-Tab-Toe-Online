@@ -59,7 +59,7 @@ public class GameUI extends JFrame {
 		// logPanel -- scroll -- log
 		log = new JTextArea("This is a message log\n");
 		log.setEditable(false);
-		// scroll to the bottom when new messages are pushed
+		// scroll to the bottom when new messages are pushed. pls don't remove :)
 		((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 		scroll = new JScrollPane(log, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -226,6 +226,11 @@ public class GameUI extends JFrame {
 
 	public char getSymbol() {
 		return this.name;
+	}
+	
+	public void setSymbol(char symbol) {
+		this.name = symbol;
+		player.setText("You are player " + name);
 	}
 
 	public Color getColor() {
