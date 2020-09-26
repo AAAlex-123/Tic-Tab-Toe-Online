@@ -1,6 +1,10 @@
 package ttt_online;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -10,8 +14,8 @@ import java.net.Socket;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import javax.swing.*;
+
 
 /**
  * Client-side application to handle communications with the server
@@ -26,10 +30,13 @@ public class GameEngine { // aka client
 	private static final int WARNING = JOptionPane.WARNING_MESSAGE;
 	private static final int ERROR = JOptionPane.ERROR_MESSAGE;
 
-	private final String address;
-	private final boolean printStackTrace;
-	private final int servers;
-
+	private String address;
+	private boolean printStackTrace;
+	private int servers;
+	private Color color = Color.BLACK;
+	private char character;
+	private boolean argumentsPassed=false;
+	private int serverCode;
 	private final GameUI ui;
 	private boolean gameEnded = false;
 
@@ -51,13 +58,116 @@ public class GameEngine { // aka client
 	 * @param printStackTrace boolean, whether or not to print stack trace when
 	 *                        Exceptions occur
 	 */
-	public GameEngine(String address, boolean printStackTrace, int servers) {
-		log("Started client for %s", servers == 0 ? "chat" : servers == 1 ? "game" : "game and chat");
-		this.address = address;
-		this.printStackTrace = printStackTrace;
-		this.servers = servers;
-		this.ui = new GameUI();
+	public GameEngine() {
+		getClientOptions();
+		while(!argumentsPassed) {
+			try {
+				Thread.sleep(500);
+			}catch(InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.printf("Color selected: %s\nCharacter selected: %c\nServer code selected:%d\nAddress: %s\nPST: %b",color,character,serverCode,address,printStackTrace);//debug
+		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"); //servers replaced with serverCode
+		this.ui = new GameUI(color,character);
 		setUI();
+	}
+	
+	private void getClientOptions() {
+		
+		JFrame optWind = new JFrame("Select Server Options");
+		
+		JPanel optPanel = new JPanel();
+		optPanel.setLayout(new BoxLayout(optPanel,BoxLayout.PAGE_AXIS));
+		optWind.setVisible(true);
+		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		optWind.setSize(new Dimension(500,500));
+		optWind.setResizable(true);
+		
+		//upper panel: address + character
+		JPanel upperPanel = new JPanel();
+		upperPanel.setLayout(new FlowLayout());
+		
+		JPanel addressPanel  = new JPanel();
+		addressPanel.setLayout(new BoxLayout(addressPanel,BoxLayout.Y_AXIS));
+		JLabel addressLabel = new JLabel("Server IP:");
+		addressLabel.setPreferredSize(new Dimension(100,50));
+		JTextField addressField = new JTextField("127.0.0.1");
+		addressPanel.add(addressLabel);
+		addressPanel.add(addressField);
+		
+		JPanel listPanel = new JPanel();
+		listPanel.setLayout(new BoxLayout(listPanel,BoxLayout.Y_AXIS));
+		String[] chars = {"X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P", "Q", "R", "S", "T", "U", "V", "W", "<", "?", "~"};
+		JList<String> charList = new JList<String>(chars); //JList forces me to use strings here
+		charList.setBackground(Color.BLUE);
+		charList.setSelectedIndex(0);
+		JScrollPane scrollList = new JScrollPane(charList);
+		JLabel listLabel = new JLabel("Choose your character");
+		listPanel.add(listLabel);
+		listPanel.add(scrollList);
+		
+		upperPanel.add(addressPanel);
+		upperPanel.add(listPanel);
+		optPanel.add(Box.createVerticalGlue());
+		
+		//lower panel: printStackTrace + chat/game + color/submit buttons
+		JPanel lowerPanel = new JPanel();
+		lowerPanel.setLayout(new BoxLayout(lowerPanel,BoxLayout.Y_AXIS));
+		JCheckBox printButton = new JCheckBox("I want to receive crash reports on my command line");
+		
+		ButtonGroup bg = new ButtonGroup();
+		JRadioButton gameChatButton = new JRadioButton("I want to play the game with chat enabled");
+		JRadioButton gameOnlyButton = new JRadioButton("I want to play the game with chat disabled");
+		JRadioButton chatOnlyButton = new JRadioButton("I just want to chat");
+		bg.add(gameChatButton);
+		bg.add(gameOnlyButton);
+		bg.add(chatOnlyButton);
+		gameChatButton.setSelected(true);
+		lowerPanel.add(printButton);
+		lowerPanel.add(Box.createVerticalGlue());
+		lowerPanel.add(gameChatButton);
+		lowerPanel.add(gameOnlyButton);
+		lowerPanel.add(chatOnlyButton);
+		lowerPanel.add(Box.createVerticalGlue());
+		
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.X_AXIS));
+		JButton submitButton = new JButton("Submit");
+		JButton colorButton = new JButton("Select color");
+		buttonPanel.add(submitButton);
+		buttonPanel.add(colorButton);
+		
+		lowerPanel.add(buttonPanel);
+		optPanel.add(upperPanel);
+		optPanel.add(lowerPanel);
+				
+		optWind.add(optPanel);
+		optWind.revalidate(); //yes, this IS necessary
+		
+		//event listeners
+		colorButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				color = JColorChooser.showDialog(optWind, "Choose a color", Color.BLACK);
+				if (color==null) color = Color.BLACK;
+			}	
+		});
+		
+		submitButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				character = charList.getSelectedValue().charAt(0);
+				printStackTrace = printButton.isSelected();
+				address = addressField.getText().strip();
+				if (gameChatButton.isSelected()) serverCode = 2;
+				else if(gameOnlyButton.isSelected()) serverCode = 1;
+				else serverCode = 0;
+				argumentsPassed = true;
+				optWind.setVisible(false);
+			}	
+		});
 	}
 
 	/**
@@ -284,6 +394,7 @@ public class GameEngine { // aka client
 		chatReader.start();
 		chatWriter.start();
 	}
+	
 
 	/**
 	 * Pushes any message it receives from Chat Server to the UI
@@ -410,52 +521,11 @@ public class GameEngine { // aka client
 
 	/**
 	 * Main method. Run to create and run a client
-	 * 
-	 * @param args args[0] is used for the player's symbol
-	 * @param args args[1] is used to determine <code>printStackTrace</code> field,
-	 *             '1' for true, other for false
-	 * @param args args[2] is used to determine <code>servers</code> field, 'c' for
-	 *             chat, 't' for game, otherwise both
 	 */
 	public static void main(String[] args) {
 		log("Getting symbol and color options");
 		GameEngine gameEngine;
-		String address;
-		boolean printStackTrace;
-		int servers;
-
-		try {
-			address = args[0];
-		} catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Warning: No <address> argument provided;\nInitialised to '127.0.0.1';");
-			address = "127.0.0.1";
-		}
-
-		try {
-			printStackTrace = args[1].equals("1") ? true : false;
-		} catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Warning: No <printStackTrace> argument provided;\nInitialised to 'false';");
-			printStackTrace = false;
-		}
-
-		try {
-			switch (args[2]) {
-			case "c":
-				servers = 0;
-				break;
-			case "t":
-				servers = 1;
-				break;
-			default:
-				servers = 2;
-				break;
-			}
-		} catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Warning: No <servers> argument provided;\nInitialised to 'ct';");
-			servers = 2;
-		}
-
-		gameEngine = new GameEngine(address, printStackTrace, servers);
+		gameEngine = new GameEngine();
 		gameEngine.run();
 	}
 }
