@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Server-side application to handle communications with the clients
  */
 public class GameServer extends Server {
+	// port of the Game Server
 	private static final int GAME_PORT = 10001;
 
 	private final Socket[] sockets;
@@ -27,11 +28,9 @@ public class GameServer extends Server {
 	private int currentPlayer = 0;
 
 	/**
-	 * Constructor to initialise fields
+	 * Constructor to initialise fields.
 	 * 
-	 * @param playerCount     int, the number of players
-	 * @param printStackTrace boolean, whether or not to print full Stack Trace when
-	 *                        exceptions occur
+	 * @see Server#Server() Server()
 	 */
 	public GameServer() {
 		super();
@@ -44,9 +43,9 @@ public class GameServer extends Server {
 	/**
 	 * Main method that calls other methods to actually run the server
 	 * 
-	 * @see Server#initialiseServer() initialiseServer()
-	 * @see Server#getConnections2() getConnections2()
-	 * @see Server#makeTurn() makeTurn()
+	 * @see GameServer#initialiseServer() initialiseServer()
+	 * @see GameServer#getConnections() getConnections()
+	 * @see GameServer#makeTurn() makeTurn()
 	 */
 	protected void run() {
 		initialiseServer();
@@ -60,7 +59,7 @@ public class GameServer extends Server {
 
 	/**
 	 * Initialises the server on port <code>GAME_PORT</code> with
-	 * <code>playerCount</code> connections.
+	 * <code>playerCount</code> total connections.
 	 */
 	protected void initialiseServer() {
 		try {
@@ -90,6 +89,8 @@ public class GameServer extends Server {
 	 * accordingly.<br>
 	 * <br>
 	 * If at any point something goes wrong, reset server :)
+	 * 
+	 * @see GameServer#reset() reset()
 	 */
 	protected void getConnections() {
 		boolean reset = false;
@@ -112,39 +113,28 @@ public class GameServer extends Server {
 				log("\nPlayer #%d connected", i);
 			}
 
-			for (int i = 0; i < playerCount; i++)
-				System.out.printf("%c ", symbols[i]);
-			System.out.println();
-
+			// array of chess piece characters used to replace duplicates
 			ArrayList<Character> chessPieces = new ArrayList<Character>(
 					Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
 			char[] found = new char[playerCount];
 			int foundIndex = 0;
 
 			// check if there are duplicates and if there are, put chess piece
+			// for some reason Arrays.asList(found).contains(symols[i]) doesn't work so
+			// nested for loops
 			for (int i = 0; i < playerCount; i++) {
-				log("checking symbols[%d] = %c", i, symbols[i]);
 				for (int j = 0; j < playerCount; j++) {
-					log("against found[%d] = %c", j, found[j]);
-					try {
-						if (found[j] == symbols[i]) {
-							// if there is a duplicate, replace it with a random piece from chessPieces
-							char chessPiece = chessPieces
-									.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
-							log("Duplicate found '%c', replaced with '\\u%04x'", symbols[i], (int) chessPiece);
-							symbols[i] = chessPiece;
-							break;
-						}
-					} catch (IndexOutOfBoundsException e) {
-						;
+					if (found[j] == symbols[i]) {
+						// if there is a duplicate, replace it with a random piece from chessPieces
+						char chessPiece = chessPieces
+								.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
+						log("Duplicate found '%c', replaced with '\\u%04x'", symbols[i], (int) chessPiece);
+						symbols[i] = chessPiece;
+						break;
 					}
 				}
 				found[foundIndex++] = symbols[i];
 			}
-
-			for (int i = 0; i < playerCount; i++)
-				System.out.printf("%c ", symbols[i]);
-			System.out.println();
 
 			// send ready message and symbol and color array
 			for (int j = 0; j < playerCount; j++) {
@@ -176,9 +166,14 @@ public class GameServer extends Server {
 	 * <ul>
 	 * <li>Sends 'ok' to start
 	 * <li>Sends the board
-	 * <li>Receives the move
+	 * <li>Receives and processes the move
 	 * <li>Sends acknowledgement for the move
 	 * <li>Resends board
+	 * 
+	 * If something goes wrong, reset the server.
+	 * 
+	 * @see GameServer#sendBoard(int) sendBoard()
+	 * @see GameServer#reset() reset()
 	 */
 	private void makeTurn() {
 		boolean reset = false;
@@ -225,10 +220,12 @@ public class GameServer extends Server {
 			}
 
 			// send response to move
+			// TODO replace checkmark with something else as ack, because someone else
+			// thinks 3 lines of code are too much :(
 			response = (String.format("Move received: [%c, %d]", 65 + move / 10, move % 10 + 1));
 			outputs[currentPlayer].writeObject(String.format("%c", '\u2713'));
 
-			log("Move received: %d, response sent %s", move, response);
+			log("Move received: '%d', response sent '%s'", move, response);
 
 			// send board again
 			sendBoard(currentPlayer);
@@ -314,10 +311,10 @@ public class GameServer extends Server {
 	}
 
 	/**
-	 * Main method. Run to create and run a server Uses static method
-	 * Server.getServerOptions() to initialize server arguments
-	 * 
-	 * FIXME documentation
+	 * Main method. Run to create and run a Game Server.
+	 *
+	 * @param args not used
+	 * @see Server#Server() Server()
 	 */
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
