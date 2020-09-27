@@ -20,23 +20,25 @@ import javax.swing.*;
  * Client-side application to handle communications with the server
  */
 public class GameEngine { // aka client
+	// ports of the Game and Chat Servers
 	private static final int GAME_PORT = 10001;
 	private static final int CHAT_PORT = 10002;
-	public final static char X = 'X';
-	public final static char O = 'O';
+
 	public final static char DASH = '-';
+
 	private static final int INFORMATION = JOptionPane.INFORMATION_MESSAGE;
 	private static final int WARNING = JOptionPane.WARNING_MESSAGE;
 	private static final int ERROR = JOptionPane.ERROR_MESSAGE;
 
+	// variables initialised from UI
 	private String address;
 	private boolean printStackTrace;
-	private int servers;
+	private int serverCode;
 	private Color color = Color.BLACK;
 	private char character;
-	private boolean argumentsPassed=false;
-	private int serverCode;
-  
+
+	private boolean argumentsPassed = false;
+
 	private final GameUI ui;
 	private boolean gameEnded = false;
 
@@ -51,73 +53,70 @@ public class GameEngine { // aka client
 	private char[][] localGameBoardConstructor;
 
 	/**
-	 * Constructor with parameters <code>address</code> and
-	 * <code>printStackTrace</code> Also sets up the UI
+	 * Constructs the GameEngine Also sets up the UI.
 	 * 
-	 * @param address         String, the IP address of the server
-	 * @param printStackTrace boolean, whether or not to print stack trace when
-	 *                        Exceptions occur
+	 * @see GameEngine#getClientOptions() getClientOptions
 	 */
 	public GameEngine() {
 		getClientOptions();
-		while(!argumentsPassed) {
-			try {
-				Thread.sleep(500);
-			}catch(InterruptedException e) {
-				e.printStackTrace();
-			}
+		while (!argumentsPassed) {
+			try {Thread.sleep(500);}
+			catch (InterruptedException e) {e.printStackTrace();}
 		}
-    // reeeeeeeeeeeeeeeeeeeeeeeeeeeee
-		System.out.printf("Color selected: %s\nCharacter selected: %c\nServer code selected:%d\nAddress: %s\nPST: %b",color,character,serverCode,address,printStackTrace);//debug
-		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"); //servers replaced with serverCode
-		this.ui = new GameUI(color,character);
-		setUI();
+		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat");
+		this.ui = new GameUI(color, character);
+		setupUI();
 	}
-	
+
+	/**
+	 * Creates a UI to get the GameEngine options.
+	 */
 	private void getClientOptions() {
-		
+
 		JFrame optWind = new JFrame("Select Server Options");
-		
+
 		JPanel optPanel = new JPanel();
-		optPanel.setLayout(new BoxLayout(optPanel,BoxLayout.PAGE_AXIS));
+		optPanel.setLayout(new BoxLayout(optPanel, BoxLayout.PAGE_AXIS));
 		optWind.setVisible(true);
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		optWind.setSize(new Dimension(500,500));
+		optWind.setSize(new Dimension(500, 500));
 		optWind.setResizable(true);
-		
-		//upper panel: address + character
+
+		// upper panel: address + character
 		JPanel upperPanel = new JPanel();
 		upperPanel.setLayout(new FlowLayout());
-		
-		JPanel addressPanel  = new JPanel();
-		addressPanel.setLayout(new BoxLayout(addressPanel,BoxLayout.Y_AXIS));
+
+		JPanel addressPanel = new JPanel();
+		addressPanel.setLayout(new BoxLayout(addressPanel, BoxLayout.Y_AXIS));
 		JLabel addressLabel = new JLabel("Server IP:");
-		addressLabel.setPreferredSize(new Dimension(100,50));
+		addressLabel.setPreferredSize(new Dimension(100, 50));
 		JTextField addressField = new JTextField("127.0.0.1");
 		addressPanel.add(addressLabel);
 		addressPanel.add(addressField);
-		
+
 		JPanel listPanel = new JPanel();
-		listPanel.setLayout(new BoxLayout(listPanel,BoxLayout.Y_AXIS));
-		String[] chars = {"X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P", "Q", "R", "S", "T", "U", "V", "W", "<", "?", "~"};
-		JList<String> charList = new JList<String>(chars); //JList forces me to use strings here
+		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+		String[] chars = { "X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P",
+				"Q", "R", "S", "T", "U", "V", "W", "<", "?", "~" };
+		JList<String> charList = new JList<String>(chars); // JList forces me to use strings here
 		charList.setBackground(Color.BLUE);
 		charList.setSelectedIndex(0);
 		JScrollPane scrollList = new JScrollPane(charList);
 		JLabel listLabel = new JLabel("Choose your character");
 		listPanel.add(listLabel);
 		listPanel.add(scrollList);
-		
+
 		upperPanel.add(addressPanel);
 		upperPanel.add(listPanel);
 		optPanel.add(Box.createVerticalGlue());
-		
-		//lower panel: printStackTrace + chat/game + color/submit buttons
+
+		// lower panel: printStackTrace + chat/game + color/submit buttons
 		JPanel lowerPanel = new JPanel();
-		lowerPanel.setLayout(new BoxLayout(lowerPanel,BoxLayout.Y_AXIS));
+		lowerPanel.setLayout(new BoxLayout(lowerPanel, BoxLayout.Y_AXIS));
 		JCheckBox printButton = new JCheckBox("I want to receive crash reports on my command line");
-		
+
 		ButtonGroup bg = new ButtonGroup();
+		// TODO replace with checkboxes?
 		JRadioButton gameChatButton = new JRadioButton("I want to play the game with chat enabled");
 		JRadioButton gameOnlyButton = new JRadioButton("I want to play the game with chat disabled");
 		JRadioButton chatOnlyButton = new JRadioButton("I just want to chat");
@@ -131,57 +130,61 @@ public class GameEngine { // aka client
 		lowerPanel.add(gameOnlyButton);
 		lowerPanel.add(chatOnlyButton);
 		lowerPanel.add(Box.createVerticalGlue());
-		
+
 		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.X_AXIS));
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 		JButton submitButton = new JButton("Submit");
 		JButton colorButton = new JButton("Select color");
 		buttonPanel.add(submitButton);
 		buttonPanel.add(colorButton);
-		
+
 		lowerPanel.add(buttonPanel);
 		optPanel.add(upperPanel);
 		optPanel.add(lowerPanel);
-				
+
 		optWind.add(optPanel);
-		optWind.revalidate(); //yes, this IS necessary
-		
-		//event listeners
+		optWind.revalidate(); // yes, this IS necessary
+
+		// event listeners
 		colorButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				color = JColorChooser.showDialog(optWind, "Choose a color", Color.BLACK);
-				if (color==null) color = Color.BLACK;
-			}	
+				if (color == null)
+					color = Color.BLACK;
+			}
 		});
-		
+
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+
 				character = charList.getSelectedValue().charAt(0);
 				printStackTrace = printButton.isSelected();
 				address = addressField.getText().strip();
-				if (gameChatButton.isSelected()) serverCode = 2;
-				else if(gameOnlyButton.isSelected()) serverCode = 1;
-				else serverCode = 0;
+				if (gameChatButton.isSelected())
+					serverCode = 2;
+				else if (gameOnlyButton.isSelected())
+					serverCode = 1;
+				else
+					serverCode = 0;
 				argumentsPassed = true;
 				optWind.setVisible(false);
-			}	
+			}
 		});
 	}
 
 	/**
 	 * Runs the GameEngine initialising connections to Game and Chat servers
-	 * according to the <code>servers</code>field
+	 * according to the <code>serverCode</code>field
 	 */
 	private void run() {
-		if (servers == 2 || servers == 0) {
+		if (serverCode == 2 || serverCode == 0) {
 			getChatConnection();
 			initChat();
 			ui.setEnableChat(true);
 		}
-		if (servers == 2 || servers == 1) {
+		if (serverCode == 2 || serverCode == 1) {
 			getServerConnection();
 			while (!gameEnded) {
 				setup(true);
@@ -193,10 +196,8 @@ public class GameEngine { // aka client
 
 	/**
 	 * Sets up the UI.
-	 * 
-	 * @param symbol char, the player's symbol
 	 */
-	private void setUI() {
+	private void setupUI() {
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		ui.setSize(320, 720);
 		ui.setVisible(true);
@@ -215,6 +216,8 @@ public class GameEngine { // aka client
 	 * special unique chess pieces and informs the client here.<br>
 	 * <br>
 	 * If at any point something goes wrong, show pop-up message then exit.
+	 * 
+	 * @see GameEngine#exit(String, String, int, Exception, boolean) exit()
 	 */
 	private void getServerConnection() {
 		try {
@@ -264,10 +267,12 @@ public class GameEngine { // aka client
 
 	/**
 	 * Sets up the UI and exchanges messages before and after the player makes their
-	 * move.
+	 * move. <br>
+	 * If at any point something goes wrong, show pop-up message then exit.
 	 * 
 	 * @param starting boolean, whether or not it is the start or the end of the
 	 *                 player's turn
+	 * @see GameEngine#exit(String, String, int, Exception, boolean) exit()
 	 */
 	private void setup(boolean starting) {
 		try {
@@ -294,9 +299,9 @@ public class GameEngine { // aka client
 						response.charAt(8) == ui.getSymbol()
 								? response.matches("Player.*resigned") ? "You resigned :(" : "You won :)"
 								: response.matches("Player.*resigned") ? response + " :)" : response + " :(",
-						servers == 1 ? "please exit" : "you can still chat, or exit to play another game");
+						serverCode == 1 ? "please exit" : "you can still chat, or exit to play another game");
 				exit(msg, "!game! game ended", INFORMATION, null, false);
-				if (servers == 0)
+				if (serverCode == 0)
 					System.exit(0);
 				return;
 			}
@@ -324,7 +329,10 @@ public class GameEngine { // aka client
 	}
 
 	/**
-	 * Gets the player's move, and sends it to the server.
+	 * Gets the player's move, and sends it to the server. <br>
+	 * If at any point something goes wrong, show pop-up message then exit.
+	 * 
+	 * @see GameEngine#exit(String, String, int, Exception, boolean) exit()
 	 */
 	private void play() {
 		// get the move in the worst possible way (:
@@ -363,6 +371,8 @@ public class GameEngine { // aka client
 	 * Exchanges some messages.<br>
 	 * <br>
 	 * If at any point something goes wrong, show pop-up message then exit.
+	 * 
+	 * @see GameEngine#exit(String, String, int, Exception, boolean) exit()
 	 */
 	private void getChatConnection() {
 		try {
@@ -386,8 +396,8 @@ public class GameEngine { // aka client
 	}
 
 	/**
-	 * Initialises connection to the Chat Server and starts two threads;
-	 * one for reading and one for writing to chat
+	 * Initialises connection to the Chat Server and starts two threads; one for
+	 * reading and one for writing to chat
 	 */
 	private void initChat() {
 		chatReader = new ChatReader();
@@ -395,7 +405,6 @@ public class GameEngine { // aka client
 		chatReader.start();
 		chatWriter.start();
 	}
-	
 
 	/**
 	 * Pushes any message it receives from Chat Server to the UI
@@ -421,9 +430,23 @@ public class GameEngine { // aka client
 	}
 
 	/**
-	 * When there is a message to send, it sends it
+	 * Private inner class that, whenever there is chat text to send, sends it to
+	 * the ChatServer's input Stream.
+	 * <p>
+	 * When an Exception occurs, a pop-up is displayed, the ChatServer's Streams are
+	 * closed and this Thread terminates execution,
+	 *
+	 * @see GameEngine#exit(String, String, int, Exception, boolean) exit()
 	 */
 	private class ChatWriter extends Thread {
+
+		/**
+		 * Runs this thread; whenever there is chat text to send, sends it to the
+		 * ChatServer's input Stream. When an Exception occurs, a pop-up is displayed,
+		 * the ChatServer's Streams are closed and this Thread terminates execution,
+		 *
+		 * @see GameEngine#exit(String, String, int, Exception, boolean) exit()
+		 */
 		public void run() {
 			boolean err = false;
 			while (!err) {
@@ -436,7 +459,7 @@ public class GameEngine { // aka client
 						if (printStackTrace)
 							e.printStackTrace();
 					}
-				// if a chat is sent, send it to the Chat Server
+					// if a chat is sent, send it to the Chat Server
 				} else {
 					try {
 						String msg = String.format("%c: %s", ui.getSymbol(), chatText);
