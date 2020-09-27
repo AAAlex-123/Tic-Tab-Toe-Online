@@ -145,9 +145,11 @@ public abstract class Server {
 			try {
 				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
-				logerr("Error while broadcasting");
+				logerr("IOException in broadcast()");
 				if (printStackTrace)
 					e.printStackTrace();
+			} catch (NullPointerException e) {
+				logerr("NullPointerException in broadcast()");
 			}
 		}
 
