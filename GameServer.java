@@ -38,7 +38,7 @@ public class GameServer extends Server {
 		sockets = new Socket[playerCount];
 		symbols = new char[playerCount];
 		colors = new Color[playerCount];
-		gameBoard = new GameBoard();
+		gameBoard = new GameBoard(boardSize);
 	}
 
 	/**
