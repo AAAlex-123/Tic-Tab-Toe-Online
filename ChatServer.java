@@ -10,15 +10,8 @@ import java.net.SocketException;
 /**
  * Server-side application to handle chat between players.
  */
-public class ChatServer {
+public class ChatServer extends Server {
 	private static final int CHAT_PORT = 10002;
-
-	private final int playerCount;
-	private final boolean printStackTrace;
-
-	private ServerSocket chatServer;
-	private final ObjectOutputStream[] outputs;
-
 	/**
 	 * Keeps track of the running threads to know when another connection can be
 	 * accepted.<br>
@@ -28,19 +21,15 @@ public class ChatServer {
 	 * are empty and can have an Output Stream
 	 */
 	private final boolean[] available;
-
+	
 	/**
 	 * Constructs the Chat Server object.
 	 * 
-	 * @param playerCount     int, the maximum number of connections allowed.
-	 * @param printStackTrace boolean, whether or not to print stack trace when
-	 *                        Exceptions occur.
+	 * FIXME documentation
 	 */
-	public ChatServer(int playerCount, boolean printStackTrace) {
-		this.printStackTrace = printStackTrace;
-		this.playerCount = playerCount;
+	public ChatServer() {
+		super();
 		this.available = new boolean[playerCount];
-		outputs = new ObjectOutputStream[playerCount];
 		for (int i = 0; i < playerCount; i++)
 			available[i] = true;
 	}
@@ -48,7 +37,7 @@ public class ChatServer {
 	/**
 	 * Runs the Chat Server
 	 */
-	private void run() {
+	protected void run() {
 		initialiseServer();
 		getConnections();
 	}
@@ -57,9 +46,9 @@ public class ChatServer {
 	 * Initialises the Chat Server on port <code>CHAT_PORT</code> with
 	 * <code>playerCount</code> total possible connections.
 	 */
-	private void initialiseServer() {
+	protected void initialiseServer() {
 		try {
-			chatServer = new ServerSocket(CHAT_PORT);
+			server = new ServerSocket(CHAT_PORT);
 			log("\n\nChat Server ready, listening for up to %d players", playerCount);
 		} catch (IOException e) {
 			logerr("IOException in initialiseServer()");
@@ -74,11 +63,13 @@ public class ChatServer {
 	 * connection. If there is, accept a connection and assign it this slot then
 	 * start a new <code>ChatServerThread</code> handing it the accepted Socket.
 	 * 
+	 * FIXME documentation
+	 * 
 	 * @see ChatServerThread
 	 * @see ChatServer#getAvailable() getAvailable()
 	 * @see ChatServer#available available
 	 */
-	private void getConnections() {
+	protected void getConnections() {
 		try {
 			int index = -1;
 			Socket chatConnection = null;
@@ -86,7 +77,7 @@ public class ChatServer {
 				// wait until there is an available slot to accept a connection
 				index = getAvailable();
 				if (index != -1) {
-					chatConnection = chatServer.accept();
+					chatConnection = server.accept();
 				} else {
 					try {
 						Thread.sleep(2000);
@@ -96,17 +87,15 @@ public class ChatServer {
 					continue;
 				}
 
-				log("accepted #%d", index);
-
+				inputs[index] = new ObjectInputStream(chatConnection.getInputStream());
 				outputs[index] = new ObjectOutputStream(chatConnection.getOutputStream());
-
+				
 				// exchange send ack message
-				outputs[index].writeObject(new Packet<String>(Server.TEXT,
-						String.format("Hi player #%d, you're now connected.\nYou can start chatting.", index)));
+				outputs[index].writeObject(String.format("Hi player #%d, you're now connected.\nPlease wait for others to join\n", index));
 
 				log("\nChat Connection #%d established", index);
 
-				new ChatServerThread(chatConnection, index).start();
+				new ChatServerThread(index).start();
 				index++;
 			}
 		} catch (IOException e) {
@@ -115,7 +104,7 @@ public class ChatServer {
 				e.printStackTrace();
 		}
 	}
-
+	
 	/**
 	 * Returns the first slot of the <code>available</code> that is available to get
 	 * a connection and sets it to <code>false</code>.
@@ -140,6 +129,8 @@ public class ChatServer {
 	 * When an Exception occurs, this Thread terminates execution,<br>
 	 * the client's Output Stream is closed and the <code>available</code> slot<br>
 	 * specified by <code>index</code> is freed up.
+	 * 
+	 * FIXME documentation
 	 *
 	 * @see ChatServer#broadcast(String, Object[]) broadcast()
 	 * @see ChatServer#closeOutputStream(int) closeOutputStream()
@@ -147,7 +138,6 @@ public class ChatServer {
 	 */
 	private class ChatServerThread extends Thread {
 
-		private ObjectInputStream input;
 		private final int index;
 
 		/**
@@ -156,40 +146,21 @@ public class ChatServer {
 		 * @param socket Socket, the socket this Threads listens to
 		 * @param count  int, used to keep track the slot this thread occupies in the
 		 *               <code>available</code> table
+		 *               
+		 * FIXME documentation
 		 */
-		public ChatServerThread(Socket socket, int count) {
+		public ChatServerThread(int count) {
 			this.index = count;
-			try {
-				this.input = new ObjectInputStream(socket.getInputStream());
-			} catch (IOException e) {
-				logerr("IOException in ChatServerThread()\nidkwhatishappeningplshelp...");
-				if (printStackTrace)
-					e.printStackTrace();
-			}
 		}
-
+		
 		/**
 		 * Runs the thread
 		 */
-		@SuppressWarnings("rawtypes")
 		public void run() {
 			log("Thread #%d started", index);
-			// also remove the following line
-			Packet p;
 			while (true) {
 				try {
-					// replace lines 149-155 with this when removing packets (haven't tested it (: )
-					/*
-					 * String msg = (String) input.readObject() log("Thread #%d received: '%s'",
-					 * index, msg); broadcast(msg);
-					 */
-					p = (Packet) input.readObject();
-					log("Thread #%d received: '%s'", index, p.value);
-					if (p.attribute == Server.CHAT) {
-						broadcast((String) p.value);
-					} else {
-						logerr("WhatTheFuckIsThisMessageException in ChatServerThread.run()");
-					}
+					broadcast((String) inputs[index].readObject());
 				} catch (SocketException e) {
 					logerr("SocketException in ChatServerThread.run(); connection #%d closed by user\n", index);
 					if (printStackTrace)
@@ -220,12 +191,16 @@ public class ChatServer {
 	 * 
 	 * @param index int, the index of the client
 	 * @see ChatServer#available available
+	 * 
+	 * FIXME documentation
 	 */
 	private void closeOutputStream(int index) {
 		log("Closing thread #%d", index);
 		try {
 			outputs[index].close();
+			inputs[index].close();
 			outputs[index] = null;
+			inputs[index] = null;
 			available[index] = true;
 		} catch (IOException e) {
 			logerr("IOException in closeOutputStream()");
@@ -235,77 +210,17 @@ public class ChatServer {
 	}
 
 	/**
-	 * Sends <code>message</code> to every client connected.<br>
-	 * Uses <code>Sting.format(format, args)</code> to format <code>message</code>
-	 * with <code>args</code>.
-	 * 
-	 * @param message String, message to send
-	 * @param args    Object[], arguments
-	 */
-	private void broadcast(String message, Object... args) {
-		for (int i = 0; i < playerCount; i++) {
-			try {
-				outputs[i].writeObject(new Packet<String>(Server.CHAT, String.format(message, args)));
-			} catch (IOException e) {
-				logerr("IOException in broadcast()");
-				if (printStackTrace)
-					e.printStackTrace();
-			} catch (NullPointerException e) {
-				;
-			}
-		}
-	}
-
-	/**
-	 * Same as <code>System.out.printf(text, args)</code>
-	 * 
-	 * @param text String, text to send
-	 * @param args Object[], arguments
-	 */
-	private static void log(String text, Object... args) {
-		System.out.printf(text + "\n", args);
-	}
-
-	/**
-	 * Same as <code>System.err.printf(text, args)</code>
-	 * 
-	 * @param text String, text to send
-	 * @param args Object[], arguments
-	 */
-	private static void logerr(String text, Object... args) {
-		System.err.printf(text + "\n", args);
-	}
-
-	/**
 	 * Main method. Run to create and run a chat server
 	 * 
 	 * @param args args[0] is used for the maximum number of players allowed to
 	 *             connect
 	 * @param args args[1] is used to determine <code>printStackTrace</code> field,
 	 *             '1' for true, other for false
+	 *             
+	 * FIXME documentation
 	 */
 	public static void main(String[] args) {
-		int playerCount;
-		boolean printStackTrace;
-
-		try {
-			playerCount = Integer.parseInt(args[0]);
-		} catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Warning: No <player_count> argument provided;\nInitialised to 2");
-			playerCount = 2;
-		} catch (NumberFormatException e) {
-			logerr("Warning: <player_count> argument has illegal format;\nInitialised to 2");
-			playerCount = 2;
-		}
-
-		try {
-			printStackTrace = args[1].equals("1") ? true : false;
-		} catch (ArrayIndexOutOfBoundsException e) {
-			logerr("Warning: No <printStackTrace> argument provided;\nInitialised to false;");
-			printStackTrace = false;
-		}
-
-		ChatServer server = new ChatServer(playerCount, printStackTrace);
+		ChatServer server = new ChatServer();
 		server.run();
 	}
 }

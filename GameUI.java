@@ -34,18 +34,11 @@ public class GameUI extends JFrame {
 	private final JPanel autismPanel, inputPanel, chatPanel, logPanel;
 	private final JScrollPane scroll;
 
-	public static void main(String[] args) {
-		GameUI ui = new GameUI();
-		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ui.setSize(320, 720);
-		ui.setVisible(true);
-		ui.setResizable(true);
-	}
-
-	public GameUI() {
+	public GameUI(Color color, char name) {
 		super("Naughts & Crosses Online");
-
-		getOptions();
+		this.color = color;
+		this.name = name;
+  
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 
 		// screen
@@ -59,7 +52,8 @@ public class GameUI extends JFrame {
 		// logPanel -- scroll -- log
 		log = new JTextArea("This is a message log\n");
 		log.setEditable(false);
-		// scroll to the bottom when new messages are pushed
+
+		// scroll to the bottom when new messages are pushed. pls don't remove :)
 		((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 		scroll = new JScrollPane(log, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -83,7 +77,7 @@ public class GameUI extends JFrame {
 			}
 		});
 
-/*AD */ chatPanel.add(chatField);
+/*ADD*/ chatPanel.add(chatField);
 /*ADD*/ chatPanel.add(chatButton);
 /*ADD*/ logPanel.add(chatPanel);
 
@@ -168,25 +162,21 @@ public class GameUI extends JFrame {
 		log.setText(String.format("%s%s\n", log.getText(), mes));
 	}
 	
-	// for future use so we can do:
-	// ui.pushMessage("player %s played %d", ui.getSymbol, move);
-	// instead of:
-	// ui.pushMessage(String.format("player %s played %d", ui.getSymbol, move));
-	// similar to how GameEngine#log works
-	public void pushMessage(String mes, Object... args) {
+	public void pushMessage(String mes, Object... args) {//Use String.format instead of this
 		log.setText(String.format("%s%s\n", log.getText(), mes, args));
 	}
 
-	public void pushMessage(String mes, boolean newline) {
+	public void pushMessage(String mes, boolean newline) {//Append \n instead of this
 		log.setText(String.format("%s%s%s", log.getText(), mes, newline ? "\n" : ""));
 	}
 
 	public void setScreen(GameBoard gboard) {
 		screen.board = gboard;
+		//this.revalidate(); ???maybe
+		
 		screen.repaint();
 		// Wait until it loads then update the whole thing.
 		// JVM has forced my hand
-		// spaghetti
 		try {
 			Thread.sleep(200);
 		} catch (InterruptedException e) {
@@ -226,6 +216,11 @@ public class GameUI extends JFrame {
 
 	public char getSymbol() {
 		return this.name;
+	}
+	
+	public void setSymbol(char symbol) {
+		this.name = symbol;
+		player.setText("You are player " + name);
 	}
 
 	public Color getColor() {
@@ -275,36 +270,6 @@ public class GameUI extends JFrame {
 
 		index += Integer.parseInt(Character.toString(str.charAt(1))) - 1;
 		return index;
-	}
-
-	// gets character player and color
-	private void getOptions() {
-
-		Object[] chars = { GameEngine.X, GameEngine.O, '\u0021', '\u0022', '\u0023', '\u0024', '\u0025', '\u002A',
-				'\u002B', '\u0041', '\u0042', '\u0043', '\u0044', '\u0045', '\u0046', '\u0047', '\u0048', '\u0049',
-				'\u0050', '\u0051', '\u0052', '\u0053', '\u0054', '\u0055', '\u0056', '\u0057', '\u003C', '\u003F',
-				'\u007E' };
-
-		boolean correct = false;
-		do {
-			try {
-				this.name = (Character) JOptionPane.showInputDialog(null, "Select one of the following characters",
-						"Character Selection", JOptionPane.PLAIN_MESSAGE, null, chars, chars[0]);
-				correct = true;
-			} catch (NullPointerException e) {
-				JOptionPane.showMessageDialog(this, "Please select a character", "Error", JOptionPane.ERROR_MESSAGE);
-				correct = false;
-			}
-		} while (!correct);
-
-		Color col;
-		do {
-			col = JColorChooser.showDialog(this, "Choose a color", Color.BLACK);
-			if (col == null)
-				JOptionPane.showMessageDialog(this, "Please select a color", "Error", JOptionPane.ERROR_MESSAGE);
-		} while (col == null);
-
-		this.color = col;
 	}
 
 	public void setCustomOptions(char[] chars, Color[] colors) {
