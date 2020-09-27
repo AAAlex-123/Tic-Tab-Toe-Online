@@ -31,11 +31,10 @@ public class GameEngine { // aka client
 
 	private String address;
 	private boolean printStackTrace;
-	private int servers;
+	private int server,boardSize=8;//TODO: make this value dependent on the server upon initialization
 	private Color color = Color.BLACK;
 	private char character;
 	private boolean argumentsPassed=false;
-	private int serverCode;
   
 	private final GameUI ui;
 	private boolean gameEnded = false;
@@ -67,10 +66,9 @@ public class GameEngine { // aka client
 				e.printStackTrace();
 			}
 		}
-    // reeeeeeeeeeeeeeeeeeeeeeeeeeeee
-		System.out.printf("Color selected: %s\nCharacter selected: %c\nServer code selected:%d\nAddress: %s\nPST: %b",color,character,serverCode,address,printStackTrace);//debug
-		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"); //servers replaced with serverCode
-		this.ui = new GameUI(color,character);
+		
+		log("Started client for %s", server == 0 ? "chat" : server == 1 ? "game" : "game and chat"); 
+		this.ui = new GameUI(color,character,boardSize); //TODO: Make sure gameBoard obj  OR boardSize is initialized by the server ==009localGameBoard.size
 		setUI();
 	}
 	
@@ -162,9 +160,9 @@ public class GameEngine { // aka client
 				character = charList.getSelectedValue().charAt(0);
 				printStackTrace = printButton.isSelected();
 				address = addressField.getText().strip();
-				if (gameChatButton.isSelected()) serverCode = 2;
-				else if(gameOnlyButton.isSelected()) serverCode = 1;
-				else serverCode = 0;
+				if (gameChatButton.isSelected()) server = 2;
+				else if(gameOnlyButton.isSelected()) server = 1;
+				else server = 0;
 				argumentsPassed = true;
 				optWind.setVisible(false);
 			}	
@@ -176,12 +174,12 @@ public class GameEngine { // aka client
 	 * according to the <code>servers</code>field
 	 */
 	private void run() {
-		if (servers == 2 || servers == 0) {
+		if (server == 2 || server == 0) {
 			getChatConnection();
 			initChat();
 			ui.setEnableChat(true);
 		}
-		if (servers == 2 || servers == 1) {
+		if (server == 2 || server == 1) {
 			getServerConnection();
 			while (!gameEnded) {
 				setup(true);
@@ -198,7 +196,7 @@ public class GameEngine { // aka client
 	 */
 	private void setUI() {
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ui.setSize(320, 720);
+		ui.setSize(500,1000);
 		ui.setVisible(true);
 		ui.setResizable(true);
 		ui.setEnableTurn(false);
@@ -294,9 +292,9 @@ public class GameEngine { // aka client
 						response.charAt(8) == ui.getSymbol()
 								? response.matches("Player.*resigned") ? "You resigned :(" : "You won :)"
 								: response.matches("Player.*resigned") ? response + " :)" : response + " :(",
-						servers == 1 ? "please exit" : "you can still chat, or exit to play another game");
+						server == 1 ? "please exit" : "you can still chat, or exit to play another game");
 				exit(msg, "!game! game ended", INFORMATION, null, false);
-				if (servers == 0)
+				if (server == 0)
 					System.exit(0);
 				return;
 			}
