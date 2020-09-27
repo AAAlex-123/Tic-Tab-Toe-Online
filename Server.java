@@ -39,7 +39,6 @@ public abstract class Server {
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 	}
-	
 	protected abstract void run();
 	protected abstract void initialiseServer();
 	protected abstract void getConnections();
@@ -100,7 +99,7 @@ public abstract class Server {
 
 		optWind.add(optPanel);
 	}
-	
+
 	/**
 	 * Sends message <code>msg</code> to every client connected<br>
 	 * <code>System.out.printf(text, args)</code>
@@ -118,9 +117,10 @@ public abstract class Server {
 					e.printStackTrace();
 			}
 		}
+
 		log("Broadcasted: %s", String.format(msg, args));
 	}
-	
+
 	/**
 	 * Same as <code>System.out.printf(text, args)</code>
 	 * 
@@ -130,7 +130,7 @@ public abstract class Server {
 	protected static void log(String text, Object... args) {
 		System.out.printf(text+"\n", args);
 	}
-	
+
 	/**
 	 * Same as <code>System.err.printf(text, args)</code>
 	 * 
@@ -141,3 +141,4 @@ public abstract class Server {
 		System.err.printf(text+"\n", args);
 	}
 }
+

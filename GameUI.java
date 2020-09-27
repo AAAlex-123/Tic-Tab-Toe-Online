@@ -38,6 +38,7 @@ public class GameUI extends JFrame {
 		super("Naughts & Crosses Online");
 		this.color = color;
 		this.name = name;
+  
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 
 		// screen
@@ -51,6 +52,7 @@ public class GameUI extends JFrame {
 		// logPanel -- scroll -- log
 		log = new JTextArea("This is a message log\n");
 		log.setEditable(false);
+
 		// scroll to the bottom when new messages are pushed. pls don't remove :)
 		((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 

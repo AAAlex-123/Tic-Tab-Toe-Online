@@ -8,11 +8,10 @@ import java.net.Socket;
 import java.net.SocketException;
 
 /**
- * Server-side application to handle communications with the clients
+ * Server-side application to handle chat between players.
  */
 public class ChatServer extends Server {
 	private static final int CHAT_PORT = 10002;
-	
 	/**
 	 * Keeps track of the running threads to know when another connection can be
 	 * accepted.<br>
@@ -41,7 +40,6 @@ public class ChatServer extends Server {
 	protected void run() {
 		initialiseServer();
 		getConnections();
-		log("all set");
 	}
 
 	/**
@@ -214,7 +212,8 @@ public class ChatServer extends Server {
 	/**
 	 * Main method. Run to create and run a chat server
 	 * 
-	 * @param args args[0] is used for the number of players expected to connect
+	 * @param args args[0] is used for the maximum number of players allowed to
+	 *             connect
 	 * @param args args[1] is used to determine <code>printStackTrace</code> field,
 	 *             '1' for true, other for false
 	 *             

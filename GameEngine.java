@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 
 import javax.swing.*;
 
-
 /**
  * Client-side application to handle communications with the server
  */
@@ -37,6 +36,7 @@ public class GameEngine { // aka client
 	private char character;
 	private boolean argumentsPassed=false;
 	private int serverCode;
+  
 	private final GameUI ui;
 	private boolean gameEnded = false;
 
@@ -67,6 +67,7 @@ public class GameEngine { // aka client
 				e.printStackTrace();
 			}
 		}
+    // reeeeeeeeeeeeeeeeeeeeeeeeeeeee
 		System.out.printf("Color selected: %s\nCharacter selected: %c\nServer code selected:%d\nAddress: %s\nPST: %b",color,character,serverCode,address,printStackTrace);//debug
 		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"); //servers replaced with serverCode
 		this.ui = new GameUI(color,character);
@@ -385,8 +386,8 @@ public class GameEngine { // aka client
 	}
 
 	/**
-	 * Initialises connection to the Chat Server and starts two threads; one for
-	 * reading and one for writing to chat
+	 * Initialises connection to the Chat Server and starts two threads;
+	 * one for reading and one for writing to chat
 	 */
 	private void initChat() {
 		chatReader = new ChatReader();
@@ -435,7 +436,7 @@ public class GameEngine { // aka client
 						if (printStackTrace)
 							e.printStackTrace();
 					}
-					// if a chat is sent, send it to the Chat Server
+				// if a chat is sent, send it to the Chat Server
 				} else {
 					try {
 						String msg = String.format("%c: %s", ui.getSymbol(), chatText);
@@ -524,8 +525,7 @@ public class GameEngine { // aka client
 	 */
 	public static void main(String[] args) {
 		log("Getting symbol and color options");
-		GameEngine gameEngine;
-		gameEngine = new GameEngine();
+		GameEngine gameEngine = new GameEngine();
 		gameEngine.run();
 	}
 }
