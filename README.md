@@ -1,15 +1,21 @@
-A 5x5 Tic Tac Toe game playable on any local network connection. Features a custom UI (using the standard Java swing library) and a variety of avatars and colors players can use in-game. The Java Runtime Environment is required to run the game (it's likely it's already installed on your computer).
+### Summary
+A 5x5 Tic Tac Toe game playable on any local network connection. Features a custom UI (using the standard Java swing library) and a variety of avatars and colors players can use in-game.
 
-To run download the zip file, unpack it and run the following commands in your command prompt:
-```cd [name of the directory the game folder is in]```
-```javac GameEngine.java GameBoard.java Server.java GameUI.java```
-<bold>java ttt_online.Server</bold> 
-This will use the computer as a local server in order to communicate with the other players.
-Append the number of players you expect to play on the server on your command. You can also append '1' if you don't want to ignore information if the game crashes.
-Eg ```java ttt_online.Server 3 1``` == "I want a server for 3 players and I want you to show me any errors that are caused"
+### Requirements
+The Java Runtime Environment is required to run the game (it's likely already installed on your computer). Currently runs in version 14, not sure about earlier version. ~~Minimum version is 8, the earliest supported and non-obsolete version.~~
 
+### Download and Setup
+Download the whole project as a zip file and un-zip it. Inside the directory `Tic-Tab-Toe-Online-master` you will find the `format_project.bat` file. Run it to configure the project's files and create 4 .bat files to help you compile and run the project
 
-To play the game use the following command instead:
-```java GameEngine.java``` or  ```java GameEngine```
-Use this as many times as the server expects players, from any computer in the local network. 
+### Compile and Run
+To compile the project simply run the `compile.bat` file inside the `scripts` directory or simply type `scripts\compile.bat` on your terminal making sure the current working directory is the projects directory.
+To run the project, first run any of the two servers (game and/or chat) and then run any amount of clients. All of that can be done quickly using the .bat files. Configure the server and client options from the pop-ups and you're set.
 
+### Authors
+Two bored university students during summer vacations.
+
+### Motivation
+Boredom.
+
+### Bugs
+If you find any, please do create an issue and we'll try to fix it ASAP.
