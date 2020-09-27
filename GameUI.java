@@ -25,7 +25,7 @@ public class GameUI extends JFrame {
 	private Color color;
 	private String chatText = "";
 	private boolean dataReceived = false;
-	private int answer = -1;
+	private int answer = -1,boardSize; 
 	private final JLabel error_msg;
 	private final Screen screen;
 	private final JTextArea log;
@@ -33,17 +33,19 @@ public class GameUI extends JFrame {
 	private final JButton submitB, disconnectB, chatButton;
 	private final JPanel autismPanel, inputPanel, chatPanel, logPanel;
 	private final JScrollPane scroll;
+	private String[] letters = { "A", "B", "C", "D", "E","F","G","H"};
 
-	public GameUI(Color color, char name) {
+	public GameUI(Color color, char name,int boardSize) {
 		super("Naughts & Crosses Online");
 		this.color = color;
 		this.name = name;
+		this.boardSize = boardSize; //used to get the correct letter for input matcher, set window size
   
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 
 		// screen
 		screen = new Screen();
-		screen.setPreferredSize(new Dimension(500, 500));
+		screen.setPreferredSize(new Dimension(100*boardSize, 100*boardSize));
 
 		// logPanel
 		logPanel = new JPanel();
@@ -113,7 +115,7 @@ public class GameUI extends JFrame {
 					return;
 				}
 				String input = move.getText().toUpperCase().strip();
-				if (!input.matches("[A-E][1-5]")) {
+				if (!input.matches(String.format("[A-%s][1-5]",letters[boardSize]))) {
 					error_msg.setVisible(true);
 					return;
 				}
@@ -285,10 +287,9 @@ public class GameUI extends JFrame {
 	private class Screen extends JPanel {
 		private GameBoard board;
 		private final HashMap<Character, Color> colorMap = new HashMap<Character, Color>();
-		private String[] letters = { "A", "B", "C", "D", "E" };
-
+	
 		public Screen() {
-			board = new GameBoard();
+			board = new GameBoard(boardSize);
 		}
 
 		@Override
@@ -297,9 +298,9 @@ public class GameUI extends JFrame {
 			g.setFont(new Font("Serif", Font.PLAIN, 60));
 
 			// paint board
-			for (int i = 1; i < 6; i++) {
+			for (int i = 1; i < board.size+1; i++) {
 				g.drawString(Integer.toString(i), i * 53, 50);// 53 instead of 50 to compensate for character width
-				for (int j = 1; j < 6; j++) {
+				for (int j = 1; j < board.size+1; j++) {
 					g.drawString(letters[j - 1], 0, (j + 1) * 50);
 					g.drawRect(i * 50, j * 50, 50, 50);
 				}
@@ -307,8 +308,8 @@ public class GameUI extends JFrame {
 
 			// paint marks
 			g.setFont(new Font("Monospaced", Font.BOLD, 65));
-			for (int i = 0; i < 5; i++) {
-				for (int j = 0; j < 5; j++) {
+			for (int i = 0; i < board.size; i++) {
+				for (int j = 0; j < board.size; j++) {
 					char c = board.getBoard()[i][j];
 					if (c != GameEngine.DASH) {
 						g.setColor(colorMap.get(c));
