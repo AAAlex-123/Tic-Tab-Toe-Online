@@ -27,7 +27,7 @@ public class GameServer extends Server {
 	private int currentPlayer = 0;
 
 	/**
-	 * Constructor to initialise fields
+	 * Constructor to initialize fields
 	 * 
 	 * @param playerCount     int, the number of players
 	 * @param printStackTrace boolean, whether or not to print full Stack Trace when
@@ -129,8 +129,7 @@ public class GameServer extends Server {
 					try {
 						if (found[j] == symbols[i]) {
 							// if there is a duplicate, replace it with a random piece from chessPieces
-							char chessPiece = chessPieces
-									.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
+							char chessPiece = chessPieces.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
 							log("Duplicate found '%c', replaced with '\\u%04x'", symbols[i], (int) chessPiece);
 							symbols[i] = chessPiece;
 							break;
@@ -299,10 +298,10 @@ public class GameServer extends Server {
 	 *                         board
 	 */
 	private void sendBoard(int currentPlayer) throws SocketException {
-		char[][] newBoard = new char[5][5];
+		char[][] newBoard = new char[boardSize][boardSize];
 		char[][] currentBoard = gameBoard.getBoard();
-		for (int i = 0; i < 5; i++)
-			for (int j = 0; j < 5; j++)
+		for (int i = 0; i < boardSize; i++)
+			for (int j = 0; j < boardSize; j++)
 				newBoard[i][j] = currentBoard[i][j];
 		try {
 			outputs[currentPlayer].writeObject(newBoard);
