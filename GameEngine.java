@@ -20,6 +20,9 @@ import javax.swing.*;
  * Client-side application to handle communications with the server
  */
 public class GameEngine { // aka client
+
+	// TODO check if chat, if so maybe don't exit on exception
+	
 	// ports of the Game and Chat Servers
 	private static final int GAME_PORT = 10001;
 	private static final int CHAT_PORT = 10002;
@@ -29,6 +32,10 @@ public class GameEngine { // aka client
 	private static final int INFORMATION = JOptionPane.INFORMATION_MESSAGE;
 	private static final int WARNING = JOptionPane.WARNING_MESSAGE;
 	private static final int ERROR = JOptionPane.ERROR_MESSAGE;
+	
+	private static final int CHAT = 0;
+	private static final int GAME = 1;
+	private static final int CHAT_GAME = 2;
 
 	// variables initialised from UI
 	private String address;
@@ -63,7 +70,7 @@ public class GameEngine { // aka client
 			try {Thread.sleep(500);}
 			catch (InterruptedException e) {e.printStackTrace();}
 		}
-		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat");
+		log("Started client for %s", serverCode == CHAT ? "chat" : serverCode == GAME ? "game" : "game and chat");
 		this.ui = new GameUI(color, character);
 		setupUI();
 	}
@@ -163,11 +170,11 @@ public class GameEngine { // aka client
 				printStackTrace = printButton.isSelected();
 				address = Utility.myStrip(addressField.getText(), ' ', '\t');
 				if (gameChatButton.isSelected())
-					serverCode = 2;
+					serverCode = CHAT_GAME;
 				else if (gameOnlyButton.isSelected())
-					serverCode = 1;
+					serverCode = GAME;
 				else
-					serverCode = 0;
+					serverCode = CHAT;
 				argumentsPassed = true;
 				optWind.setVisible(false);
 			}
@@ -179,13 +186,14 @@ public class GameEngine { // aka client
 	 * according to the <code>serverCode</code>field
 	 */
 	private void run() {
-		if (serverCode == 2 || serverCode == 0) {
+		if (serverCode == CHAT_GAME || serverCode == CHAT) {
 			getChatConnection();
 			initChat();
 			ui.setEnableChat(true);
 		}
-		if (serverCode == 2 || serverCode == 1) {
+		if (serverCode == CHAT_GAME || serverCode == GAME)
 			getServerConnection();
+		if (serverCode == CHAT_GAME || serverCode == GAME) {
 			while (!gameEnded) {
 				setup(true);
 				play();
@@ -227,21 +235,22 @@ public class GameEngine { // aka client
 			serverInput = new ObjectInputStream(serverSocket.getInputStream());
 
 			// exchange messages and get the index of the connection to server (look below)
+			serverOutput.writeObject(ui.getSymbol());
+			serverOutput.writeObject(ui.getColor());
+			
 			String serverMsg = (String) serverInput.readObject();
+			ui.pushMessage(String.format("\nGame Server said: %s", serverMsg));
+
 			Matcher m = Pattern.compile(".*#(\\d).*").matcher(serverMsg);
 			m.find();
 			int connectionToServerIndex = Integer.parseInt(m.group(1));
-
-			ui.pushMessage(String.format("\nGame Server said: %s", serverMsg));
-			serverOutput.writeObject(ui.getSymbol());
-			serverOutput.writeObject(ui.getColor());
 
 			log("Connected to Game Server successfully as player '%c' with number #%d with color (r, g, b): (%d, %d %d)",
 					ui.getSymbol(), connectionToServerIndex, ui.getColor().getRed(), ui.getColor().getGreen(),
 					ui.getColor().getBlue());
 
 			// wait for ready message and for updated symbols/colors
-			ui.pushMessage((String) serverInput.readObject());
+			ui.pushMessage(String.format("\nGame Server said: %s", (String) serverInput.readObject()));
 
 			char[] symbols = ((char[]) serverInput.readObject());
 			Color[] colors = ((Color[]) serverInput.readObject());
@@ -379,9 +388,12 @@ public class GameEngine { // aka client
 			// get connection
 			chatSocket = new Socket(InetAddress.getByName(address), CHAT_PORT);
 			chatOutput = new ObjectOutputStream(chatSocket.getOutputStream());
-			chatInput = new ObjectInputStream(chatSocket.getInputStream());
+			chatOutput.flush();
 
-			// exchange messages
+			// send symbol and wait for ack
+			chatOutput.writeObject(ui.getSymbol());
+			
+			chatInput = new ObjectInputStream(chatSocket.getInputStream());
 			ui.pushMessage(String.format("\nChat Server said: %s", ((String) chatInput.readObject())));
 
 			log("Connected to Chat Server successfully as player '%c'", ui.getSymbol());
