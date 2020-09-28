@@ -161,7 +161,7 @@ public class GameEngine { // aka client
 
 				character = charList.getSelectedValue().charAt(0);
 				printStackTrace = printButton.isSelected();
-				address = addressField.getText().strip();
+				address = Utility.myStrip(addressField.getText(), ' ', '\t');
 				if (gameChatButton.isSelected())
 					serverCode = 2;
 				else if (gameOnlyButton.isSelected())
