@@ -11,6 +11,9 @@ import java.net.SocketException;
  * Server-side application to handle chat between players.
  */
 public class ChatServer extends Server {
+	
+	// TODO when someone joins or leaves, broadcast message (X joined the chat! Say hi! / X left the chat! !)
+	
 	// port of the Chat Server
 	private static final int CHAT_PORT = 10002;
 
@@ -56,7 +59,7 @@ public class ChatServer extends Server {
 	protected void initialiseServer() {
 		try {
 			server = new ServerSocket(CHAT_PORT);
-			log("Chat Server ready, listening for up to %d players", playerCount);
+			log("\n\nChat Server ready, listening for up to %d players", playerCount);
 		} catch (IOException e) {
 			logerr("IOException in initialiseServer()");
 			if (printStackTrace)
@@ -90,20 +93,32 @@ public class ChatServer extends Server {
 					continue;
 				}
 
+				// get Input Stream.
+				// get output Stream after broadcasting so that this player doesn't get the message that he joined
 				inputs[index] = new ObjectInputStream(chatConnection.getInputStream());
+				
+				// get symbol, send ack back
+				symbols[index] = (char) inputs[index].readObject();
+				
+				// inform everyone that someone has joined
+				broadcast("Chat Server: '%c' just joined. Say hi!", symbols[index]);
+
+				// finally get Output Stream
 				outputs[index] = new ObjectOutputStream(chatConnection.getOutputStream());
-
-				// send ack message
 				outputs[index].writeObject(
-						String.format("Hi player #%d, you're now connected.\nPlease wait for others to join\n", index));
+						String.format("Hi player '%c', you're now connected.\nStart chatting!\n", symbols[index]));
 
-				log("\nChat Connection #%d established", index);
+				log("\nChat Connection #%d established with '%c'", index, symbols[index]);
 
 				new ChatServerThread(index).start();
 				index++;
 			}
 		} catch (IOException e) {
 			logerr("IOException in getConnections()\nidkwhatishappeningplshelp...");
+			if (printStackTrace)
+				e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			logerr("ClassNotFoundException in getConnections()\nSomething went very wrong...");
 			if (printStackTrace)
 				e.printStackTrace();
 		}
@@ -196,16 +211,19 @@ public class ChatServer extends Server {
 	 */
 	private void closeStreams(int index) {
 		log("Closing thread #%d", index);
+		broadcast("Chat Server: '%c' left the chat.", symbols[index]);
 		try {
 			outputs[index].close();
 			inputs[index].close();
-			outputs[index] = null;
-			inputs[index] = null;
-			available[index] = true;
 		} catch (IOException e) {
 			logerr("IOException in closeStreams()");
 			if (printStackTrace)
 				e.printStackTrace();
+		} finally {
+			outputs[index] = null;
+			inputs[index] = null;
+			symbols[index] = '\u0000';
+			available[index] = true;
 		}
 	}
 
