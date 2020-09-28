@@ -32,7 +32,7 @@ public class GameEngine { // aka client
 
 	private String address;
 	private boolean printStackTrace;
-	private static final int HEIGHT_MULTIPLIER =1;//= Toolkit.getDefaultToolkit().getScreenSize().height<750? 1 : 2; //used to determine UI and graphics size
+	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height<750? 1 : 2; //used to determine UI and graphics size
 	private int server,boardSize=8;//TODO: make this value dependent on the server upon initialization
 	private Color color = Color.BLACK;
 	private char character;
