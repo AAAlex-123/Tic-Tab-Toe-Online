@@ -112,7 +112,7 @@ public class GameUI extends JFrame {
 							JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				String input = move.getText().toUpperCase().strip();
+				String input = Utility.myStrip(move.getText().toUpperCase(), ' ', '\t');
 				if (!input.matches("[A-E][1-5]")) {
 					error_msg.setVisible(true);
 					return;
