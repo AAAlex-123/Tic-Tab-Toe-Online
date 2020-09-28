@@ -8,8 +8,6 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -106,14 +104,11 @@ public class GameServer extends Server {
 
 				// exchange send ack message
 				outputs[i].writeObject(
-						String.format("Hi player '%c', you're now connected as #%d.\nPlease wait for others to join\n", symbols[i], i));
+						String.format("Hi player '%c', you're now connected as #%d.\nPlease wait for others to join.", symbols[i], i));
 
 				log("\nPlayer #%d connected as '%c'", i, symbols[i]);
 			}
 
-			// array of chess piece characters used to replace duplicates
-			ArrayList<Character> chessPieces = new ArrayList<Character>(
-					Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
 			char[] found = new char[playerCount];
 			int foundIndex = 0;
 
