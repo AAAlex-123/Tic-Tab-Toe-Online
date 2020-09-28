@@ -21,7 +21,6 @@ public class GameServer extends Server {
 
 	private final Socket[] sockets;
 
-	private final char[] symbols;
 	private final Color[] colors;
 
 	private final GameBoard gameBoard;
@@ -35,7 +34,6 @@ public class GameServer extends Server {
 	public GameServer() {
 		super();
 		sockets = new Socket[playerCount];
-		symbols = new char[playerCount];
 		colors = new Color[playerCount];
 		gameBoard = new GameBoard();
 	}
@@ -102,15 +100,15 @@ public class GameServer extends Server {
 				inputs[i] = new ObjectInputStream(sockets[i].getInputStream());
 				outputs[i] = new ObjectOutputStream(sockets[i].getOutputStream());
 
-				// exchange send ack message
-				outputs[i].writeObject(
-						String.format("Hi player #%d, you're now connected.\nPlease wait for others to join\n", i));
-
 				// get player symbol
 				symbols[i] = (char) inputs[i].readObject();
 				colors[i] = (Color) inputs[i].readObject();
 
-				log("\nPlayer #%d connected", i);
+				// exchange send ack message
+				outputs[i].writeObject(
+						String.format("Hi player '%c', you're now connected as #%d.\nPlease wait for others to join\n", symbols[i], i));
+
+				log("\nPlayer #%d connected as '%c'", i, symbols[i]);
 			}
 
 			// array of chess piece characters used to replace duplicates
