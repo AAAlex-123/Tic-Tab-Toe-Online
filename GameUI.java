@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -26,6 +27,7 @@ public class GameUI extends JFrame {
 	private String chatText = "";
 	private boolean dataReceived = false;
 	private int answer = -1,boardSize; 
+	private static int HEIGHT_MULTIPLIER;//effectively final, used to calculate graphics size
 	private final JLabel error_msg;
 	private final Screen screen;
 	private final JTextArea log;
@@ -33,13 +35,14 @@ public class GameUI extends JFrame {
 	private final JButton submitB, disconnectB, chatButton;
 	private final JPanel autismPanel, inputPanel, chatPanel, logPanel;
 	private final JScrollPane scroll;
-	private String[] letters = { "A", "B", "C", "D", "E","F","G","H"};
+	private static String[] letters = { "A", "B", "C", "D", "E","F","G","H"};
 
-	public GameUI(Color color, char name,int boardSize) {
+	public GameUI(Color color, char name,int boardSize, int heightMultiplier) {
 		super("Naughts & Crosses Online");
 		this.color = color;
 		this.name = name;
 		this.boardSize = boardSize; //used to get the correct letter for input matcher, set window size
+		GameUI.HEIGHT_MULTIPLIER = heightMultiplier;
   
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 
@@ -115,13 +118,13 @@ public class GameUI extends JFrame {
 					return;
 				}
 				String input = move.getText().toUpperCase().strip();
-				if (!input.matches(String.format("[A-%s][1-5]",letters[boardSize]))) {
+				if (!input.matches(String.format("[A-%s][1-%d]",letters[boardSize-1],boardSize))) {
 					error_msg.setVisible(true);
 					return;
 				}
 				answer = convertInput(input);
 				// un-comment if you need for debugging
-//				pushMessage(String.format("Player %s played %s", name, move.getText()));
+				pushMessage(String.format("Player %s played %s", name, move.getText()));
 				move.setText("");
 				error_msg.setVisible(false);
 			}
@@ -174,11 +177,11 @@ public class GameUI extends JFrame {
 
 	public void setScreen(GameBoard gboard) {
 		screen.board = gboard;
-		//this.revalidate(); ???maybe
 		
 		screen.repaint();
 		// Wait until it loads then update the whole thing.
 		// JVM has forced my hand
+		// yes, this.revalidate() doesn't work here
 		try {
 			Thread.sleep(200);
 		} catch (InterruptedException e) {
@@ -247,31 +250,8 @@ public class GameUI extends JFrame {
 	 * @return int, the data the GameBoard understands
 	 */
 	private static int convertInput(String str) {
-		char row = str.charAt(0);
-		int index;
-		switch (row) {
-		case '\u0041':
-			index = 0;
-			break;
-
-		case '\u0042':
-			index = 10;
-			break;
-
-		case '\u0043':
-			index = 20;
-			break;
-
-		case '\u0044':
-			index = 30;
-			break;
-
-		default:
-			index = 40;
-		}
-
-		index += Integer.parseInt(Character.toString(str.charAt(1))) - 1;
-		return index;
+		String characters = "ABCDEFGH";
+		return characters.indexOf(str.charAt(0))*10+Integer.parseInt(Character.toString(str.charAt(1))) - 1;
 	}
 
 	public void setCustomOptions(char[] chars, Color[] colors) {
@@ -295,25 +275,25 @@ public class GameUI extends JFrame {
 		@Override
 		public void paintComponent(Graphics g) {
 			g.setColor(Color.BLACK);
-			g.setFont(new Font("Serif", Font.PLAIN, 60));
+			g.setFont(new Font("Serif", Font.PLAIN, 30*HEIGHT_MULTIPLIER));
 
 			// paint board
 			for (int i = 1; i < board.size+1; i++) {
-				g.drawString(Integer.toString(i), i * 53, 50);// 53 instead of 50 to compensate for character width
+				g.drawString(Integer.toString(i), i * 26*HEIGHT_MULTIPLIER, 25*HEIGHT_MULTIPLIER);// 53 instead of 50 to compensate for character width
 				for (int j = 1; j < board.size+1; j++) {
-					g.drawString(letters[j - 1], 0, (j + 1) * 50);
-					g.drawRect(i * 50, j * 50, 50, 50);
+					g.drawString(letters[j - 1], 0, (j + 1) * 25*HEIGHT_MULTIPLIER);
+					g.drawRect(i * 25*HEIGHT_MULTIPLIER, j * 25*HEIGHT_MULTIPLIER, 25*HEIGHT_MULTIPLIER, 25*HEIGHT_MULTIPLIER); //kill me
 				}
 			}
 
 			// paint marks
-			g.setFont(new Font("Monospaced", Font.BOLD, 65));
+			g.setFont(new Font("Monospaced", Font.BOLD, 32*HEIGHT_MULTIPLIER));
 			for (int i = 0; i < board.size; i++) {
 				for (int j = 0; j < board.size; j++) {
 					char c = board.getBoard()[i][j];
 					if (c != GameEngine.DASH) {
 						g.setColor(colorMap.get(c));
-						g.drawString(Character.toString(c), (j + 1) * 50, (i + 2) * 50);
+						g.drawString(Character.toString(c), (j + 1) * 25*HEIGHT_MULTIPLIER, (i + 2) * 25*HEIGHT_MULTIPLIER);
 					}
 				}
 			}
