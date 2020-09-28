@@ -6,13 +6,12 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Server-side application to handle chat between players.
  */
 public class ChatServer extends Server {
-	
-	// TODO when someone joins or leaves, broadcast message (X joined the chat! Say hi! / X left the chat! !)
 	
 	// port of the Chat Server
 	private static final int CHAT_PORT = 10002;
@@ -99,6 +98,16 @@ public class ChatServer extends Server {
 				
 				// get symbol, send ack back
 				symbols[index] = (char) inputs[index].readObject();
+
+				for (int i=0; i<playerCount; i++) {
+					if ((i != index) && (symbols[index] == symbols[i])) {
+						char chessPiece = chessPieces
+								.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
+						log("Duplicate found '%c', replaced with '\\u%04x'", symbols[index], (int) chessPiece);
+						symbols[index] = chessPiece;
+					}
+				}
+
 				
 				// inform everyone that someone has joined
 				broadcast("Chat Server: '%c' just joined. Say hi!", symbols[index]);
@@ -106,7 +115,7 @@ public class ChatServer extends Server {
 				// finally get Output Stream
 				outputs[index] = new ObjectOutputStream(chatConnection.getOutputStream());
 				outputs[index].writeObject(
-						String.format("Hi player '%c', you're now connected.\nStart chatting!\n", symbols[index]));
+						String.format("Hi player '%c', you're now connected.\nStart chatting!", symbols[index]));
 
 				log("\nChat Connection #%d established with '%c'", index, symbols[index]);
 
