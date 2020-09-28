@@ -3,6 +3,7 @@ package ttt_online;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.EOFException;
@@ -31,6 +32,7 @@ public class GameEngine { // aka client
 
 	private String address;
 	private boolean printStackTrace;
+	private static final int HEIGHT_MULTIPLIER =1;//= Toolkit.getDefaultToolkit().getScreenSize().height<750? 1 : 2; //used to determine UI and graphics size
 	private int server,boardSize=8;//TODO: make this value dependent on the server upon initialization
 	private Color color = Color.BLACK;
 	private char character;
@@ -68,7 +70,7 @@ public class GameEngine { // aka client
 		}
 		
 		log("Started client for %s", server == 0 ? "chat" : server == 1 ? "game" : "game and chat"); 
-		this.ui = new GameUI(color,character,boardSize); //TODO: Make sure gameBoard obj  OR boardSize is initialized by the server ==009localGameBoard.size
+		this.ui = new GameUI(color,character,boardSize,GameEngine.HEIGHT_MULTIPLIER); //TODO: Make sure gameBoard obj  OR boardSize is initialized by the server ==009localGameBoard.size
 		setUI();
 	}
 	
@@ -196,7 +198,7 @@ public class GameEngine { // aka client
 	 */
 	private void setUI() {
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ui.setSize(500,1000);
+		ui.setSize(500,300*HEIGHT_MULTIPLIER+300);
 		ui.setVisible(true);
 		ui.setResizable(true);
 		ui.setEnableTurn(false);
@@ -488,7 +490,7 @@ public class GameEngine { // aka client
 	 * 
 	 * @see GameBoard#GameBoard(char[][]) GameBoard(char[][])
 	 * 
-	 * @throws ClassNotFoundException idk when it's thrown
+	 * @throws ClassNotFoundException 
 	 * @throws IOException            thrown when server disconnects
 	 * @throws EOFException           thrown when server closes connection
 	 */
@@ -523,6 +525,7 @@ public class GameEngine { // aka client
 	 */
 	public static void main(String[] args) {
 		log("Getting symbol and color options");
+		System.out.println(HEIGHT_MULTIPLIER+" "+Toolkit.getDefaultToolkit().getScreenSize().height);
 		GameEngine gameEngine = new GameEngine();
 		gameEngine.run();
 	}
