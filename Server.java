@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -23,7 +25,7 @@ import javax.swing.JRadioButton;
 /**
  * Abstract class to run a server; GameServer and ChatServer inherit from it.
  */
-public abstract class Server {
+public abstract class Server implements Logging {
 
 	// server fields
 	protected static int playerCount;
@@ -32,6 +34,12 @@ public abstract class Server {
 	protected final ObjectInputStream[] inputs;
 	protected final ObjectOutputStream[] outputs;
 	protected ServerSocket server;
+	
+	protected final char[] symbols;
+	
+	// array of chess piece characters used to replace duplicates
+	protected final ArrayList<Character> chessPieces = new ArrayList<Character>(
+			Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
 
 	// used to determine when user has entered options to the UI
 	protected static boolean argumentsPassed = false;
@@ -51,6 +59,7 @@ public abstract class Server {
 
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
+		symbols = new char[playerCount];
 	}
 
 	/**
@@ -145,34 +154,14 @@ public abstract class Server {
 			try {
 				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
-				logerr("IOException in broadcast()");
+				logerr("Error in broadcast()");
 				if (printStackTrace)
 					e.printStackTrace();
 			} catch (NullPointerException e) {
-				logerr("NullPointerException in broadcast()");
+				;
 			}
 		}
 
 		log("Broadcasted: %s", String.format(msg, args));
-	}
-
-	/**
-	 * Same as <code>System.out.printf(text, args)</code>
-	 * 
-	 * @param text String, text to send
-	 * @param args Object[], arguments
-	 */
-	protected static void log(String text, Object... args) {
-		System.out.printf(text + "\n", args);
-	}
-
-	/**
-	 * Same as <code>System.err.printf(text, args)</code>
-	 * 
-	 * @param text String, text to send
-	 * @param args Object[], arguments
-	 */
-	protected static void logerr(String text, Object... args) {
-		System.err.printf(text + "\n", args);
 	}
 }
