@@ -7,14 +7,16 @@ public class GameBoard {
 
 	final static char EMPTY = GameEngine.DASH;
 	private final int consecutive = 3;
-	private final int boardSize = 5;
-	private final char[][] board = new char[boardSize][boardSize];
+	public final int size;
+	private final char[][] board;
 
 	/**
 	 * Initialise board of size <code>dimension</code> with <code>EMPTY</code>
 	 * characters
 	 */
-	public GameBoard() {
+	public GameBoard(int boardSize) {
+		this.size = boardSize;
+		this.board= new char[size][size];
 		for (int i = 0; i < boardSize; i++)
 			for (int j = 0; j < boardSize; j++)
 				board[i][j] = EMPTY;
@@ -26,8 +28,10 @@ public class GameBoard {
 	 * @param table char[][], the table to be copied
 	 */
 	public GameBoard(char[][] table) {
-		for (int i = 0; i < boardSize; i++)
-			for (int j = 0; j < boardSize; j++)
+		this.size = table.length;
+		this.board= new char[size][size];
+		for (int i = 0; i < size; i++)
+			for (int j = 0; j < size; j++)
 				board[i][j] = table[i][j];
 	}
 
@@ -62,8 +66,8 @@ public class GameBoard {
 	 * Clears the board; fills all squares with <code>EMPTY</code>
 	 */
 	public void clear() {
-		for (int i = 0; i < boardSize; i++)
-			for (int j = 0; j < boardSize; j++)
+		for (int i = 0; i < size; i++)
+			for (int j = 0; j < size; j++)
 				board[i][j] = EMPTY;
 	}
 

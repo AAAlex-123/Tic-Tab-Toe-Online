@@ -3,6 +3,7 @@ package ttt_online;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.EOFException;
@@ -40,6 +41,9 @@ public class GameEngine implements Logging { // aka client
 	// variables initialised from UI
 	private String address;
 	private boolean printStackTrace;
+	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height<750? 1 : 2; //used to determine UI and graphics size
+	private int boardSize=8;//TODO: make this value dependent on the server upon initialization
+  
 	private int serverCode;
 	private Color color = Color.BLACK;
 	private char character;
@@ -73,9 +77,9 @@ public class GameEngine implements Logging { // aka client
 				e.printStackTrace();
 			}
 		}
-		log("Started client for %s", serverCode == CHAT ? "chat" : serverCode == GAME ? "game" : "game and chat");
-		this.ui = new GameUI(color, character);
-		setupUI();
+    log("Started client for %s", server == 0 ? "chat" : server == 1 ? "game" : "game and chat"); 
+		this.ui = new GameUI(color,character,boardSize,GameEngine.HEIGHT_MULTIPLIER); //TODO: Make sure gameBoard obj  OR boardSize is initialized by the server ==009localGameBoard.size
+		setUI();
 	}
 
 	/**
@@ -109,7 +113,7 @@ public class GameEngine implements Logging { // aka client
 	 */
 	private void setupUI() {
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ui.setSize(320, 720);
+		ui.setSize(500,300*HEIGHT_MULTIPLIER+300);
 		ui.setVisible(true);
 		ui.setResizable(true);
 		ui.setEnableTurn(false);
@@ -459,7 +463,7 @@ public class GameEngine implements Logging { // aka client
 	 * 
 	 * @see GameBoard#GameBoard(char[][]) GameBoard(char[][])
 	 * 
-	 * @throws ClassNotFoundException idk when it's thrown
+	 * @throws ClassNotFoundException 
 	 * @throws IOException            thrown when server disconnects
 	 * @throws EOFException           thrown when server closes connection
 	 */
@@ -473,55 +477,49 @@ public class GameEngine implements Logging { // aka client
 	 * Creates a UI to get the GameEngine options.
 	 */
 	private void getClientOptions() {
-		log("Getting symbol and color options");
-
+		
 		JFrame optWind = new JFrame("Select Server Options");
-
+		
 		JPanel optPanel = new JPanel();
-		optPanel.setLayout(new BoxLayout(optPanel, BoxLayout.PAGE_AXIS));
+		optPanel.setLayout(new BoxLayout(optPanel,BoxLayout.PAGE_AXIS));
 		optWind.setVisible(true);
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		optWind.setSize(new Dimension(500, 500));
+		optWind.setSize(new Dimension(500,500));
 		optWind.setResizable(true);
-
-		// upper panel: address + character
+		
+		//upper panel: address + character
 		JPanel upperPanel = new JPanel();
 		upperPanel.setLayout(new FlowLayout());
-
-		JPanel addressPanel = new JPanel();
-		addressPanel.setLayout(new BoxLayout(addressPanel, BoxLayout.Y_AXIS));
+		
+		JPanel addressPanel  = new JPanel();
+		addressPanel.setLayout(new BoxLayout(addressPanel,BoxLayout.Y_AXIS));
 		JLabel addressLabel = new JLabel("Server IP:");
-		addressLabel.setPreferredSize(new Dimension(100, 50));
+		addressLabel.setPreferredSize(new Dimension(100,50));
 		JTextField addressField = new JTextField("127.0.0.1");
 		addressPanel.add(addressLabel);
 		addressPanel.add(addressField);
-
+		
 		JPanel listPanel = new JPanel();
-		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-		String[] chars = { "X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P",
-				"Q", "R", "S", "T", "U", "V", "W", "<", "?", "~" };
-		JList<String> charList = new JList<String>(chars); // JList forces me to use strings here
+		listPanel.setLayout(new BoxLayout(listPanel,BoxLayout.Y_AXIS));
+		String[] chars = {"X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P", "Q", "R", "S", "T", "U", "V", "W", "<", "?", "~"};
+		JList<String> charList = new JList<String>(chars); //JList forces me to use strings here
 		charList.setBackground(Color.BLUE);
 		charList.setSelectedIndex(0);
 		JScrollPane scrollList = new JScrollPane(charList);
 		JLabel listLabel = new JLabel("Choose your character");
 		listPanel.add(listLabel);
 		listPanel.add(scrollList);
-
+		
 		upperPanel.add(addressPanel);
 		upperPanel.add(listPanel);
 		optPanel.add(Box.createVerticalGlue());
-
-		// lower panel: printStackTrace + chat/game + buttonPanel (color/submit buttons)
+		
+		//lower panel: printStackTrace + chat/game + color/submit buttons
 		JPanel lowerPanel = new JPanel();
-		lowerPanel.setLayout(new BoxLayout(lowerPanel, BoxLayout.Y_AXIS));
-
-		// Print Stack Trace
-		JCheckBox printCheckBox = new JCheckBox("I want to receive crash reports on my command line");
-
-		// Button Group
+		lowerPanel.setLayout(new BoxLayout(lowerPanel,BoxLayout.Y_AXIS));
+		JCheckBox printButton = new JCheckBox("I want to receive crash reports on my command line");
+		
 		ButtonGroup bg = new ButtonGroup();
-		// TODO replace with checkboxes?
 		JRadioButton gameChatButton = new JRadioButton("I want to play the game with chat enabled");
 		JRadioButton gameOnlyButton = new JRadioButton("I want to play the game with chat disabled");
 		JRadioButton chatOnlyButton = new JRadioButton("I just want to chat");
@@ -529,58 +527,51 @@ public class GameEngine implements Logging { // aka client
 		bg.add(gameOnlyButton);
 		bg.add(chatOnlyButton);
 		gameChatButton.setSelected(true);
-
-		// Button Panel: color/submit buttons
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-		JButton submitButton = new JButton("Submit");
-		JButton colorButton = new JButton("Select color");
-		buttonPanel.add(submitButton);
-		buttonPanel.add(colorButton);
-
-		// Add to lowerPanel
-		lowerPanel.add(printCheckBox);
+		lowerPanel.add(printButton);
 		lowerPanel.add(Box.createVerticalGlue());
 		lowerPanel.add(gameChatButton);
 		lowerPanel.add(gameOnlyButton);
 		lowerPanel.add(chatOnlyButton);
 		lowerPanel.add(Box.createVerticalGlue());
+		
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.X_AXIS));
+		JButton submitButton = new JButton("Submit");
+		JButton colorButton = new JButton("Select color");
+		buttonPanel.add(submitButton);
+		buttonPanel.add(colorButton);
+		
 		lowerPanel.add(buttonPanel);
-
 		optPanel.add(upperPanel);
 		optPanel.add(lowerPanel);
-
+				
 		optWind.add(optPanel);
-		optWind.revalidate(); // yes, this IS necessary
-
-		// event listeners
+		optWind.revalidate(); //yes, this IS necessary
+		
+		//event listeners
 		colorButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				color = JColorChooser.showDialog(optWind, "Choose a color", Color.BLACK);
-				if (color == null)
-					color = Color.BLACK;
-			}
+				if (color==null) color = Color.BLACK;
+			}	
 		});
-
+		
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
+				
 				character = charList.getSelectedValue().charAt(0);
-				printStackTrace = printCheckBox.isSelected();
-				address = Utility.myStrip(addressField.getText(), ' ', '\t');
-				if (gameChatButton.isSelected())
-					serverCode = CHAT_GAME;
-				else if (gameOnlyButton.isSelected())
-					serverCode = GAME;
-				else
-					serverCode = CHAT;
+				printStackTrace = printButton.isSelected();
+				address = addressField.getText().strip();
+				if (gameChatButton.isSelected()) server = 2;
+				else if(gameOnlyButton.isSelected()) server = 1;
+				else server = 0;
 				argumentsPassed = true;
 				optWind.setVisible(false);
-			}
+			}	
 		});
-	}
+  }
 
 	/**
 	 * Main method. Run to create and run a client

@@ -16,11 +16,12 @@ import java.util.Arrays;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 
 /**
  * Abstract class to run a server; GameServer and ChatServer inherit from it.
@@ -96,32 +97,51 @@ public abstract class Server implements Logging {
 
 		JFrame optWind = new JFrame("Select Server Options");
 		JPanel optPanel = new JPanel();
-		optPanel.setLayout(new BoxLayout(optPanel, BoxLayout.PAGE_AXIS));
+		optPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
 		optWind.setVisible(true);
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		optWind.setSize(new Dimension(500, 300));
 		optWind.setResizable(false);
-
-		JPanel lsPanelExt = new JPanel();
-		lsPanelExt.setLayout(new BoxLayout(lsPanelExt, BoxLayout.Y_AXIS));
-		JLabel lsLabel = new JLabel("Choose the number of players");
-		String[] plOptions = { "2 players", "3 players", "4 players" };
-		JList<String> list = new JList<String>(plOptions);
-		list.setBackground(Color.BLUE);
+		
+		//listPanel = playerPanel + board Panel 
+		JPanel listPanel = new JPanel();
+		listPanel.setLayout(new BoxLayout(listPanel,BoxLayout.X_AXIS));
+		
+		//playerPanel = playerLabel + playerList
+		JPanel playerPanel = new JPanel();
+		playerPanel.setLayout(new BoxLayout(playerPanel,BoxLayout.Y_AXIS));
+		JLabel playerLabel = new JLabel("Choose the number of players");
+		String[] plOptions = {"2 players","3 players","4 players"};
+		JList<String>playerList = new JList<String>(plOptions);
+		playerList.setBackground(Color.BLUE);
 		Font font = new Font("Serif", Font.BOLD, 25);
-		list.setFont(font);
-		list.setSelectedIndex(0);
-
-		JPanel lsPanelInt = new JPanel();
-		lsPanelInt.setLayout(new FlowLayout(FlowLayout.CENTER));
-		lsPanelInt.add(list);
-
-		lsPanelExt.add(lsLabel);
-		lsPanelExt.add(lsPanelInt);
-
-		optPanel.add(lsPanelExt);
-
-		JRadioButton b1 = new JRadioButton("I would like to receive crash reports on my command line");
+		playerList.setFont(font);
+		playerList.setSelectedIndex(0);
+		playerPanel.add(playerLabel);
+		playerPanel.add(playerList);
+		
+		//boardPanel = boardLabel + (scroll) boardList
+		JPanel boardPanel = new JPanel();
+		boardPanel.setLayout(new BoxLayout(boardPanel,BoxLayout.Y_AXIS));
+		JLabel boardLabel= new JLabel("Choose the boards size");
+		String[] boardOptions = {"3x3","4x4","5x5","6x6","7x7","8x8"};
+		JList<String>boardLs = new JList<String>(boardOptions);
+		boardLs.setBackground(Color.BLUE);
+		boardLs.setFont(font);
+		boardLs.setSelectedIndex(2);
+		JScrollPane scrollList = new JScrollPane(boardLs);
+		scrollList.setPreferredSize(new Dimension(100,100));
+		boardPanel.add(boardLabel);
+		boardPanel.add(scrollList);
+		
+		listPanel.add(playerPanel);
+		listPanel.add(Box.createRigidArea(new Dimension(50,50)));
+		listPanel.add(boardPanel);
+		
+		optPanel.add(Box.createRigidArea(new Dimension(20,20)));
+		optPanel.add(listPanel);
+		optPanel.add(Box.createRigidArea(new Dimension(50,50)));
+		JCheckBox b1 = new JCheckBox("I would like to receive crash reports on my command line"); 
 		optPanel.add(b1);
 
 		JButton submitBut = new JButton("Submit");
@@ -129,8 +149,9 @@ public abstract class Server implements Logging {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playerCount = list.getSelectedIndex() + 2;
+				playerCount = playerList.getSelectedIndex()+2;
 				printStackTrace = b1.isSelected();
+				boardSize = boardLs.getSelectedIndex()+3;
 				optWind.setVisible(false);
 				argumentsPassed = true;
 			}

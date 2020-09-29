@@ -33,7 +33,7 @@ public class GameServer extends Server {
 		super();
 		sockets = new Socket[playerCount];
 		colors = new Color[playerCount];
-		gameBoard = new GameBoard();
+		gameBoard = new GameBoard(boardSize);
 	}
 
 	/**
@@ -289,10 +289,10 @@ public class GameServer extends Server {
 	 *                         board
 	 */
 	private void sendBoard(int currentPlayer) throws SocketException {
-		char[][] newBoard = new char[5][5];
+		char[][] newBoard = new char[boardSize][boardSize];
 		char[][] currentBoard = gameBoard.getBoard();
-		for (int i = 0; i < 5; i++)
-			for (int j = 0; j < 5; j++)
+		for (int i = 0; i < boardSize; i++)
+			for (int j = 0; j < boardSize; j++)
 				newBoard[i][j] = currentBoard[i][j];
 		try {
 			outputs[currentPlayer].writeObject(newBoard);
