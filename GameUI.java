@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
@@ -68,12 +69,22 @@ public class GameUI extends JFrame {
 
 		// logPanel -- chatPanel -- chatField / chatButton
 		chatField = new JTextField();
+		chatField.addKeyListener(new KeyListener() {
+			@Override
+			public void keyTyped(KeyEvent e) {;}
+			@Override
+			public void keyReleased(KeyEvent e) {;}
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER)
+					sendChat();
+			}
+		});
 		chatButton = new JButton("Send");
 		chatButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				chatText += (chatText.equals("") ? "" : "\n") + chatField.getText();
-				chatField.setText("");
+				sendChat();
 			}
 		});
 
@@ -101,27 +112,23 @@ public class GameUI extends JFrame {
 
 		// inputPanel -- move / submitB
 		move = new JTextField("Your next move", 10);
+		move.addKeyListener(new KeyListener() {
+			@Override
+			public void keyTyped(KeyEvent e) {;}
+			@Override
+			public void keyReleased(KeyEvent e) {;}
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER)
+					submitMove();
+			}
+		});
 		submitB = new JButton("Submit");
-		submitB.setMnemonic(KeyEvent.VK_SPACE);
+//		submitB.setMnemonic(KeyEvent.VK_ENTER);
 		submitB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (!dataReceived) {
-					JOptionPane.showMessageDialog(getContentPane(),
-							"Please wait for the other players to finish picking their characters", "Error",
-							JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				String input = Utility.myStrip(move.getText().toUpperCase(), ' ', '\t');
-				if (!input.matches("[A-E][1-5]")) {
-					error_msg.setVisible(true);
-					return;
-				}
-				answer = convertInput(input);
-				// un-comment if you need for debugging
-//				pushMessage(String.format("Player %s played %s", name, move.getText()));
-				move.setText("");
-				error_msg.setVisible(false);
+				submitMove();
 			}
 		});
 /*ADD*/ inputPanel.add(move);
@@ -280,6 +287,30 @@ public class GameUI extends JFrame {
 			screen.colorMap.put(chars[i], colors[i]);
 
 		dataReceived = true;
+	}
+	
+	private void submitMove() {
+		if (!dataReceived) {
+			JOptionPane.showMessageDialog(getContentPane(),
+					"Please wait for the other players to finish picking their characters", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		String input = Utility.myStrip(move.getText().toUpperCase(), ' ', '\t');
+		if (!input.matches("[A-E][1-5]")) {
+			error_msg.setVisible(true);
+			return;
+		}
+		answer = convertInput(input);
+		// un-comment if you need for debugging
+//		pushMessage(String.format("Player %s played %s", name, move.getText()));
+		move.setText("");
+		error_msg.setVisible(false);
+	}
+	
+	private void sendChat() {
+		chatText += (chatText.equals("") ? "" : "\n") + chatField.getText();
+		chatField.setText("");
 	}
 
 	private class Screen extends JPanel {
