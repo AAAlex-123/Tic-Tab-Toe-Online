@@ -22,8 +22,6 @@ import javax.swing.*;
  */
 public class GameEngine implements Logging { // aka client
 
-	// TODO check if chat, if so maybe don't exit on exception
-
 	// ports of the Game and Chat Servers
 	private static final int GAME_PORT = 10001;
 	private static final int CHAT_PORT = 10002;
@@ -41,8 +39,10 @@ public class GameEngine implements Logging { // aka client
 	// variables initialised from UI
 	private String address;
 	private boolean printStackTrace;
-	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height<750? 1 : 2; //used to determine UI and graphics size
-	private int boardSize=8;//TODO: make this value dependent on the server upon initialization
+	//used to determine UI and graphics size
+	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height<750? 1 : 2; 
+	//TODO: make this value dependent on the server upon initialization
+	private int boardSize=8;
   
 	private int serverCode;
 	private Color color = Color.BLACK;
@@ -77,9 +77,10 @@ public class GameEngine implements Logging { // aka client
 				e.printStackTrace();
 			}
 		}
-    log("Started client for %s", server == 0 ? "chat" : server == 1 ? "game" : "game and chat"); 
-		this.ui = new GameUI(color,character,boardSize,GameEngine.HEIGHT_MULTIPLIER); //TODO: Make sure gameBoard obj  OR boardSize is initialized by the server ==009localGameBoard.size
-		setUI();
+    log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"); 
+    	//TODO: Make sure gameBoard obj OR boardSize is initialized by the server ==009localGameBoard.size
+		this.ui = new GameUI(color,character,boardSize,GameEngine.HEIGHT_MULTIPLIER);
+		setupUI();
 	}
 
 	/**
@@ -563,10 +564,13 @@ public class GameEngine implements Logging { // aka client
 				
 				character = charList.getSelectedValue().charAt(0);
 				printStackTrace = printButton.isSelected();
-				address = addressField.getText().strip();
-				if (gameChatButton.isSelected()) server = 2;
-				else if(gameOnlyButton.isSelected()) server = 1;
-				else server = 0;
+				address = Utility.myStrip(addressField.getText(), ' ', '\t');
+				if (gameChatButton.isSelected())
+					serverCode = CHAT_GAME;
+				else if (gameOnlyButton.isSelected())
+					serverCode = GAME;
+				else
+					serverCode = CHAT;
 				argumentsPassed = true;
 				optWind.setVisible(false);
 			}	
