@@ -28,6 +28,8 @@ public class Utility {
 	 * @return String, the stripped string
 	 */
 	public static String myStrip(String string, char... chars) {
+		if (string.equals(""))
+			return "";
 		return string.substring(firstIndexOfNonChars(string, chars), lastIndexofNonChars(string, chars) + 1);
 	}
 
