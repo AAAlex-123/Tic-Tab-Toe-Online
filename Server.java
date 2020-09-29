@@ -38,6 +38,8 @@ public abstract class Server implements Logging {
 	
 	protected final char[] symbols;
 	
+	protected int boardSize;
+	
 	// array of chess piece characters used to replace duplicates
 	protected final ArrayList<Character> chessPieces = new ArrayList<Character>(
 			Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
