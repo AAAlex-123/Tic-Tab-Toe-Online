@@ -5,7 +5,7 @@ mkdir scripts
 move *.java src\ttt_online
 
 rem create .bat files
-echo javac -d ..\bin  --release 14 ..\src\ttt_online\*.java > scripts\compile.bat
+echo javac -d ..\bin  --release 8 ..\src\ttt_online\*.java > scripts\compile.bat
 echo java -cp ..\bin ttt_online.GameEngine > scripts\run_client.bat
 echo java -cp ..\bin ttt_online.GameServer > scripts\run_server_game.bat
 echo java -cp ..\bin ttt_online.ChatServer > scripts\run_server_chat.bat

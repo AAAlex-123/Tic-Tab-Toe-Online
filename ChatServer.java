@@ -6,26 +6,30 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Server-side application to handle chat between players.
  */
 public class ChatServer extends Server {
+	
+	// port of the Chat Server
 	private static final int CHAT_PORT = 10002;
+
 	/**
 	 * Keeps track of the running threads to know when another connection can be
 	 * accepted.<br>
 	 * When one is created, give it a slot. When one is stopped, free up its slot.
 	 * <p>
-	 * No it's not spaghetti, yes we need it to keep track of which <code>outputs</code> indexes
-	 * are empty and can have an Output Stream
+	 * No it's not spaghetti, yes we need it to keep track of which
+	 * <code>outputs</code> indexes are empty and can have an Output Stream
 	 */
 	private final boolean[] available;
-	
+
 	/**
 	 * Constructs the Chat Server object.
 	 * 
-	 * FIXME documentation
+	 * @see Server#Server() Server()
 	 */
 	public ChatServer() {
 		super();
@@ -35,7 +39,12 @@ public class ChatServer extends Server {
 	}
 
 	/**
-	 * Runs the Chat Server
+	 * Main method that calls other methods to actually run the server.<br>
+	 * After these methods are done, only the threads listening for input are
+	 * running.
+	 * 
+	 * @see ChatServer#initialiseServer() initialiseServer()
+	 * @see ChatServer#getConnections() getConnections()
 	 */
 	protected void run() {
 		initialiseServer();
@@ -60,14 +69,13 @@ public class ChatServer extends Server {
 
 	/**
 	 * Every 2 seconds check if there is an <code>available</code> slot to get a
-	 * connection. If there is, accept a connection and assign it this slot then
-	 * start a new <code>ChatServerThread</code> handing it the accepted Socket.
+	 * connection. If there is, wait to accept a connection and assign it this slot.
+	 * Get its input and output streams. Finally create a new ChatServerThread with
+	 * the slot's index and start it.
 	 * 
-	 * FIXME documentation
-	 * 
-	 * @see ChatServerThread
-	 * @see ChatServer#getAvailable() getAvailable()
 	 * @see ChatServer#available available
+	 * @see ChatServer#getAvailable() getAvailable()
+	 * @see ChatServerThread
 	 */
 	protected void getConnections() {
 		try {
@@ -79,21 +87,37 @@ public class ChatServer extends Server {
 				if (index != -1) {
 					chatConnection = server.accept();
 				} else {
-					try {
-						Thread.sleep(2000);
-					} catch (InterruptedException e) {
-						;
-					}
+					try {Thread.sleep(2000);}
+					catch (InterruptedException e) {;}
 					continue;
 				}
 
+				// get Input Stream.
+				// get output Stream after broadcasting so that this player doesn't get the message that he joined
 				inputs[index] = new ObjectInputStream(chatConnection.getInputStream());
-				outputs[index] = new ObjectOutputStream(chatConnection.getOutputStream());
 				
-				// exchange send ack message
-				outputs[index].writeObject(String.format("Hi player #%d, you're now connected.\nPlease wait for others to join\n", index));
+				// get symbol, send ack back
+				symbols[index] = (char) inputs[index].readObject();
 
-				log("\nChat Connection #%d established", index);
+				for (int i=0; i<playerCount; i++) {
+					if ((i != index) && (symbols[index] == symbols[i])) {
+						char chessPiece = chessPieces
+								.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
+						log("Duplicate found '%c', replaced with '\\u%04x'", symbols[index], (int) chessPiece);
+						symbols[index] = chessPiece;
+					}
+				}
+
+				
+				// inform everyone that someone has joined
+				broadcast("Chat Server: '%c' just joined. Say hi!", symbols[index]);
+
+				// finally get Output Stream
+				outputs[index] = new ObjectOutputStream(chatConnection.getOutputStream());
+				outputs[index].writeObject(
+						String.format("Hi player '%c', you're now connected.\nStart chatting!", symbols[index]));
+
+				log("\nChat Connection #%d established with '%c'", index, symbols[index]);
 
 				new ChatServerThread(index).start();
 				index++;
@@ -102,9 +126,13 @@ public class ChatServer extends Server {
 			logerr("IOException in getConnections()\nidkwhatishappeningplshelp...");
 			if (printStackTrace)
 				e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			logerr("ClassNotFoundException in getConnections()\nSomething went very wrong...");
+			if (printStackTrace)
+				e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Returns the first slot of the <code>available</code> that is available to get
 	 * a connection and sets it to <code>false</code>.
@@ -122,18 +150,16 @@ public class ChatServer extends Server {
 	}
 
 	/**
-	 * Private inner class that listens to a specific client's Output Stream<br>
-	 * and upon receiving a message, broadcasts it to every client connected to the
-	 * Chat Server.
+	 * Private inner class that listens to a specific client's Output Stream and
+	 * upon receiving a message, broadcasts it to every client connected to the Chat
+	 * Server.
 	 * <p>
-	 * When an Exception occurs, this Thread terminates execution,<br>
-	 * the client's Output Stream is closed and the <code>available</code> slot<br>
-	 * specified by <code>index</code> is freed up.
-	 * 
-	 * FIXME documentation
+	 * When an Exception occurs, this Thread terminates execution, the client's
+	 * Streams are closed and the <code>available</code> slot specified by
+	 * <code>index</code> is freed up.
 	 *
 	 * @see ChatServer#broadcast(String, Object[]) broadcast()
-	 * @see ChatServer#closeOutputStream(int) closeOutputStream()
+	 * @see ChatServer#closeStreams(int) closeOutputStream()
 	 * @see ChatServer#available available
 	 */
 	private class ChatServerThread extends Thread {
@@ -141,20 +167,20 @@ public class ChatServer extends Server {
 		private final int index;
 
 		/**
-		 * Constructs the Thread to listen to <code>socket</code>.
+		 * Constructs the Thread to listen to <code>index</code> input Stream
 		 * 
-		 * @param socket Socket, the socket this Threads listens to
-		 * @param count  int, used to keep track the slot this thread occupies in the
-		 *               <code>available</code> table
-		 *               
-		 * FIXME documentation
+		 * @param count int, used to keep track the slot this thread occupies in the
+		 *              <code>available</code> table
 		 */
 		public ChatServerThread(int count) {
 			this.index = count;
 		}
-		
+
 		/**
-		 * Runs the thread
+		 * Runs the thread; upon receiving a message, broadcasts it to every client
+		 * connected to the Chat Server.
+		 * 
+		 * @see ChatServer#broadcast(String, Object[]) broadcast()
 		 */
 		public void run() {
 			log("Thread #%d started", index);
@@ -165,19 +191,19 @@ public class ChatServer extends Server {
 					logerr("SocketException in ChatServerThread.run(); connection #%d closed by user\n", index);
 					if (printStackTrace)
 						e.printStackTrace();
-					closeOutputStream(index);
+					closeStreams(index);
 					break;
 				} catch (IOException e) {
 					logerr("IOException in ChatServerThread.run()\nidkwhatishappeningplshelp...");
 					if (printStackTrace)
 						e.printStackTrace();
-					closeOutputStream(index);
+					closeStreams(index);
 					break;
 				} catch (ClassNotFoundException e) {
 					logerr("ClassNotFoundException in ChatServerThread.run()\nidkwhatishappeningplshelp...");
 					if (printStackTrace)
 						e.printStackTrace();
-					closeOutputStream(index);
+					closeStreams(index);
 					break;
 				}
 			}
@@ -185,39 +211,36 @@ public class ChatServer extends Server {
 	}
 
 	/**
-	 * Closes the Output Stream bound to client #<code>index</code><br>
-	 * and frees up the <code>available</code> slot this Thread occupied (specified
-	 * by <code>index</code>).
+	 * Closes the Streams bound to client <code>index</code> and frees up the
+	 * <code>available</code> slot this Thread occupied (specified by
+	 * <code>index</code>).
 	 * 
 	 * @param index int, the index of the client
 	 * @see ChatServer#available available
-	 * 
-	 * FIXME documentation
 	 */
-	private void closeOutputStream(int index) {
+	private void closeStreams(int index) {
 		log("Closing thread #%d", index);
+		broadcast("Chat Server: '%c' left the chat.", symbols[index]);
 		try {
 			outputs[index].close();
 			inputs[index].close();
-			outputs[index] = null;
-			inputs[index] = null;
-			available[index] = true;
 		} catch (IOException e) {
-			logerr("IOException in closeOutputStream()");
+			logerr("IOException in closeStreams()");
 			if (printStackTrace)
 				e.printStackTrace();
+		} finally {
+			outputs[index] = null;
+			inputs[index] = null;
+			symbols[index] = '\u0000';
+			available[index] = true;
 		}
 	}
 
 	/**
-	 * Main method. Run to create and run a chat server
-	 * 
-	 * @param args args[0] is used for the maximum number of players allowed to
-	 *             connect
-	 * @param args args[1] is used to determine <code>printStackTrace</code> field,
-	 *             '1' for true, other for false
-	 *             
-	 * FIXME documentation
+	 * Main method. Run to create and run a Chat Server.
+	 *
+	 * @param args not used
+	 * @see Server#Server() Server()
 	 */
 	public static void main(String[] args) {
 		ChatServer server = new ChatServer();
