@@ -60,7 +60,7 @@ public class GameEngine implements Logging { // aka client
 	private char[][] localGameBoardConstructor;
 
 	/**
-	 * Constructs the GameEngine Also sets up the UI.
+	 * Constructs the GameEngine and sets up the UI.
 	 * 
 	 * @see GameEngine#getClientOptions() getClientOptions
 	 */
@@ -215,7 +215,7 @@ public class GameEngine implements Logging { // aka client
 						response.charAt(8) == ui.getSymbol()
 								? response.matches("Player.*resigned") ? "You resigned :(" : "You won :)"
 								: response.matches("Player.*resigned") ? response + " :)" : response + " :(",
-						serverCode == 1 ? "please exit" : "you can still chat, or exit to play another game");
+						serverCode == GAME ? "please exit" : "you can still chat, or exit to play another game");
 				exit(msg, "!game! game ended", INFORMATION, null, false);
 				if (serverCode == GAME)
 					System.exit(0);
@@ -314,10 +314,7 @@ public class GameEngine implements Logging { // aka client
 			Matcher m = Pattern.compile(".*'(.{0,2})'.*").matcher(response);
 			m.find();
 			char newSymbol = m.group(1).charAt(0);
-			log("response: %s", response);
-			log("group(0): %s", m.group(0));
-			log("group(1): %s", m.group(1));
-			log("newSymbol: %s", newSymbol);
+			log("Symbol after duplicate check: '%c' ('%d')", newSymbol, (int) newSymbol);
 
 			if (newSymbol != ui.getSymbol()) {
 				JOptionPane.showMessageDialog(this.ui,
