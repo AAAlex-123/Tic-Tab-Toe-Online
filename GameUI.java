@@ -124,7 +124,7 @@ public class GameUI extends JFrame {
 			}
 		});
 		submitB = new JButton("Submit");
-//		submitB.setMnemonic(KeyEvent.VK_ENTER);
+//		submitB.setMnemonic(KeyEvent.VK_SPACE);
 		submitB.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
