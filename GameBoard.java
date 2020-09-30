@@ -16,7 +16,7 @@ public class GameBoard {
 	 */
 	public GameBoard(int boardSize) {
 		this.size = boardSize;
-		this.board= new char[size][size];
+		this.board = new char[size][size];
 		for (int i = 0; i < boardSize; i++)
 			for (int j = 0; j < boardSize; j++)
 				board[i][j] = EMPTY;
@@ -29,14 +29,15 @@ public class GameBoard {
 	 */
 	public GameBoard(char[][] table) {
 		this.size = table.length;
-		this.board= new char[size][size];
+		this.board = new char[size][size];
 		for (int i = 0; i < size; i++)
 			for (int j = 0; j < size; j++)
 				board[i][j] = table[i][j];
 	}
 
 	/**
-	 * Marks square a square <code>coord</code> of the board with <code>mark</code>.<br>
+	 * Marks square a square <code>coord</code> of the board with
+	 * <code>mark</code>.<br>
 	 * Returns boolean indicating success or failure.
 	 * 
 	 * @param coord int, the coordinate of the square to be marked, in the form of
@@ -89,13 +90,14 @@ public class GameBoard {
 
 	/**
 	 * Checks if the game is over.<br>
-	 * Supports custom <code>directions</code> (i.e. steps to take on the board).<br>
+	 * Supports custom <code>directions</code> (i.e. steps to take on the
+	 * board).<br>
 	 * Supports any amount of <code>consecutive</code> squares.
 	 * 
 	 * @return boolean, true if someone has won.
 	 */
 	public boolean hasWon() {
-		int[][] directions = {{1, 0}, {0, 1}, {1, -1}, {1, 1}};
+		int[][] directions = { { 1, 0 }, { 0, 1 }, { 1, -1 }, { 1, 1 } };
 		for (int[] direction : directions) {
 			// for every direction...
 			int dx = direction[0];
@@ -108,12 +110,14 @@ public class GameBoard {
 						boolean res = true;
 						char target = board[x][y];
 						for (int i = 0; i < consecutive; i++) {
-							// for <consecutive> squares in that direction "and" square==target and the result
+							// for <consecutive> squares in that direction,
+							// "and" square==target and the result
 							// so if once 'square != target', res is false
 							char boardSquare = board[x + i * dx][y + i * dy];
 							res = res && (target == boardSquare) && (boardSquare != EMPTY);
 						}
-						if (res) return true; // winner
+						if (res)
+							return true; // winner
 					} catch (ArrayIndexOutOfBoundsException e) {
 						; // if search goes outside the board go to the next square
 					}
@@ -121,6 +125,21 @@ public class GameBoard {
 			}
 		}
 		return false; // end of loop; no winner
+	}
+
+	/**
+	 * Checks if the board is filled and no one has won; i.e. it's a tie.
+	 * 
+	 * @return boolean, true if there is a tie, false otherwise
+	 */
+	public boolean hasTied() {
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				if (board[i][j] == EMPTY)
+					return false;
+			}
+		}
+		return true;
 	}
 
 	/**
