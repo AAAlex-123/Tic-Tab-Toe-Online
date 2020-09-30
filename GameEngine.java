@@ -23,6 +23,7 @@ import javax.swing.*;
 public class GameEngine implements Logging { // aka client
 
 	// ports of the Game and Chat Servers
+	// Constants
 	private static final int GAME_PORT = 10001;
 	private static final int CHAT_PORT = 10002;
 
@@ -41,8 +42,10 @@ public class GameEngine implements Logging { // aka client
 	private boolean printStackTrace;
 	// used to determine UI and graphics size
 	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height < 750 ? 1 : 2;
+
+	// DELETEME: these comments
 	// TODO: make this value dependent on the server upon initialization
-	private int boardSize = 8;
+//	private int boardSize = 8;
 
 	private int serverCode;
 	private Color color = Color.BLACK;
@@ -78,9 +81,12 @@ public class GameEngine implements Logging { // aka client
 			}
 		}
 		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat");
+		
+		// DELETEME: these comments
 		// TODO: Make sure gameBoard obj OR boardSize is initialized by the server
 		// ==009localGameBoard.size
-		this.ui = new GameUI(color, character, boardSize, GameEngine.HEIGHT_MULTIPLIER);
+		// funfact constructor doesn't need boardsize
+		this.ui = new GameUI(color, character, GameEngine.HEIGHT_MULTIPLIER);
 		setupUI();
 	}
 
