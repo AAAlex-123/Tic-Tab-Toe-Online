@@ -39,11 +39,11 @@ public class GameEngine implements Logging { // aka client
 	// variables initialised from UI
 	private String address;
 	private boolean printStackTrace;
-	//used to determine UI and graphics size
-	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height<750? 1 : 2; 
-	//TODO: make this value dependent on the server upon initialization
-	private int boardSize=8;
-  
+	// used to determine UI and graphics size
+	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height < 750 ? 1 : 2;
+	// TODO: make this value dependent on the server upon initialization
+	private int boardSize = 8;
+
 	private int serverCode;
 	private Color color = Color.BLACK;
 	private char character;
@@ -77,9 +77,10 @@ public class GameEngine implements Logging { // aka client
 				e.printStackTrace();
 			}
 		}
-    log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"); 
-    	//TODO: Make sure gameBoard obj OR boardSize is initialized by the server ==009localGameBoard.size
-		this.ui = new GameUI(color,character,boardSize,GameEngine.HEIGHT_MULTIPLIER);
+		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat");
+		// TODO: Make sure gameBoard obj OR boardSize is initialized by the server
+		// ==009localGameBoard.size
+		this.ui = new GameUI(color, character, boardSize, GameEngine.HEIGHT_MULTIPLIER);
 		setupUI();
 	}
 
@@ -114,7 +115,7 @@ public class GameEngine implements Logging { // aka client
 	 */
 	private void setupUI() {
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ui.setSize(500,300*HEIGHT_MULTIPLIER+300);
+		ui.setSize(500, 300 * HEIGHT_MULTIPLIER + 300);
 		ui.setVisible(true);
 		ui.setResizable(true);
 		ui.setEnableTurn(false);
@@ -175,11 +176,11 @@ public class GameEngine implements Logging { // aka client
 
 		} catch (IOException e) {
 			exit("Couldn't connect to Game Server; if you're connected to chat server you may still chat.\n\nIf you don't know why this happened, please inform the developers",
-					"!game! IOException in getServerConnection()\n", WARNING, e, serverCode == GAME);
+					"!game! IOException in getServerConnection()\n", WARNING, e, serverCode == GAME, "Connection Error");
 			return 1;
 		} catch (ClassNotFoundException e) {
 			exit("Something went very wrong; please exit and inform the developers",
-					"!game! ClassNotFoundException in getServerConnection()\n", ERROR, e, true);
+					"!game! ClassNotFoundException in getServerConnection()\n", ERROR, e, true, "Very Serious Error");
 			return 1;
 		}
 		return 0;
@@ -206,7 +207,8 @@ public class GameEngine implements Logging { // aka client
 			// get ready message
 			String response = ((String) serverInput.readObject());
 
-			// if message is "won" or "resigned" display some messages and stop game thread
+			// if message is "won" or "resigned" or "tie" display some messages and stop
+			// game thread
 			if (response.matches("Player.*resigned") || response.matches("Player.*won!")) {
 				if (response.charAt(8) == ui.getSymbol())
 					ui.pushMessage(String.format("%c", '\u2713'));
@@ -221,9 +223,15 @@ public class GameEngine implements Logging { // aka client
 								? response.matches("Player.*resigned") ? "You resigned :(" : "You won :)"
 								: response.matches("Player.*resigned") ? response + " :)" : response + " :(",
 						serverCode == GAME ? "please exit" : "you can still chat, or exit to play another game");
-				exit(msg, "!game! game ended", INFORMATION, null, false);
-				if (serverCode == GAME)
-					System.exit(0);
+				exit(msg, "!game! game ended", INFORMATION, null, serverCode == GAME, "Game Over");
+				return 1;
+			} else if (response.equals("It's a tie!")) {
+				updateBoard();
+				ui.setEnableTurn(false);
+				gameEnded = true;
+				String msg = String.format("\n\n%s\n\nGame ended; %s", "It's a tie!",
+						serverCode == GAME ? "please exit" : "you can still chat, or exit to play another game");
+				exit(msg, "!game! game ended", INFORMATION, null, serverCode == GAME, "Game Over");
 				return 1;
 			}
 
@@ -239,15 +247,15 @@ public class GameEngine implements Logging { // aka client
 			log("End %s setup", starting ? "starting" : "ending");
 		} catch (EOFException e) {
 			exit("Another player unexpectedly disconnected; if you're connected to chat server you may still chat.\n\nIf you don't know why this happened, please inform the developers",
-					"!game! EOFException in setup()", INFORMATION, e, serverCode == GAME);
+					"!game! EOFException in setup()", INFORMATION, e, serverCode == GAME, "Player Disconnected");
 			return 1;
 		} catch (IOException e) {
 			exit("Connection to Game Server lost; if you're connected to chat server you may still chat.\n\nIf you don't know why this happened, please inform the developers",
-					"!game! IOException in setup()", WARNING, e, serverCode == GAME);
+					"!game! IOException in setup()", WARNING, e, serverCode == GAME, "Connection Error");
 			return 1;
 		} catch (ClassNotFoundException e) {
 			exit("Something went very wrong; please exit and inform the developers",
-					"!game! ClassNotFoundException in setup()", ERROR, e, true);
+					"!game! ClassNotFoundException in setup()", ERROR, e, true, "Very Serious Error");
 			return 1;
 		}
 		return 0;
@@ -286,7 +294,7 @@ public class GameEngine implements Logging { // aka client
 			serverOutput.writeObject(move);
 		} catch (IOException e) {
 			exit("Connection to Game Server lost; if you're connected to chat server you may still chat.\n\nIf you don't know why this happened, please inform the developers",
-					"!game! IOException in play()", WARNING, e, serverCode == GAME);
+					"!game! IOException in play()", WARNING, e, serverCode == GAME, "Connection Error");
 			return 1;
 		}
 		log("Got and sent move: [%d, %d]", move / 10, move % 10);
@@ -334,11 +342,11 @@ public class GameEngine implements Logging { // aka client
 
 		} catch (IOException e) {
 			exit("Couldn't connect to Chat Server; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
-					"!chat! IOException in getChatConnection()\nExiting...\n", WARNING, e, serverCode == CHAT);
+					"!chat! IOException in getChatConnection()\nExiting...\n", WARNING, e, serverCode == CHAT, "Connection Error");
 			return 1;
 		} catch (ClassNotFoundException e) {
 			exit("Something went very wrong; please exit and inform the developers.",
-					"!chat! ClassNotFoundException in chatReader.run()", ERROR, e, true);
+					"!chat! ClassNotFoundException in chatReader.run()", ERROR, e, true, "Very Serious Error");
 			return 1;
 		}
 		return 0;
@@ -369,11 +377,11 @@ public class GameEngine implements Logging { // aka client
 					ui.pushMessage(msg);
 				} catch (IOException e) {
 					exit("Connection to Chat Server lost; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
-							"!chat! IOException in chatReader.run()", WARNING, e, serverCode == CHAT);
+							"!chat! IOException in chatReader.run()", WARNING, e, serverCode == CHAT, "Connection Error");
 					return;
 				} catch (ClassNotFoundException e) {
 					exit("Something went very wrong; please exit and inform the developers.",
-							"!chat! ClassNotFoundException in chatReader.run()", ERROR, e, true);
+							"!chat! ClassNotFoundException in chatReader.run()", ERROR, e, true, "Very Serious Error");
 				}
 			}
 		}
@@ -417,7 +425,7 @@ public class GameEngine implements Logging { // aka client
 						chatOutput.writeObject(msg);
 					} catch (IOException e) {
 						exit("Connection to Chat Server lost; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
-								"!chat! IOException in chatWriter.run()", WARNING, e, serverCode == CHAT);
+								"!chat! IOException in chatWriter.run()", WARNING, e, serverCode == CHAT, "Connection Error");
 						return;
 					}
 				}
@@ -437,7 +445,7 @@ public class GameEngine implements Logging { // aka client
 	 * @param terminate boolean, whether or not an error has occured and the
 	 *                  application has to exit
 	 */
-	private void exit(String error_msg, String log_msg, int type, Exception e, boolean terminate) {
+	private void exit(String error_msg, String log_msg, int type, Exception e, boolean terminate, String title) {
 		if (terminate)
 			logerr(log_msg);
 		else
@@ -450,7 +458,7 @@ public class GameEngine implements Logging { // aka client
 			;
 		}
 
-		JOptionPane.showMessageDialog(this.ui, error_msg, terminate ? "Error" : "Message", type);
+		JOptionPane.showMessageDialog(this.ui, error_msg, title, type);
 		if (terminate)
 			System.exit(0);
 	}
@@ -464,7 +472,7 @@ public class GameEngine implements Logging { // aka client
 	 * 
 	 * @see GameBoard#GameBoard(char[][]) GameBoard(char[][])
 	 * 
-	 * @throws ClassNotFoundException 
+	 * @throws ClassNotFoundException
 	 * @throws IOException            thrown when server disconnects
 	 * @throws EOFException           thrown when server closes connection
 	 */
@@ -478,48 +486,49 @@ public class GameEngine implements Logging { // aka client
 	 * Creates a UI to get the GameEngine options.
 	 */
 	private void getClientOptions() {
-		
+
 		JFrame optWind = new JFrame("Select Server Options");
-		
+
 		JPanel optPanel = new JPanel();
-		optPanel.setLayout(new BoxLayout(optPanel,BoxLayout.PAGE_AXIS));
+		optPanel.setLayout(new BoxLayout(optPanel, BoxLayout.PAGE_AXIS));
 		optWind.setVisible(true);
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		optWind.setSize(new Dimension(500,500));
+		optWind.setSize(new Dimension(500, 500));
 		optWind.setResizable(true);
-		
-		//upper panel: address + character
+
+		// upper panel: address + character
 		JPanel upperPanel = new JPanel();
 		upperPanel.setLayout(new FlowLayout());
-		
-		JPanel addressPanel  = new JPanel();
-		addressPanel.setLayout(new BoxLayout(addressPanel,BoxLayout.Y_AXIS));
+
+		JPanel addressPanel = new JPanel();
+		addressPanel.setLayout(new BoxLayout(addressPanel, BoxLayout.Y_AXIS));
 		JLabel addressLabel = new JLabel("Server IP:");
-		addressLabel.setPreferredSize(new Dimension(100,50));
+		addressLabel.setPreferredSize(new Dimension(100, 50));
 		JTextField addressField = new JTextField("127.0.0.1");
 		addressPanel.add(addressLabel);
 		addressPanel.add(addressField);
-		
+
 		JPanel listPanel = new JPanel();
-		listPanel.setLayout(new BoxLayout(listPanel,BoxLayout.Y_AXIS));
-		String[] chars = {"X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P", "Q", "R", "S", "T", "U", "V", "W", "<", "?", "~"};
-		JList<String> charList = new JList<String>(chars); //JList forces me to use strings here
+		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+		String[] chars = { "X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P",
+				"Q", "R", "S", "T", "U", "V", "W", "<", "?", "~" };
+		JList<String> charList = new JList<String>(chars); // JList forces me to use strings here
 		charList.setBackground(Color.BLUE);
 		charList.setSelectedIndex(0);
 		JScrollPane scrollList = new JScrollPane(charList);
 		JLabel listLabel = new JLabel("Choose your character");
 		listPanel.add(listLabel);
 		listPanel.add(scrollList);
-		
+
 		upperPanel.add(addressPanel);
 		upperPanel.add(listPanel);
 		optPanel.add(Box.createVerticalGlue());
-		
-		//lower panel: printStackTrace + chat/game + color/submit buttons
+
+		// lower panel: printStackTrace + chat/game + color/submit buttons
 		JPanel lowerPanel = new JPanel();
-		lowerPanel.setLayout(new BoxLayout(lowerPanel,BoxLayout.Y_AXIS));
+		lowerPanel.setLayout(new BoxLayout(lowerPanel, BoxLayout.Y_AXIS));
 		JCheckBox printButton = new JCheckBox("I want to receive crash reports on my command line");
-		
+
 		ButtonGroup bg = new ButtonGroup();
 		JRadioButton gameChatButton = new JRadioButton("I want to play the game with chat enabled");
 		JRadioButton gameOnlyButton = new JRadioButton("I want to play the game with chat disabled");
@@ -534,34 +543,35 @@ public class GameEngine implements Logging { // aka client
 		lowerPanel.add(gameOnlyButton);
 		lowerPanel.add(chatOnlyButton);
 		lowerPanel.add(Box.createVerticalGlue());
-		
+
 		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.X_AXIS));
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 		JButton submitButton = new JButton("Submit");
 		JButton colorButton = new JButton("Select color");
 		buttonPanel.add(submitButton);
 		buttonPanel.add(colorButton);
-		
+
 		lowerPanel.add(buttonPanel);
 		optPanel.add(upperPanel);
 		optPanel.add(lowerPanel);
-				
+
 		optWind.add(optPanel);
-		optWind.revalidate(); //yes, this IS necessary
-		
-		//event listeners
+		optWind.revalidate(); // yes, this IS necessary
+
+		// event listeners
 		colorButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				color = JColorChooser.showDialog(optWind, "Choose a color", Color.BLACK);
-				if (color==null) color = Color.BLACK;
-			}	
+				if (color == null)
+					color = Color.BLACK;
+			}
 		});
-		
+
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+
 				character = charList.getSelectedValue().charAt(0);
 				printStackTrace = printButton.isSelected();
 				address = Utility.myStrip(addressField.getText(), ' ', '\t');
@@ -573,9 +583,9 @@ public class GameEngine implements Logging { // aka client
 					serverCode = CHAT;
 				argumentsPassed = true;
 				optWind.setVisible(false);
-			}	
+			}
 		});
-  }
+	}
 
 	/**
 	 * Main method. Run to create and run a client
