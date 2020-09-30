@@ -38,6 +38,8 @@ public abstract class Server implements Logging {
 	
 	protected final char[] symbols;
 	
+	// boardSize is in superclass because it's initialised by the UI
+	// that is also in the superclass
 	protected int boardSize;
 	
 	// array of chess piece characters used to replace duplicates
