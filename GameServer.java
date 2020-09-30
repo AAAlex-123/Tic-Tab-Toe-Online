@@ -104,7 +104,8 @@ public class GameServer extends Server {
 
 				// exchange send ack message
 				outputs[i].writeObject(
-						String.format("Hi player '%c', you're now connected as #%d.\nPlease wait for others to join.", symbols[i], i));
+						String.format("Hi player '%c', you're now connected as #%d.\nPlease wait for others to join.",
+								symbols[i], i));
 
 				log("\nPlayer #%d connected as '%c'", i, symbols[i]);
 			}
@@ -199,10 +200,13 @@ public class GameServer extends Server {
 			}
 
 			gameBoard.markSquare(move, symbols[currentPlayer]);
-			if (gameBoard.hasWon()) {
+			// check if game has ended
+			if (gameBoard.hasWon() || gameBoard.hasTied()) {
 				log("Final board:\n%s", gameBoard);
-				broadcast("Player '%c' won!", symbols[currentPlayer]);
-				log("Player '%c' won!\nGame over", symbols[currentPlayer]);
+				String msg = gameBoard.hasTied() ? "It's a tie!"
+						: String.format("Player '%c' won!", symbols[currentPlayer]);
+				broadcast(msg);
+				log("%s\nGame over", msg);
 				for (int i = 0; i < playerCount; i++) {
 					sendBoard(i);
 				}
