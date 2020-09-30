@@ -5,18 +5,19 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
 @SuppressWarnings("serial")
 public class GameUI extends JFrame {
-	/*
+	/*		DO WE NEED THIS BLOCK OF TEXT? IF NOT GO AHEAD AND DELET
 	 * Use getSymbol, getColor to get the char/color of each UI. Then use the public
 	 * method setCustomOptions by giving a char and color array such that ```char of
 	 * player i -> color of player i```. In any other case the game will use a blue X
@@ -27,8 +28,9 @@ public class GameUI extends JFrame {
 	private Color color;
 	private String chatText = "";
 	private boolean dataReceived = false;
-	private int answer = -1,boardSize; 
-	private static int HEIGHT_MULTIPLIER;//effectively final, used to calculate graphics size
+	private int answer = -1;
+	
+	// UI components
 	private final JLabel error_msg;
 	private final Screen screen;
 	private final JTextArea log;
@@ -37,19 +39,24 @@ public class GameUI extends JFrame {
 	private final JPanel autismPanel, inputPanel, chatPanel, logPanel;
 	private final JScrollPane scroll;
 	private static String[] letters = { "A", "B", "C", "D", "E","F","G","H"};
+	
+	// Constants
+	private static int HEIGHT_MULTIPLIER;  // used to calculate graphics size
+	private static final int SCREEN_WIDTH = 600;
+	private static final int SCREEN_HEIGHT = 600;
 
-	public GameUI(Color color, char name,int boardSize, int heightMultiplier) {
+	// constructor doesn't need boardSize 8)
+	public GameUI(Color color, char name, int heightMultiplier) {
 		super("Naughts & Crosses Online");
 		this.color = color;
 		this.name = name;
-		this.boardSize = boardSize; //used to get the correct letter for input matcher, set window size
 		GameUI.HEIGHT_MULTIPLIER = heightMultiplier;
   
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 
 		// screen
 		screen = new Screen();
-		screen.setPreferredSize(new Dimension(100*boardSize, 100*boardSize));
+		screen.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
 
 		// logPanel
 		logPanel = new JPanel();
@@ -168,7 +175,20 @@ public class GameUI extends JFrame {
 		add(logPanel);
 		add(Box.createRigidArea(new Dimension(50, 35)));
 		add(disconnectB);
+
+		// when user clicks on window, `move` gets focus
+		addWindowFocusListener(new WindowAdapter() {
+		    public void windowGainedFocus(WindowEvent e) {
+		        move.requestFocusInWindow();
+		    }
+		});
+		
+		// initialise with empty board so the Screen can render
+		// Screen uses screen.board.size so we need to inisialise it
+		screen.board = new GameBoard(0);
 	}
+	
+	// 3 cute methods owo
 
 	public void pushMessage(String mes) {
 		log.setText(String.format("%s%s\n", log.getText(), mes));
@@ -183,14 +203,18 @@ public class GameUI extends JFrame {
 	}
 
 	public void setScreen(GameBoard gboard) {
+		// set size now that we know how big the board is
+		// for some reason maybe doesn't work as expected (?)
+		// maybe because `screen.setPreferredSize()` is called at constructor?
 		screen.board = gboard;
-		
+		screen.setPreferredSize(new Dimension(100*gboard.size, 100*gboard.size));
 		screen.repaint();
+		
 		// Wait until it loads then update the whole thing.
 		// JVM has forced my hand
 		// yes, this.revalidate() doesn't work here
 		try {
-			Thread.sleep(200);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -204,8 +228,13 @@ public class GameUI extends JFrame {
 		move.setEnabled(enable);
 		if (!enable)
 			move.setText("Your next move");
-		else
+		else {
 			move.setText("");
+			// bring window to front and
+			// get focus when it's your turn
+			toFront();
+			move.requestFocusInWindow();
+		}
 	}
 
 	public void setEnableChat(boolean enable) {
@@ -279,7 +308,7 @@ public class GameUI extends JFrame {
 					return;
 			}
       String input = Utility.myStrip(move.getText().toUpperCase(), ' ', '\t');
-      if (!input.matches(String.format("[A-%s][1-%d]",letters[boardSize-1],boardSize))) {
+      if (!input.matches(String.format("[A-%s][1-%d]",letters[screen.board.size-1], screen.board.size))) {
         error_msg.setVisible(true);
         return;
       }
@@ -299,9 +328,7 @@ public class GameUI extends JFrame {
 		private GameBoard board;
 		private final HashMap<Character, Color> colorMap = new HashMap<Character, Color>();
 	
-		public Screen() {
-			board = new GameBoard(boardSize);
-		}
+		public Screen() {;}
 
 		@Override
 		public void paintComponent(Graphics g) {
