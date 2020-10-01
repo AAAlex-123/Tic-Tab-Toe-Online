@@ -15,15 +15,10 @@ import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
-@SuppressWarnings("serial")
-public class GameUI extends JFrame {
-	/*		DO WE NEED THIS BLOCK OF TEXT? IF NOT GO AHEAD AND DELET
-	 * Use getSymbol, getColor to get the char/color of each UI. Then use the public
-	 * method setCustomOptions by giving a char and color array such that ```char of
-	 * player i -> color of player i```. In any other case the game will use a blue X
-	 * and a red O for the players
-	 */
 
+public class GameUI extends JFrame {
+	
+	private static final long serialVersionUID = 1L;
 	private char name;
 	private Color color;
 	private String chatText = "";
@@ -45,7 +40,7 @@ public class GameUI extends JFrame {
 	private static int SCREEN_WIDTH;
 	private static int SCREEN_HEIGHT;
 
-	// constructor doesn't need boardSize 8)
+
 	public GameUI(Color color, char name, int heightMultiplier) {
 		super("Naughts & Crosses Online");
 		this.color = color;
@@ -69,7 +64,7 @@ public class GameUI extends JFrame {
 		logTextArea = new JTextArea("This is a message log\n");
 		logTextArea.setEditable(false);
 
-		// scroll to the bottom when new messages are pushed. pls don't remove :)
+		// scroll to the bottom when new messages are pushed
 		((DefaultCaret) logTextArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 		scroll = new JScrollPane(logTextArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -139,7 +134,6 @@ public class GameUI extends JFrame {
 			}
 		});
 		moveButton = new JButton("Submit");
-//		moveButton.setMnemonic(KeyEvent.VK_SPACE);
 		moveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -162,8 +156,6 @@ public class GameUI extends JFrame {
 					return;
 				}
 				answer = -2;
-				// un-comment if you need for debugging
-//				pushMessage("Player "+ name +" resigned the game!");
 			}
 		});
 
@@ -186,17 +178,12 @@ public class GameUI extends JFrame {
 		    }
 		});
 		
-		// initialise with empty board so the Screen can render
-		// Screen uses screen.board.size so we need to inisialise it
+		// initialize with empty board so the Screen can render
+		// Screen uses screen.board.size so we need to inisialize it
 		screen.board = new GameBoard(0);
 	}
 	
-	// 3 cute methods owo
 
-	public void pushMessage(String mes) {
-		logTextArea.setText(String.format("%s%s\n", logTextArea.getText(), mes));
-	}
-	
 	public void pushMessage(String mes, Object... args) {//Use String.format instead of this
 		logTextArea.setText(String.format("%s%s\n", logTextArea.getText(), mes, args));
 	}
@@ -324,14 +311,12 @@ public class GameUI extends JFrame {
 							JOptionPane.ERROR_MESSAGE);
 					return;
 			}
-      String input = Utility.myStrip(moveTextArea.getText().toUpperCase(), ' ', '\t');
+      String input = Server.Utility.myStrip(moveTextArea.getText().toUpperCase(), ' ', '\t');
       if (!input.matches(String.format("[A-%s][1-%d]",letters[screen.board.size-1], screen.board.size))) {
         error_msg.setVisible(true);
         return;
       }
       answer = convertInput(input);
-      // un-comment if you need for debugging
-      // pushMessage(String.format("Player %s played %s", name, move.getText()));
       moveTextArea.setText("");
       error_msg.setVisible(false);
 	}
@@ -342,6 +327,8 @@ public class GameUI extends JFrame {
 	}
 
 	private class Screen extends JPanel {
+
+		private static final long serialVersionUID = -4300424235585763140L;
 		private GameBoard board;
 		private final HashMap<Character, Color> colorMap = new HashMap<Character, Color>();
 	
