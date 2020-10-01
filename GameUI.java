@@ -33,10 +33,10 @@ public class GameUI extends JFrame {
 	// UI components
 	private final JLabel error_msg;
 	private final Screen screen;
-	private final JTextArea log;
-	private final JTextField player, move, chatField;
-	private final JButton submitB, disconnectB, chatButton;
-	private final JPanel autismPanel, inputPanel, chatPanel, logPanel;
+	private final JTextArea logTextArea;
+	private final JTextField playerTextArea, moveTextArea, chatTextArea;
+	private final JButton moveButton, resignButton, chatButton;
+	private final JPanel autismPanel, movePanel, chatPanel, logPanel;
 	private final JScrollPane scroll;
 	private static String[] letters = { "A", "B", "C", "D", "E","F","G","H"};
 	
@@ -63,13 +63,13 @@ public class GameUI extends JFrame {
 		logPanel.setLayout(new BoxLayout(logPanel, BoxLayout.Y_AXIS));
 
 		// logPanel -- scroll -- log
-		log = new JTextArea("This is a message log\n");
-		log.setEditable(false);
+		logTextArea = new JTextArea("This is a message log\n");
+		logTextArea.setEditable(false);
 
 		// scroll to the bottom when new messages are pushed. pls don't remove :)
-		((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		((DefaultCaret) logTextArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
-		scroll = new JScrollPane(log, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+		scroll = new JScrollPane(logTextArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scroll.setPreferredSize(new Dimension(100, 250));
 
@@ -80,8 +80,8 @@ public class GameUI extends JFrame {
 		chatPanel.setLayout(new BoxLayout(chatPanel, BoxLayout.X_AXIS));
 
 		// logPanel -- chatPanel -- chatField / chatButton
-		chatField = new JTextField();
-		chatField.addKeyListener(new KeyListener() {
+		chatTextArea = new JTextField();
+		chatTextArea.addKeyListener(new KeyListener() {
 			@Override
 			public void keyTyped(KeyEvent e) {;}
 			@Override
@@ -100,7 +100,7 @@ public class GameUI extends JFrame {
 			}
 		});
 
-/*ADD*/ chatPanel.add(chatField);
+/*ADD*/ chatPanel.add(chatTextArea);
 /*ADD*/ chatPanel.add(chatButton);
 /*ADD*/ logPanel.add(chatPanel);
 
@@ -109,22 +109,22 @@ public class GameUI extends JFrame {
 		autismPanel.setLayout(new FlowLayout()); // because there is no other way to force Layout to cooperate
 
 		// autismPanel -- player
-		player = new JTextField("You are player " + name);
-		player.setEditable(false);
+		playerTextArea = new JTextField("You are player " + name);
+		playerTextArea.setEditable(false);
 
-/*ADD*/ autismPanel.add(player);
+/*ADD*/ autismPanel.add(playerTextArea);
 
 		// error_msg
 		error_msg = new JLabel("Invalid input: Insert [letter][number]");
 		error_msg.setVisible(false);
 
 		// inputPanel
-		inputPanel = new JPanel();
-		inputPanel.setLayout(new FlowLayout());
+		movePanel = new JPanel();
+		movePanel.setLayout(new FlowLayout());
 
 		// inputPanel -- move / submitB
-		move = new JTextField("Your next move", 10);
-		move.addKeyListener(new KeyListener() {
+		moveTextArea = new JTextField("Your next move", 10);
+		moveTextArea.addKeyListener(new KeyListener() {
 			@Override
 			public void keyTyped(KeyEvent e) {;}
 			@Override
@@ -135,21 +135,21 @@ public class GameUI extends JFrame {
 					submitMove();
 			}
 		});
-		submitB = new JButton("Submit");
-//		submitB.setMnemonic(KeyEvent.VK_SPACE);
-		submitB.addActionListener(new ActionListener() {
+		moveButton = new JButton("Submit");
+//		moveButton.setMnemonic(KeyEvent.VK_SPACE);
+		moveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				submitMove();
 			}
 		});
-/*ADD*/ inputPanel.add(move);
-/*ADD*/ inputPanel.add(submitB);
+/*ADD*/ movePanel.add(moveTextArea);
+/*ADD*/ movePanel.add(moveButton);
 
 		// disconnectB
-		disconnectB = new JButton("Resign");
-		disconnectB.setMnemonic(KeyEvent.VK_R);
-		disconnectB.addActionListener(new ActionListener() {
+		resignButton = new JButton("Resign");
+		resignButton.setMnemonic(KeyEvent.VK_R);
+		resignButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (!dataReceived) {
@@ -169,17 +169,17 @@ public class GameUI extends JFrame {
 		add(autismPanel);
 		add(screen);
 		add(Box.createRigidArea(new Dimension(20, 15)));
-		add(inputPanel);
+		add(movePanel);
 		add(error_msg);
 		add(Box.createRigidArea(new Dimension(50, 15)));
 		add(logPanel);
 		add(Box.createRigidArea(new Dimension(50, 35)));
-		add(disconnectB);
+		add(resignButton);
 
 		// when user clicks on window, `move` gets focus
 		addWindowFocusListener(new WindowAdapter() {
 		    public void windowGainedFocus(WindowEvent e) {
-		        move.requestFocusInWindow();
+		        moveTextArea.requestFocusInWindow();
 		    }
 		});
 		
@@ -191,15 +191,15 @@ public class GameUI extends JFrame {
 	// 3 cute methods owo
 
 	public void pushMessage(String mes) {
-		log.setText(String.format("%s%s\n", log.getText(), mes));
+		logTextArea.setText(String.format("%s%s\n", logTextArea.getText(), mes));
 	}
 	
 	public void pushMessage(String mes, Object... args) {//Use String.format instead of this
-		log.setText(String.format("%s%s\n", log.getText(), mes, args));
+		logTextArea.setText(String.format("%s%s\n", logTextArea.getText(), mes, args));
 	}
 
 	public void pushMessage(String mes, boolean newline) {//Append \n instead of this
-		log.setText(String.format("%s%s%s", log.getText(), mes, newline ? "\n" : ""));
+		logTextArea.setText(String.format("%s%s%s", logTextArea.getText(), mes, newline ? "\n" : ""));
 	}
 
 	public void setScreen(GameBoard gboard) {
@@ -223,27 +223,41 @@ public class GameUI extends JFrame {
 	}
 
 	public void setEnableTurn(boolean enable) {
-		submitB.setEnabled(enable);
-		disconnectB.setEnabled(enable);
-		move.setEnabled(enable);
+		moveButton.setEnabled(enable);
+		resignButton.setEnabled(enable);
+		moveTextArea.setEnabled(enable);
 		if (!enable)
-			move.setText("Your next move");
+			moveTextArea.setText("Your next move");
 		else {
-			move.setText("");
+			moveTextArea.setText("");
 			// bring window to front and
 			// get focus when it's your turn
 			toFront();
-			move.requestFocusInWindow();
+			moveTextArea.requestFocusInWindow();
 		}
 	}
 
 	public void setEnableChat(boolean enable) {
 		chatButton.setEnabled(enable);
-		chatField.setEnabled(enable);
+		chatTextArea.setEnabled(enable);
 		if (!enable)
-			chatField.setText("You're not connected to chat server");
+			chatTextArea.setText("You're not connected to chat server");
 		else
-			chatField.setText("");
+			chatTextArea.setText("");
+	}
+	
+	public void focusMove() {
+		focusWindow();
+		moveTextArea.requestFocusInWindow();
+	}
+	
+	public void focusChat() {
+		focusWindow();
+		chatTextArea.requestFocusInWindow();
+	}
+	
+	public void focusWindow() {
+		toFront();
 	}
 
 	public int getAnswer() {
@@ -261,7 +275,7 @@ public class GameUI extends JFrame {
 	
 	public void setSymbol(char symbol) {
 		this.name = symbol;
-		player.setText("You are player " + name);
+		playerTextArea.setText("You are player " + name);
 	}
 
 	public Color getColor() {
@@ -307,7 +321,7 @@ public class GameUI extends JFrame {
 							JOptionPane.ERROR_MESSAGE);
 					return;
 			}
-      String input = Utility.myStrip(move.getText().toUpperCase(), ' ', '\t');
+      String input = Utility.myStrip(moveTextArea.getText().toUpperCase(), ' ', '\t');
       if (!input.matches(String.format("[A-%s][1-%d]",letters[screen.board.size-1], screen.board.size))) {
         error_msg.setVisible(true);
         return;
@@ -315,13 +329,13 @@ public class GameUI extends JFrame {
       answer = convertInput(input);
       // un-comment if you need for debugging
       // pushMessage(String.format("Player %s played %s", name, move.getText()));
-      move.setText("");
+      moveTextArea.setText("");
       error_msg.setVisible(false);
 	}
 	
 	private void sendChat() {
-		chatText += (chatText.equals("") ? "" : "\n") + chatField.getText();
-		chatField.setText("");
+		chatText += (chatText.equals("") ? "" : "\n") + chatTextArea.getText();
+		chatTextArea.setText("");
 	}
 
 	private class Screen extends JPanel {
