@@ -42,14 +42,17 @@ public class GameUI extends JFrame {
 	
 	// Constants
 	private static int HEIGHT_MULTIPLIER;  // used to calculate graphics size
-	private static final int SCREEN_WIDTH = 600;
-	private static final int SCREEN_HEIGHT = 600;
+	private static int SCREEN_WIDTH;
+	private static int SCREEN_HEIGHT;
 
 	// constructor doesn't need boardSize 8)
 	public GameUI(Color color, char name, int heightMultiplier) {
 		super("Naughts & Crosses Online");
 		this.color = color;
 		this.name = name;
+		
+		SCREEN_WIDTH = 600;
+		SCREEN_HEIGHT = 600;
 		GameUI.HEIGHT_MULTIPLIER = heightMultiplier;
   
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
