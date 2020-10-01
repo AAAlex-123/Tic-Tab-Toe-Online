@@ -1,9 +1,8 @@
 package ttt_online;
 
 /**
- * An interface for <code>log</code> and <code>logerr</code> methods because
- * both GameEngine and Server are using it and there can't be a superclass of
- * these.
+ * An interface for <code>log</code> and <code>logerr</code> methods providing an easily changeable print and error stream.
+ * Default methods implement the System.out.printf and System.err.printf streams. 
  *
  */
 public interface Logging {

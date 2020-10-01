@@ -154,7 +154,7 @@ public class GameEngine implements Logging { // aka client
 			serverOutput.writeObject(ui.getColor());
 
 			String serverMsg = (String) serverInput.readObject();
-			ui.pushMessage(String.format("\nGame Server said: %s", serverMsg));
+			ui.pushMessage("\nGame Server said: %s", serverMsg);
 
 			Matcher m = Pattern.compile(".*#(\\d).*").matcher(serverMsg);
 			m.find();
@@ -165,7 +165,7 @@ public class GameEngine implements Logging { // aka client
 					ui.getColor().getBlue());
 
 			// wait for ready message and for updated symbols/colors
-			ui.pushMessage(String.format("\nGame Server said: %s", (String) serverInput.readObject()));
+			ui.pushMessage("\nGame Server said: %s", (String) serverInput.readObject());
 
 			char[] symbols = ((char[]) serverInput.readObject());
 			Color[] colors = ((Color[]) serverInput.readObject());
@@ -223,7 +223,7 @@ public class GameEngine implements Logging { // aka client
 			// game thread
 			if (response.matches("Player.*resigned") || response.matches("Player.*won!")) {
 				if (response.charAt(8) == ui.getSymbol())
-					ui.pushMessage(String.format("%c", '\u2713'));
+					ui.pushMessage("%c", '\u2713');
 				updateBoard();
 				ui.setEnableTurn(false);
 				gameEnded = true;
@@ -287,7 +287,7 @@ public class GameEngine implements Logging { // aka client
 		while (move == -1) {
 			move = ui.getAnswer();
 			if (move != -1 && move != -2 && !localGameBoard.isValid(move)) {
-				ui.pushMessage(String.format("You can't play %c%s!", 65 + move / 10, move % 10 + 1));
+				ui.pushMessage("You can't play %c%s!", 65 + move / 10, move % 10 + 1);
 				log("Tried to play %c%s", 65 + move / 10, move % 10 + 1);
 				move = -1;
 			}
@@ -300,7 +300,7 @@ public class GameEngine implements Logging { // aka client
 		}
 
 		if (move != -2)
-			ui.pushMessage(String.format("You played %c%s", 65 + move / 10, move % 10 + 1), false);
+			ui.pushMessage("You played %c%s", 65 + move / 10, move % 10 + 1, false);
 
 		// send the move
 		try {
@@ -350,7 +350,7 @@ public class GameEngine implements Logging { // aka client
 				ui.setSymbol(newSymbol);
 			}
 
-			ui.pushMessage(String.format("\nChat Server said: %s", response));
+			ui.pushMessage("\nChat Server said: %s", response);
 			
 			ui.focusChat();
 
@@ -590,7 +590,7 @@ public class GameEngine implements Logging { // aka client
 
 				character = charList.getSelectedValue().charAt(0);
 				printStackTrace = printButton.isSelected();
-				address = Utility.myStrip(addressField.getText(), ' ', '\t');
+				address = Server.Utility.myStrip(addressField.getText(), ' ', '\t');
 				if (gameChatButton.isSelected())
 					serverCode = CHAT_GAME;
 				else if (gameOnlyButton.isSelected())

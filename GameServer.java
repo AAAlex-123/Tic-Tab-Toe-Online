@@ -217,8 +217,6 @@ public class GameServer extends Server {
 			}
 
 			// send response to move
-			// TODO replace checkmark with something else as ack, because someone else
-			// thinks 3 lines of code are too much :(
 			response = (String.format("Move received: [%c, %d]", 65 + move / 10, move % 10 + 1));
 			outputs[currentPlayer].writeObject(String.format("%c", '\u2713'));
 
