@@ -23,6 +23,7 @@ import javax.swing.*;
 public class GameEngine implements Logging { // aka client
 
 	// ports of the Game and Chat Servers
+	// Constants
 	private static final int GAME_PORT = 10001;
 	private static final int CHAT_PORT = 10002;
 
@@ -41,8 +42,10 @@ public class GameEngine implements Logging { // aka client
 	private boolean printStackTrace;
 	// used to determine UI and graphics size
 	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height < 750 ? 1 : 2;
+
+	// DELETEME: these comments
 	// TODO: make this value dependent on the server upon initialization
-	private int boardSize = 8;
+//	private int boardSize = 8;
 
 	private int serverCode;
 	private Color color = Color.BLACK;
@@ -78,9 +81,12 @@ public class GameEngine implements Logging { // aka client
 			}
 		}
 		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat");
+		
+		// DELETEME: these comments
 		// TODO: Make sure gameBoard obj OR boardSize is initialized by the server
 		// ==009localGameBoard.size
-		this.ui = new GameUI(color, character, boardSize, GameEngine.HEIGHT_MULTIPLIER);
+		// funfact constructor doesn't need boardsize
+		this.ui = new GameUI(color, character, GameEngine.HEIGHT_MULTIPLIER);
 		setupUI();
 	}
 
@@ -188,7 +194,7 @@ public class GameEngine implements Logging { // aka client
 
 	/**
 	 * Sets up the UI and exchanges messages before and after the player makes their
-	 * move. <br>
+	 * move.<br>
 	 * If at any point something goes wrong, show pop-up message then exit.
 	 * 
 	 * @param starting boolean, whether or not it is the start or the end of the
@@ -199,9 +205,15 @@ public class GameEngine implements Logging { // aka client
 	private int setup(boolean starting) {
 		try {
 			if (starting) {
-				ui.setEnableTurn(false);
 				ui.pushMessage("");
+				ui.focusMove();
 				log("\nStarting turn");
+			} else {
+				// disable buttons/text
+				if (serverCode == CHAT_GAME) {
+					ui.focusChat();
+				}
+				ui.setEnableTurn(false);
 			}
 
 			// get ready message
@@ -241,7 +253,7 @@ public class GameEngine implements Logging { // aka client
 			// update board
 			updateBoard();
 
-			// enable/disable buttons/text
+			// enable buttons/text
 			ui.setEnableTurn(starting);
 
 			log("End %s setup", starting ? "starting" : "ending");
@@ -269,6 +281,7 @@ public class GameEngine implements Logging { // aka client
 	 * @return int, 0 or 1, indicating success or fail
 	 */
 	private int play() {
+		
 		// get the move in the worst possible way (:
 		int move = -1;
 		while (move == -1) {
@@ -298,6 +311,7 @@ public class GameEngine implements Logging { // aka client
 			return 1;
 		}
 		log("Got and sent move: [%d, %d]", move / 10, move % 10);
+		
 		return 0;
 	}
 
@@ -337,6 +351,8 @@ public class GameEngine implements Logging { // aka client
 			}
 
 			ui.pushMessage(String.format("\nChat Server said: %s", response));
+			
+			ui.focusChat();
 
 			log("Connected to Chat Server successfully as player '%c'", ui.getSymbol());
 

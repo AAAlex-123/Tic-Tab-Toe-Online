@@ -38,6 +38,8 @@ public abstract class Server implements Logging {
 	
 	protected final char[] symbols;
 	
+	// boardSize is in superclass because it's initialised by the UI
+	// that is also in the superclass
 	protected int boardSize;
 	
 	// array of chess piece characters used to replace duplicates
@@ -97,7 +99,7 @@ public abstract class Server implements Logging {
 	 */
 	protected void getServerOptions() {
 
-		JFrame optWind = new JFrame("Select Server Options");
+		JFrame optWind = new JFrame(String.format("Select %s Options", this.getClass().getSimpleName()));
 		JPanel optPanel = new JPanel();
 		optPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
 		optWind.setVisible(true);
@@ -138,7 +140,11 @@ public abstract class Server implements Logging {
 		
 		listPanel.add(playerPanel);
 		listPanel.add(Box.createRigidArea(new Dimension(50,50)));
-		listPanel.add(boardPanel);
+		if (this.getClass().getSimpleName().equals("GameServer")) {
+			listPanel.add(boardPanel);
+		} else {
+			listPanel.add(Box.createRigidArea(new Dimension(150,150)));
+		}
 		
 		optPanel.add(Box.createRigidArea(new Dimension(20,20)));
 		optPanel.add(listPanel);
