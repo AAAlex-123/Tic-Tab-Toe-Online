@@ -37,6 +37,19 @@ public class ChatServer extends Server {
 		for (int i = 0; i < playerCount; i++)
 			available[i] = true;
 	}
+	
+	/**
+	 * Constructs the Chat Server object with a set playerCount
+	 * 
+	 * @param int playerCount number of connections
+	 * @see Server#Server() Server()
+	 */
+	public ChatServer(int playerCount,boolean printStackTrace) {
+		super(playerCount,printStackTrace);
+		this.available = new boolean[playerCount];
+		for (int i = 0; i < playerCount; i++)
+			available[i] = true;
+	}
 
 	/**
 	 * Main method that calls other methods to actually run the server.<br>
@@ -119,7 +132,7 @@ public class ChatServer extends Server {
 
 				log("\nChat Connection #%d established with '%c'", index, symbols[index]);
 
-				new ChatServerThread(index).start();
+				new ChatServerThread(index).run();
 				index++;
 			}
 		} catch (IOException e) {
@@ -162,7 +175,7 @@ public class ChatServer extends Server {
 	 * @see ChatServer#closeStreams(int) closeOutputStream()
 	 * @see ChatServer#available available
 	 */
-	private class ChatServerThread extends Thread {
+	private class ChatServerThread implements Runnable {
 
 		private final int index;
 
