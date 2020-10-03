@@ -311,7 +311,7 @@ public class GameUI extends JFrame {
 							JOptionPane.ERROR_MESSAGE);
 					return;
 			}
-      String input = Server.Utility.myStrip(moveTextArea.getText().toUpperCase(), ' ', '\t');
+      String input = GameEngine.Utility.myStrip(moveTextArea.getText().toUpperCase(), ' ', '\t');
       if (!input.matches(String.format("[A-%s][1-%d]",letters[screen.board.size-1], screen.board.size))) {
         error_msg.setVisible(true);
         return;
