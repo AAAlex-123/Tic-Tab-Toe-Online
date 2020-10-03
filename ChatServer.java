@@ -6,12 +6,14 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Server-side application to handle chat between players.
  */
-public class ChatServer extends Server {
+public class ChatServer extends Server implements Runnable{
 	
 	// port of the Chat Server
 	private static final int CHAT_PORT = 10002;
@@ -59,7 +61,8 @@ public class ChatServer extends Server {
 	 * @see ChatServer#initialiseServer() initialiseServer()
 	 * @see ChatServer#getConnections() getConnections()
 	 */
-	protected void run() {
+	@Override
+	public void run() {
 		initialiseServer();
 		getConnections();
 	}
@@ -132,7 +135,8 @@ public class ChatServer extends Server {
 
 				log("\nChat Connection #%d established with '%c'", index, symbols[index]);
 
-				new ChatServerThread(index).run();
+				ExecutorService exec = Executors.newCachedThreadPool();
+				exec.execute(new ChatServerThread(index));
 				index++;
 			}
 		} catch (IOException e) {
@@ -195,6 +199,7 @@ public class ChatServer extends Server {
 		 * 
 		 * @see ChatServer#broadcast(String, Object[]) broadcast()
 		 */
+		@Override
 		public void run() {
 			log("Thread #%d started", index);
 			while (true) {
