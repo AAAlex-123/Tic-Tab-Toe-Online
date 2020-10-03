@@ -20,7 +20,7 @@ public class GameServer extends Server {
 	private final Socket[] sockets;
 
 	private final Color[] colors;
-
+	
 	private final GameBoard gameBoard;
 	private int currentPlayer = 0;
 
@@ -34,6 +34,20 @@ public class GameServer extends Server {
 		sockets = new Socket[playerCount];
 		colors = new Color[playerCount];
 		gameBoard = new GameBoard(boardSize);
+	}
+	
+	/**
+	 * Main method. Run to create and run a Game Server.
+	 *
+	 * @param args not used
+	 * @see Server#Server() Server()
+	 */
+	public static void main(String[] args) {
+		GameServer server = new GameServer();
+		ChatServer chatServer = new ChatServer(playerCount,printStackTrace);
+		chatServer.run();
+		server.run();
+		
 	}
 
 	/**
@@ -305,14 +319,4 @@ public class GameServer extends Server {
 		}
 	}
 
-	/**
-	 * Main method. Run to create and run a Game Server.
-	 *
-	 * @param args not used
-	 * @see Server#Server() Server()
-	 */
-	public static void main(String[] args) {
-		GameServer server = new GameServer();
-		server.run();
-	}
 }
