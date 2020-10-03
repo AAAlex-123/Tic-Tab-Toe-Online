@@ -8,7 +8,10 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Server-side application to handle communications with the clients
@@ -45,9 +48,16 @@ public class GameServer extends Server {
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
 		ChatServer chatServer = new ChatServer(playerCount,printStackTrace);
-		chatServer.run();
-		server.run();
-		
+		ExecutorService exec = Executors.newCachedThreadPool();
+		exec.execute(server);
+		exec.execute(chatServer);
+		//exits after 30 mins assuming the server is running unintentionally
+		try {
+			exec.awaitTermination((long) 0.5,TimeUnit.HOURS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.exit(0);
 	}
 
 	/**
@@ -57,7 +67,8 @@ public class GameServer extends Server {
 	 * @see GameServer#getConnections() getConnections()
 	 * @see GameServer#makeTurn() makeTurn()
 	 */
-	protected void run() {
+	@Override
+	public void run() {
 		initialiseServer();
 		getConnections();
 
