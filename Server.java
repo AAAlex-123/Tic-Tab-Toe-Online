@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,7 +27,7 @@ import javax.swing.JScrollPane;
 /**
  * Abstract class to run a server; GameServer and ChatServer inherit from it.
  */
-public abstract class Server implements Logging {
+public abstract class Server implements Logging,Runnable {
 
 	// server fields
 	protected static int playerCount;
@@ -85,7 +86,8 @@ public abstract class Server implements Logging {
 	 * @see GameServer#run()
 	 * @see ChatServer#run()
 	 */
-	protected abstract void run();
+	@Override
+	public abstract void run();
 
 	/**
 	 * Abstract method; initialises the server.
