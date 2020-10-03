@@ -13,6 +13,8 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -377,8 +379,9 @@ public class GameEngine implements Logging { // aka client
 	private void initChat() {
 		chatReader = new ChatReader();
 		chatWriter = new ChatWriter();
-		chatReader.run();
-		chatWriter.run();
+		ExecutorService exec = Executors.newCachedThreadPool();
+		exec.execute(chatReader);
+		exec.execute(chatWriter);
 	}
 
 	
