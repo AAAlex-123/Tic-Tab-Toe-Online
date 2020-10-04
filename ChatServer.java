@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Server-side application to handle chat between players.
  */
-public class ChatServer extends Server implements Runnable{
+public class ChatServer extends Server{
 	
 	// port of the Chat Server
 	private static final int CHAT_PORT = 10002;
@@ -74,7 +74,7 @@ public class ChatServer extends Server implements Runnable{
 	protected void initialiseServer() {
 		try {
 			server = new ServerSocket(CHAT_PORT);
-			log("\n\nChat Server ready, listening for up to %d players", playerCount);
+			log(String.format("\n\nChat Server ready, listening for up to %d players", playerCount));
 		} catch (IOException e) {
 			logerr("IOException in initialiseServer()");
 			if (printStackTrace)
@@ -119,7 +119,7 @@ public class ChatServer extends Server implements Runnable{
 					if ((i != index) && (symbols[index] == symbols[i])) {
 						char chessPiece = chessPieces
 								.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
-						log("Duplicate found '%c', replaced with '\\u%04x'", symbols[index], (int) chessPiece);
+						log(String.format("Duplicate found '%c', replaced with '\\u%04x'", symbols[index], (int) chessPiece));
 						symbols[index] = chessPiece;
 					}
 				}
@@ -133,7 +133,7 @@ public class ChatServer extends Server implements Runnable{
 				outputs[index].writeObject(
 						String.format("Hi player '%c', you're now connected.\nStart chatting!", symbols[index]));
 
-				log("\nChat Connection #%d established with '%c'", index, symbols[index]);
+				log(String.format("\nChat Connection #%d established with '%c'", index, symbols[index]));
 
 				ExecutorService exec = Executors.newCachedThreadPool();
 				exec.execute(new ChatServerThread(index));
@@ -164,7 +164,9 @@ public class ChatServer extends Server implements Runnable{
 				return i;
 			}
 		return -1;
-	}
+		
+	
+	}//class
 
 	/**
 	 * Private inner class that listens to a specific client's Output Stream and
@@ -201,12 +203,12 @@ public class ChatServer extends Server implements Runnable{
 		 */
 		@Override
 		public void run() {
-			log("Thread #%d started", index);
+			log(String.format("Thread #%d started", index));
 			while (true) {
 				try {
 					broadcast((String) inputs[index].readObject());
 				} catch (SocketException e) {
-					logerr("SocketException in ChatServerThread.run(); connection #%d closed by user\n", index);
+					logerr(String.format("SocketException in ChatServerThread.run(); connection #%d closed by user\n", index));
 					if (printStackTrace)
 						e.printStackTrace();
 					closeStreams(index);
@@ -237,7 +239,7 @@ public class ChatServer extends Server implements Runnable{
 	 * @see ChatServer#available available
 	 */
 	private void closeStreams(int index) {
-		log("Closing thread #%d", index);
+		log("Closing thread "+ index);
 		broadcast("Chat Server: '%c' left the chat.", symbols[index]);
 		try {
 			outputs[index].close();
