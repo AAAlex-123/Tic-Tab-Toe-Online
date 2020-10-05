@@ -24,10 +24,12 @@ public abstract class Server implements Logging,Runnable {
 	// server fields
 	protected static int playerCount;
 	protected static boolean printStackTrace;
+	protected static int gameConnected;
+	protected static int chatConnected;
 
 	protected final ObjectInputStream[] inputs;
 	protected final ObjectOutputStream[] outputs;
-	protected final Screen screen = new Screen(); 
+	protected Screen screen = new Screen(); 
 	protected ServerSocket server;
 	
 	protected final char[] symbols;
@@ -53,11 +55,14 @@ public abstract class Server implements Logging,Runnable {
 			catch (InterruptedException e) {e.printStackTrace();}
 		}
 
+		gameConnected = 0;
+		chatConnected = 0;
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
-		
-		screen.setCurConnections(0);
+
+		screen.updateGameConnectionCounter(0);
+		screen.updateChatConnectionCounter(0);
 		screen.setVisible(true);
 		screen.setSize(new Dimension(500,300));
 		screen.setResizable(true);
@@ -206,7 +211,7 @@ public abstract class Server implements Logging,Runnable {
 			}
 		}
 
-		log("Broadcasted: "+msg);
+		log(String.format(String.format("Broadcasted: %s", msg), args));
 	}
 	
 	@SuppressWarnings("serial")
@@ -214,7 +219,7 @@ public abstract class Server implements Logging,Runnable {
 		private final JTextArea log;
 		private final JScrollPane scroll;
 		private final JPanel panel;
-		private final JLabel playerLabel; //TODO: Synchronize this label to the current playerCount if possible, else delete
+		private final JLabel playerLabel;
 		public Screen() {
 			super("Server Log");
 			panel = new JPanel(); //used for layout
@@ -233,8 +238,21 @@ public abstract class Server implements Logging,Runnable {
 			log.setText(log.getText()+"\n"+msg);
 		}
 		
-		public void setCurConnections(int connections) {
-			playerLabel.setText(String.format("Connected players: %d/%d",connections,Server.playerCount));
+		private void updatePlayerLabel() {
+			playerLabel.setText(String.format(
+					"Game connections: %d/%d\t\tChat connections: %d/%d", gameConnected, Server.playerCount, chatConnected, Server.playerCount
+					));
+		}
+		
+		public void updateGameConnectionCounter(int i) {
+			gameConnected += i;
+			if (i == 0) gameConnected = 0;
+			updatePlayerLabel();
+		}		
+		public void updateChatConnectionCounter(int i) {
+			chatConnected += i;
+			if (i == 0) chatConnected = 0;
+			updatePlayerLabel();
 		}
 	}
 }
