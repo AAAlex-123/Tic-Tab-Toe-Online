@@ -47,6 +47,7 @@ public class GameServer extends Server {
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
 		ChatServer chatServer = new ChatServer(playerCount,printStackTrace);
+		chatServer.setScreen(server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
 		exec.execute(server);
 		exec.execute(chatServer);
@@ -120,6 +121,7 @@ public class GameServer extends Server {
 								symbols[i], i));
 
 				log(String.format("\nPlayer #%d connected as '%c'", i, symbols[i]));
+				screen.updateGameConnectionCounter(1);
 			}
 
 			char[] found = new char[playerCount];
@@ -270,6 +272,8 @@ public class GameServer extends Server {
 				outputs[i].close();
 				symbols[i] = '\u0000';
 				colors[i] = new Color(0, 0, 0);
+			} catch (SocketException e) {
+				logerr(String.format("SocketException inside reset() %d\n", i));
 			} catch (IOException e) {
 				logerr(String.format("IOException in reset() %d; player disconnected\n", i));
 			} catch (NullPointerException e) {
@@ -277,6 +281,7 @@ public class GameServer extends Server {
 			}
 		}
 		log("Done resetting");
+		screen.updateGameConnectionCounter(0);
 	}
 
 	/**
@@ -300,9 +305,7 @@ public class GameServer extends Server {
 		try {
 			outputs[currentPlayer].writeObject(newBoard);
 		} catch (IOException e) {
-			logerr("Error while sending board");
-			if (printStackTrace)
-				e.printStackTrace();
+			logerr("Error while sending board"+ (printStackTrace ?e.toString():""));
 		}
 	}
 
