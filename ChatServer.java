@@ -138,6 +138,7 @@ public class ChatServer extends Server{
 				ExecutorService exec = Executors.newCachedThreadPool();
 				exec.execute(new ChatServerThread(index));
 				index++;
+				screen.updateChatConnectionCounter(1);
 			}
 		} catch (IOException e) {
 			logerr("IOException in getConnections()\nidkwhatishappeningplshelp...");
@@ -253,7 +254,12 @@ public class ChatServer extends Server{
 			inputs[index] = null;
 			symbols[index] = '\u0000';
 			available[index] = true;
+			screen.updateChatConnectionCounter(-1);
 		}
+	}
+	
+	public void setScreen(Screen screen) {
+		this.screen = screen;
 	}
 
 	/**
