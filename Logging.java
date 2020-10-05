@@ -1,3 +1,5 @@
+package ttt_online;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -6,8 +8,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.Scanner;
-
-//package ttt_online;
 
 /**
  * An interface for <code>log</code> and <code>logerr</code> methods providing an easily changeable print and error stream.
