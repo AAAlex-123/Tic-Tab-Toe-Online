@@ -56,13 +56,13 @@ public class GameServer extends Server {
 	/**
 	 * Main method that calls other methods to actually run the server
 	 * 
-	 * @see GameServer#InitializeServer() InitializeServer()
+	 * @see GameServer#initializeServer() InitializeServer()
 	 * @see GameServer#getConnections() getConnections()
 	 * @see GameServer#makeTurn() makeTurn()
 	 */
 	@Override
 	public void run() {
-		InitializeServer();
+		initializeServer();
 		getConnections();
 
 		log("Starting game");
@@ -75,7 +75,7 @@ public class GameServer extends Server {
 	 * Initializes the server on port <code>GAME_PORT</code> with
 	 * <code>playerCount</code> total connections.
 	 */
-	protected void InitializeServer() {
+	protected void initializeServer() {
 		try {
 			server = new ServerSocket(GAME_PORT, playerCount);
 			log(String.format("Game Server ready, waiting for %d players", playerCount));
