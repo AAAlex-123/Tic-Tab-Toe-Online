@@ -58,12 +58,12 @@ public class ChatServer extends Server{
 	 * After these methods are done, only the threads listening for input are
 	 * running.
 	 * 
-	 * @see ChatServer#InitializeServer() InitializeServer()
+	 * @see ChatServer#initializeServer() InitializeServer()
 	 * @see ChatServer#getConnections() getConnections()
 	 */
 	@Override
 	public void run() {
-		InitializeServer();
+		initializeServer();
 		getConnections();
 	}
 
@@ -71,7 +71,7 @@ public class ChatServer extends Server{
 	 * Initializes the Chat Server on port <code>CHAT_PORT</code> with
 	 * <code>playerCount</code> total possible connections.
 	 */
-	protected void InitializeServer() {
+	protected void initializeServer() {
 		try {
 			server = new ServerSocket(CHAT_PORT);
 			log(String.format("Chat Server ready, listening for up to %d players", playerCount));
