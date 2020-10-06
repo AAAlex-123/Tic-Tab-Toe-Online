@@ -6,7 +6,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,15 +13,8 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 
 /**
  * Abstract class to run a server; GameServer and ChatServer inherit from it.
@@ -32,9 +24,12 @@ public abstract class Server implements Logging,Runnable {
 	// server fields
 	protected static int playerCount;
 	protected static boolean printStackTrace;
+	protected static int gameConnected;
+	protected static int chatConnected;
 
 	protected final ObjectInputStream[] inputs;
 	protected final ObjectOutputStream[] outputs;
+	protected Screen screen = new Screen(); 
 	protected ServerSocket server;
 	
 	protected final char[] symbols;
@@ -60,9 +55,18 @@ public abstract class Server implements Logging,Runnable {
 			catch (InterruptedException e) {e.printStackTrace();}
 		}
 
+		gameConnected = 0;
+		chatConnected = 0;
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
+
+		screen.updateGameConnectionCounter(0);
+		screen.updateChatConnectionCounter(0);
+		screen.setVisible(true);
+		screen.setSize(new Dimension(500,300));
+		screen.setResizable(true);
+		screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	
 	/**
@@ -183,7 +187,12 @@ public abstract class Server implements Logging,Runnable {
 
 		optWind.add(optPanel);
 	}
-
+	
+	@Override 
+	public void log(String text) {
+		screen.pushMessage(text);
+	}
+	
 	/**
 	 * Sends message <code>msg</code> to every client connected;<br>
 	 * uses <code>System.out.printf(text, args)</code>
@@ -196,17 +205,54 @@ public abstract class Server implements Logging,Runnable {
 			try {
 				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
-				logerr("Error in broadcast()");
-				if (printStackTrace)
-					e.printStackTrace();
+				logerr("Error in broadcast()\n"+ (printStackTrace ?e.toString():""));
 			} catch (NullPointerException e) {
-				;
+				if(printStackTrace) logerr(e.toString());
 			}
 		}
 
-		log("Broadcasted: %s", String.format(msg, args));
+		log(String.format(String.format("Broadcasted: %s", msg), args));
 	}
 	
-	
-
+	@SuppressWarnings("serial")
+	protected class Screen extends JFrame{
+		private final JTextArea log;
+		private final JScrollPane scroll;
+		private final JPanel panel;
+		private final JLabel playerLabel;
+		public Screen() {
+			super("Server Log");
+			panel = new JPanel(); //used for layout
+			panel.setLayout(new BoxLayout(panel,BoxLayout.PAGE_AXIS));
+			playerLabel = new JLabel();
+			log = new JTextArea();
+			((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+			scroll = new JScrollPane(log, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+			scroll.setPreferredSize(new Dimension(200,200));
+			panel.add(playerLabel);
+			panel.add(scroll);
+			add(panel);
+		}
+		
+		public void pushMessage(String msg) {
+			log.setText(log.getText()+"\n"+msg);
+		}
+		
+		private void updatePlayerLabel() {
+			playerLabel.setText(String.format(
+					"Game connections: %d/%d\t\tChat connections: %d/%d", gameConnected, Server.playerCount, chatConnected, Server.playerCount
+					));
+		}
+		
+		public void updateGameConnectionCounter(int i) {
+			gameConnected += i;
+			if (i == 0) gameConnected = 0;
+			updatePlayerLabel();
+		}		
+		public void updateChatConnectionCounter(int i) {
+			chatConnected += i;
+			if (i == 0) chatConnected = 0;
+			updatePlayerLabel();
+		}
+	}
 }

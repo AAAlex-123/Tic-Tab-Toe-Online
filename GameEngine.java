@@ -40,7 +40,7 @@ public class GameEngine implements Logging { // aka client
 	private static final int GAME = 1;
 	private static final int CHAT_GAME = 2;
 
-	// variables initialised from UI
+	// variables Initialized from UI
 	private String address;
 	private boolean printStackTrace;
 	// used to determine UI and graphics size
@@ -79,7 +79,7 @@ public class GameEngine implements Logging { // aka client
 				e.printStackTrace();
 			}
 		}
-		log("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat");
+		log(String.format("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"));
 		
 		this.ui = new GameUI(color, character, GameEngine.HEIGHT_MULTIPLIER);
 		setupUI();
@@ -164,9 +164,9 @@ public class GameEngine implements Logging { // aka client
 			m.find();
 			int connectionToServerIndex = Integer.parseInt(m.group(1));
 
-			log("Connected to Game Server successfully as player '%c' with number #%d with color (r, g, b): (%d, %d %d)",
+			log(String.format("Connected to Game Server successfully as player '%c' with number #%d with color (r, g, b): (%d, %d %d)",
 					ui.getSymbol(), connectionToServerIndex, ui.getColor().getRed(), ui.getColor().getGreen(),
-					ui.getColor().getBlue());
+					ui.getColor().getBlue()));
 
 			// wait for ready message and for updated symbols/colors
 			ui.pushMessage("\nGame Server said: %s", (String) serverInput.readObject());
@@ -251,7 +251,7 @@ public class GameEngine implements Logging { // aka client
 				return 1;
 			}
 
-			log("Got response: '%s'", response);
+			log("Got response: "+response);
 			ui.pushMessage(response);
 
 			// update board
@@ -260,7 +260,7 @@ public class GameEngine implements Logging { // aka client
 			// enable buttons/text
 			ui.setEnableTurn(starting);
 
-			log("End %s setup", starting ? "starting" : "ending");
+			log(String.format("End %s setup", starting ? "starting" : "ending"));
 		} catch (EOFException e) {
 			exit("Another player unexpectedly disconnected; if you're connected to chat server you may still chat.\n\nIf you don't know why this happened, please inform the developers",
 					"!game! EOFException in setup()", INFORMATION, e, serverCode == GAME, "Player Disconnected");
@@ -292,7 +292,7 @@ public class GameEngine implements Logging { // aka client
 			move = ui.getAnswer();
 			if (move != -1 && move != -2 && !localGameBoard.isValid(move)) {
 				ui.pushMessage("You can't play %c%s!", 65 + move / 10, move % 10 + 1);
-				log("Tried to play %c%s", 65 + move / 10, move % 10 + 1);
+				log(String.format("Tried to play %c%s", 65 + move / 10, move % 10 + 1));
 				move = -1;
 			}
 			try {
@@ -314,7 +314,7 @@ public class GameEngine implements Logging { // aka client
 					"!game! IOException in play()", WARNING, e, serverCode == GAME, "Connection Error");
 			return 1;
 		}
-		log("Got and sent move: [%d, %d]", move / 10, move % 10);
+		log(String.format("Got and sent move: [%d, %d]", move / 10, move % 10));
 		
 		return 0;
 	}
@@ -345,7 +345,7 @@ public class GameEngine implements Logging { // aka client
 			Matcher m = Pattern.compile(".*'(.{0,2})'.*").matcher(response);
 			m.find();
 			char newSymbol = m.group(1).charAt(0);
-			log("Symbol after duplicate check: '%c' ('%d')", newSymbol, (int) newSymbol);
+			log(String.format("Symbol after duplicate check: '%c' ('%d')", newSymbol, (int) newSymbol));
 
 			if (newSymbol != ui.getSymbol()) {
 				JOptionPane.showMessageDialog(this.ui,
@@ -358,7 +358,7 @@ public class GameEngine implements Logging { // aka client
 			
 			ui.focusChat();
 
-			log("Connected to Chat Server successfully as player '%c'", ui.getSymbol());
+			log("Connected to Chat Server successfully as player "+ ui.getSymbol());
 
 		} catch (IOException e) {
 			exit("Couldn't connect to Chat Server; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
@@ -399,7 +399,7 @@ public class GameEngine implements Logging { // aka client
 	 */
 	private void exit(String error_msg, String log_msg, int type, Exception e, boolean terminate, String title) {
 		if (terminate)
-			logerr(log_msg);
+			logerr(log_msg,e,printStackTrace);
 		else
 			log(log_msg);
 
@@ -433,7 +433,7 @@ public class GameEngine implements Logging { // aka client
 		localGameBoard = new GameBoard(localGameBoardConstructor);
 		ui.setScreen(localGameBoard);
 	}
-
+	
 	/**
 	 * Creates a UI to get the GameEngine options.
 	 */
@@ -479,7 +479,7 @@ public class GameEngine implements Logging { // aka client
 		// lower panel: printStackTrace + chat/game + color/submit buttons
 		JPanel lowerPanel = new JPanel();
 		lowerPanel.setLayout(new BoxLayout(lowerPanel, BoxLayout.Y_AXIS));
-		JCheckBox printButton = new JCheckBox("I want to receive crash reports on my command line");
+		JCheckBox printButton = new JCheckBox("I would like to receive the full crash report on my error log");
 
 		ButtonGroup bg = new ButtonGroup();
 		JRadioButton gameChatButton = new JRadioButton("I want to play the game with chat enabled");
@@ -537,7 +537,7 @@ public class GameEngine implements Logging { // aka client
 				optWind.setVisible(false);
 			}
 		});
-	}
+	}//class
 	
 	/**
 	 * Pushes any message it receives from Chat Server to the UI.
@@ -549,7 +549,7 @@ public class GameEngine implements Logging { // aka client
 				try {
 					// wait to receive a chat message and push it to the log JTextArea
 					String msg = (String) chatInput.readObject();
-					log("!chat! received message: '%s'", msg);
+					log("!chat! received message: "+ msg);
 					ui.pushMessage(msg);
 				} catch (IOException e) {
 					exit("Connection to Chat Server lost; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
@@ -561,7 +561,7 @@ public class GameEngine implements Logging { // aka client
 				}
 			}
 		}
-	}
+	}//private class
 
 	/**
 	 * Private inner class that, whenever there is chat text to send, sends it to
@@ -597,7 +597,7 @@ public class GameEngine implements Logging { // aka client
 				} else {
 					try {
 						String msg = String.format("%c: %s", ui.getSymbol(), chatText);
-						log("!chat! sent message:     '%s'", msg);
+						log("!chat! sent message:     "+ msg);
 						chatOutput.writeObject(msg);
 					} catch (IOException e) {
 						exit("Connection to Chat Server lost; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
@@ -607,7 +607,7 @@ public class GameEngine implements Logging { // aka client
 				}
 			}
 		}
-	}
+	}//private class
 	
 	/**
 	 * A class with a set of static utility methods to be used throughout the
