@@ -40,7 +40,7 @@ public class GameEngine implements Logging { // aka client
 	private static final int GAME = 1;
 	private static final int CHAT_GAME = 2;
 
-	// variables initialised from UI
+	// variables Initialized from UI
 	private String address;
 	private boolean printStackTrace;
 	// used to determine UI and graphics size
@@ -399,7 +399,7 @@ public class GameEngine implements Logging { // aka client
 	 */
 	private void exit(String error_msg, String log_msg, int type, Exception e, boolean terminate, String title) {
 		if (terminate)
-			logerr(log_msg);
+			logerr(log_msg,e,printStackTrace);
 		else
 			log(log_msg);
 
@@ -479,7 +479,7 @@ public class GameEngine implements Logging { // aka client
 		// lower panel: printStackTrace + chat/game + color/submit buttons
 		JPanel lowerPanel = new JPanel();
 		lowerPanel.setLayout(new BoxLayout(lowerPanel, BoxLayout.Y_AXIS));
-		JCheckBox printButton = new JCheckBox("I want to receive crash reports on my command line");
+		JCheckBox printButton = new JCheckBox("I would like to receive the full crash report on my error log");
 
 		ButtonGroup bg = new ButtonGroup();
 		JRadioButton gameChatButton = new JRadioButton("I want to play the game with chat enabled");
