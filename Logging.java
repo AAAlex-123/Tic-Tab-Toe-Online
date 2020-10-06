@@ -11,8 +11,8 @@ import java.util.Scanner;
 
 /**
  * An interface for <code>log</code> and <code>logerr</code> methods providing an easily changeable print and error stream.
- * Default methods implement the System.out.println and System.err.println streams. 
- *
+ * Default log method implements System.out.println.
+ * Default logerr method writes the errors data in a file.
  */
 public interface Logging {
 
@@ -36,6 +36,7 @@ public interface Logging {
 	 */
 	default void logerr(String error_msg, Exception e, boolean printFull) {
 		
+		log("Error logged to file: "+error_msg);
 		File file = new File("error_log.txt");
 		try {
 			if (!file.exists()) file.createNewFile();
@@ -71,7 +72,7 @@ public interface Logging {
 						error_msg, printFull? "Full report:\n"+sw.toString() :""));
 				writer.close();
 			}catch (IOException ex) {
-				System.err.println(ex);
+				ex.printStackTrace();
 				return;
 			}
 		}
