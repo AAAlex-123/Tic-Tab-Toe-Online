@@ -13,33 +13,26 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 
 /**
  * Abstract class to run a server; GameServer and ChatServer inherit from it.
  */
-public abstract class Server implements Logging {
+public abstract class Server implements Logging,Runnable {
 
 	// server fields
 	protected static int playerCount;
 	protected static boolean printStackTrace;
+	protected static int gameConnected;
+	protected static int chatConnected;
 
 	protected final ObjectInputStream[] inputs;
 	protected final ObjectOutputStream[] outputs;
+	protected Screen screen = new Screen(); 
 	protected ServerSocket server;
 	
 	protected final char[] symbols;
-	
-	// boardSize is in superclass because it's initialised by the UI
-	// that is also in the superclass
 	protected int boardSize;
 	
 	// array of chess piece characters used to replace duplicates
@@ -62,6 +55,30 @@ public abstract class Server implements Logging {
 			catch (InterruptedException e) {e.printStackTrace();}
 		}
 
+		gameConnected = 0;
+		chatConnected = 0;
+		inputs = new ObjectInputStream[playerCount];
+		outputs = new ObjectOutputStream[playerCount];
+		symbols = new char[playerCount];
+
+		screen.updateGameConnectionCounter(0);
+		screen.updateChatConnectionCounter(0);
+		screen.setVisible(true);
+		screen.setSize(new Dimension(500,300));
+		screen.setResizable(true);
+		screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	/**
+	 * Constructor of Server superclass. <br>
+	 * Gets set options directly as arguments bypassing the UI.
+	 *
+	 * @param int playerCount the number of connections
+	 * @param boolean printStackTrace whether to show detailed crash reports
+	 * @see Server#getServerOptions() getServerOptions
+	 */
+	public Server(int playerCount,boolean printStackTrace) {
+		Server.printStackTrace = printStackTrace;
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
@@ -73,7 +90,8 @@ public abstract class Server implements Logging {
 	 * @see GameServer#run()
 	 * @see ChatServer#run()
 	 */
-	protected abstract void run();
+	@Override
+	public abstract void run();
 
 	/**
 	 * Abstract method; initialises the server.
@@ -95,7 +113,6 @@ public abstract class Server implements Logging {
 	 * Gets server options from player using GUI. Assigns values to the playerCount
 	 * and printStackTrace variables
 	 * 
-	 * FIXME documentation, clear up spaghetti mby
 	 */
 	protected void getServerOptions() {
 
@@ -170,7 +187,12 @@ public abstract class Server implements Logging {
 
 		optWind.add(optPanel);
 	}
-
+	
+	@Override 
+	public void log(String text) {
+		screen.pushMessage(text);
+	}
+	
 	/**
 	 * Sends message <code>msg</code> to every client connected;<br>
 	 * uses <code>System.out.printf(text, args)</code>
@@ -183,69 +205,54 @@ public abstract class Server implements Logging {
 			try {
 				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
-				logerr("Error in broadcast()");
-				if (printStackTrace)
-					e.printStackTrace();
+				logerr("Error in broadcast()\n"+ (printStackTrace ?e.toString():""));
 			} catch (NullPointerException e) {
-				;
+				if(printStackTrace) logerr(e.toString());
 			}
 		}
 
-		log("Broadcasted: %s", String.format(msg, args));
+		log(String.format(String.format("Broadcasted: %s", msg), args));
 	}
 	
-	/**
-	 * A class with a set of static utility methods to be used throughout the
-	 * project.
-	 */
-	abstract static class Utility {
-
+	@SuppressWarnings("serial")
+	protected class Screen extends JFrame{
+		private final JTextArea log;
+		private final JScrollPane scroll;
+		private final JPanel panel;
+		private final JLabel playerLabel;
+		public Screen() {
+			super("Server Log");
+			panel = new JPanel(); //used for layout
+			panel.setLayout(new BoxLayout(panel,BoxLayout.PAGE_AXIS));
+			playerLabel = new JLabel();
+			log = new JTextArea();
+			((DefaultCaret) log.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+			scroll = new JScrollPane(log, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+			scroll.setPreferredSize(new Dimension(200,200));
+			panel.add(playerLabel);
+			panel.add(scroll);
+			add(panel);
+		}
 		
-		/**
-		 * Returns a string, stripped by <code>chars</code>.<br>
-		 * Similar to python's <code>str.strip(string)</code>.
-		 * 
-		 * @param string String, the string to strip
-		 * @param chars  char[], the characters to strip from the string
-		 * @return String, the stripped string
-		 */
-		public static String myStrip(String string, char... chars) {
-			if (string.equals(""))
-				return "";
-			return string.substring(firstIndexOfNonChars(string, chars), lastIndexofNonChars(string, chars) + 1);
+		public void pushMessage(String msg) {
+			log.setText(log.getText()+"\n"+msg);
 		}
-
-		/**
-		 * Returns true or false indicating if <code>item</code> is an item of
-		 * <code>array</code>.<br>
-		 * Same as <code>ArrayList.contains()</code>
-		 * 
-		 * @param array char[], the array of items
-		 * @param item  char, the item to check if it is in the array
-		 * @return boolean, whether or not <code>item</code> is in <code>array</code>
-		 * 
-		 * @see ArrayList#contains(Object)
-		 */
-		public static boolean myContains(char[] array, char item) {
-			for (int i = 0; i < array.length; i++)
-				if (array[i] == item)
-					return true;
-			return false;
+		
+		private void updatePlayerLabel() {
+			playerLabel.setText(String.format(
+					"Game connections: %d/%d\t\tChat connections: %d/%d", gameConnected, Server.playerCount, chatConnected, Server.playerCount
+					));
 		}
-
-		private static int firstIndexOfNonChars(String string, char... chars) {
-			for (int i = 0; i < string.length(); i++)
-				if (!myContains(chars, string.charAt(i)))
-					return i;
-			return -1;
-		}
-
-		private static int lastIndexofNonChars(String string, char... chars) {
-			for (int i = string.length() - 1; i > -1; i--)
-				if (!myContains(chars, string.charAt(i)))
-					return i;
-			return -1;
+		
+		public void updateGameConnectionCounter(int i) {
+			gameConnected += i;
+			if (i == 0) gameConnected = 0;
+			updatePlayerLabel();
+		}		
+		public void updateChatConnectionCounter(int i) {
+			chatConnected += i;
+			if (i == 0) chatConnected = 0;
+			updatePlayerLabel();
 		}
 	}
-
 }

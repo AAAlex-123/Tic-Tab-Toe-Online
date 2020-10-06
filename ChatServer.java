@@ -6,12 +6,14 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Server-side application to handle chat between players.
  */
-public class ChatServer extends Server {
+public class ChatServer extends Server{
 	
 	// port of the Chat Server
 	private static final int CHAT_PORT = 10002;
@@ -37,30 +39,44 @@ public class ChatServer extends Server {
 		for (int i = 0; i < playerCount; i++)
 			available[i] = true;
 	}
+	
+	/**
+	 * Constructs the Chat Server object with a set playerCount
+	 * 
+	 * @param int playerCount number of connections
+	 * @see Server#Server() Server()
+	 */
+	public ChatServer(int playerCount,boolean printStackTrace) {
+		super(playerCount,printStackTrace);
+		this.available = new boolean[playerCount];
+		for (int i = 0; i < playerCount; i++)
+			available[i] = true;
+	}
 
 	/**
 	 * Main method that calls other methods to actually run the server.<br>
 	 * After these methods are done, only the threads listening for input are
 	 * running.
 	 * 
-	 * @see ChatServer#initialiseServer() initialiseServer()
+	 * @see ChatServer#InitializeServer() InitializeServer()
 	 * @see ChatServer#getConnections() getConnections()
 	 */
-	protected void run() {
-		initialiseServer();
+	@Override
+	public void run() {
+		InitializeServer();
 		getConnections();
 	}
 
 	/**
-	 * Initialises the Chat Server on port <code>CHAT_PORT</code> with
+	 * Initializes the Chat Server on port <code>CHAT_PORT</code> with
 	 * <code>playerCount</code> total possible connections.
 	 */
-	protected void initialiseServer() {
+	protected void InitializeServer() {
 		try {
 			server = new ServerSocket(CHAT_PORT);
-			log("\n\nChat Server ready, listening for up to %d players", playerCount);
+			log(String.format("Chat Server ready, listening for up to %d players", playerCount));
 		} catch (IOException e) {
-			logerr("IOException in initialiseServer()");
+			logerr("IOException in InitializeServer()",e,printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
 			System.exit(1);
@@ -103,7 +119,7 @@ public class ChatServer extends Server {
 					if ((i != index) && (symbols[index] == symbols[i])) {
 						char chessPiece = chessPieces
 								.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
-						log("Duplicate found '%c', replaced with '\\u%04x'", symbols[index], (int) chessPiece);
+						log(String.format("Duplicate found '%c', replaced with '\\u%04x'", symbols[index], (int) chessPiece));
 						symbols[index] = chessPiece;
 					}
 				}
@@ -117,19 +133,17 @@ public class ChatServer extends Server {
 				outputs[index].writeObject(
 						String.format("Hi player '%c', you're now connected.\nStart chatting!", symbols[index]));
 
-				log("\nChat Connection #%d established with '%c'", index, symbols[index]);
+				log(String.format("\nChat Connection #%d established with '%c'", index, symbols[index]));
 
-				new ChatServerThread(index).start();
+				ExecutorService exec = Executors.newCachedThreadPool();
+				exec.execute(new ChatServerThread(index));
 				index++;
+				screen.updateChatConnectionCounter(1);
 			}
 		} catch (IOException e) {
-			logerr("IOException in getConnections()\nidkwhatishappeningplshelp...");
-			if (printStackTrace)
-				e.printStackTrace();
+			logerr("IOException in getConnections()",e,printStackTrace);
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException in getConnections()\nSomething went very wrong...");
-			if (printStackTrace)
-				e.printStackTrace();
+			logerr("ClassNotFoundException in getConnections()",e,printStackTrace);
 		}
 	}
 
@@ -147,7 +161,9 @@ public class ChatServer extends Server {
 				return i;
 			}
 		return -1;
-	}
+		
+	
+	}//class
 
 	/**
 	 * Private inner class that listens to a specific client's Output Stream and
@@ -162,7 +178,7 @@ public class ChatServer extends Server {
 	 * @see ChatServer#closeStreams(int) closeOutputStream()
 	 * @see ChatServer#available available
 	 */
-	private class ChatServerThread extends Thread {
+	private class ChatServerThread implements Runnable {
 
 		private final int index;
 
@@ -182,27 +198,22 @@ public class ChatServer extends Server {
 		 * 
 		 * @see ChatServer#broadcast(String, Object[]) broadcast()
 		 */
+		@Override
 		public void run() {
-			log("Thread #%d started", index);
+			log(String.format("Thread #%d started", index));
 			while (true) {
 				try {
 					broadcast((String) inputs[index].readObject());
 				} catch (SocketException e) {
-					logerr("SocketException in ChatServerThread.run(); connection #%d closed by user\n", index);
-					if (printStackTrace)
-						e.printStackTrace();
+					logerr(String.format("SocketException in ChatServerThread.run(); connection #%d closed by user\n"),e,printStackTrace);
 					closeStreams(index);
 					break;
 				} catch (IOException e) {
-					logerr("IOException in ChatServerThread.run()\nidkwhatishappeningplshelp...");
-					if (printStackTrace)
-						e.printStackTrace();
+					logerr("IOException in ChatServerThread.run()",e,printStackTrace);
 					closeStreams(index);
 					break;
 				} catch (ClassNotFoundException e) {
-					logerr("ClassNotFoundException in ChatServerThread.run()\nidkwhatishappeningplshelp...");
-					if (printStackTrace)
-						e.printStackTrace();
+					logerr("ClassNotFoundException in ChatServerThread.run()",e,printStackTrace);
 					closeStreams(index);
 					break;
 				}
@@ -219,13 +230,13 @@ public class ChatServer extends Server {
 	 * @see ChatServer#available available
 	 */
 	private void closeStreams(int index) {
-		log("Closing thread #%d", index);
+		log("Closing thread "+ index);
 		broadcast("Chat Server: '%c' left the chat.", symbols[index]);
 		try {
 			outputs[index].close();
 			inputs[index].close();
 		} catch (IOException e) {
-			logerr("IOException in closeStreams()");
+			logerr("IOException in closeStreams()",e,printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
 		} finally {
@@ -233,7 +244,12 @@ public class ChatServer extends Server {
 			inputs[index] = null;
 			symbols[index] = '\u0000';
 			available[index] = true;
+			screen.updateChatConnectionCounter(-1);
 		}
+	}
+	
+	public void setScreen(Screen screen) {
+		this.screen = screen;
 	}
 
 	/**
