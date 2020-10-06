@@ -22,7 +22,7 @@ public class GameServer extends Server {
 	private final Socket[] sockets;
 
 	private final Color[] colors;
-	
+
 	private final GameBoard gameBoard;
 	private int currentPlayer = 0;
 
@@ -37,16 +37,19 @@ public class GameServer extends Server {
 		colors = new Color[playerCount];
 		gameBoard = new GameBoard(boardSize);
 	}
-	
+
 	/**
-	 * Main method. Run to create and run a Game Server.
+	 * Main method. Run to create and run a Game Server. Also creates and runs a
+	 * Chat Server with the same parameters as the Game Server.
+	 * 
+	 * TODO maybe chat server has separate parameters
 	 *
 	 * @param args not used
 	 * @see Server#Server() Server()
 	 */
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
-		ChatServer chatServer = new ChatServer(playerCount,printStackTrace);
+		ChatServer chatServer = new ChatServer(server.playerCount, server.printStackTrace);
 		chatServer.setScreen(server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
 		exec.execute(server);
@@ -80,18 +83,22 @@ public class GameServer extends Server {
 			server = new ServerSocket(GAME_PORT, playerCount);
 			log(String.format("Game Server ready, waiting for %d players", playerCount));
 		} catch (BindException e) {
-			logerr("BindException while setting up server; a server is already running on this port",e,printStackTrace);
+			logerr("BindException while setting up server; a server is already running on this port", e,
+					printStackTrace);
+			// TODO (SAME AS CHATSERVER) maybe display pop-up so user knows what is going on before exiting
 			System.exit(1);
 		} catch (IOException e) {
-			logerr("IOException while setting up server",e,printStackTrace);
+			logerr("IOException while setting up server", e, printStackTrace);
 		}
 	}
 
 	/**
-	 * Initializes <code>playerCount</code> connections.<br>
-	 * Gets their input and output streams.<br>
-	 * Exchanges some messages.<br>
-	 * <br>
+	 * <ul>
+	 * <li>Initializes <code>playerCount</code> connections.
+	 * <li>Gets their input and output streams.
+	 * <li>Exchanges some messages.
+	 * <li>Increments the <code>{@link Server#gameConnected gameConnected}</code> counter.
+	 * </ul>
 	 * If two or more players have the same symbol, the server allocates them
 	 * special unique chess pieces and the clients interpret the message
 	 * accordingly.<br>
@@ -135,7 +142,8 @@ public class GameServer extends Server {
 						// if there is a duplicate, replace it with a random piece from chessPieces
 						char chessPiece = chessPieces
 								.remove(ThreadLocalRandom.current().nextInt(0, chessPieces.size()));
-						log(String.format("Duplicate found '%c', replaced with '\\u%04x'", symbols[i], (int) chessPiece));
+						log(String.format("Duplicate found '%c', replaced with '\\u%04x'", symbols[i],
+								(int) chessPiece));
 						symbols[i] = chessPiece;
 						break;
 					}
@@ -151,10 +159,11 @@ public class GameServer extends Server {
 			}
 
 		} catch (IOException e) {
-			logerr("IOException inside getConnections() while getting connections or sending messages",e,printStackTrace);
+			logerr("IOException inside getConnections() while getting connections or sending messages", e,
+					printStackTrace);
 			reset = true;
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException inside getConnections() while getting player symbol",e,printStackTrace);
+			logerr("ClassNotFoundException inside getConnections() while getting player symbol", e, printStackTrace);
 			reset = true;
 		}
 
@@ -172,6 +181,7 @@ public class GameServer extends Server {
 	 * <li>Receives and processes the move
 	 * <li>Sends acknowledgement for the move
 	 * <li>Resends board
+	 * </ul>
 	 * 
 	 * If something goes wrong, reset the server.
 	 * 
@@ -194,15 +204,14 @@ public class GameServer extends Server {
 
 			// get, register and respond to move
 			move = (int) inputs[currentPlayer].readObject();
-			log("Just got " +move);
+			log("Just got " + move);
 
 			if (move == -2) {
-				log("Final board:\n"+ gameBoard);
+				log("Final board:\n" + gameBoard);
 				broadcast("Player '%c' resigned", symbols[currentPlayer]);
 				log(String.format("Player '%c' resigned!\nGame over", symbols[currentPlayer]));
-				for (int i = 0; i < playerCount; i++) {
+				for (int i = 0; i < playerCount; i++) 
 					sendBoard(i);
-				}
 				log("Server will now reset");
 				reset();
 				run();
@@ -211,11 +220,11 @@ public class GameServer extends Server {
 			gameBoard.markSquare(move, symbols[currentPlayer]);
 			// check if game has ended
 			if (gameBoard.hasWon() || gameBoard.hasTied()) {
-				log("Final board:\n"+ gameBoard);
+				log("Final board:\n" + gameBoard);
 				String msg = gameBoard.hasTied() ? "It's a tie!"
 						: String.format("Player '%c' won!", symbols[currentPlayer]);
 				broadcast(msg);
-				log(msg+"\nGame over");
+				log(msg + "\nGame over");
 				for (int i = 0; i < playerCount; i++) {
 					sendBoard(i);
 				}
@@ -237,13 +246,13 @@ public class GameServer extends Server {
 			currentPlayer = (currentPlayer + 1) % playerCount;
 
 		} catch (SocketException e) {
-			logerr("SocketException inside makeTurn()",e,printStackTrace);
+			logerr("SocketException inside makeTurn()", e, printStackTrace);
 			reset = true;
 		} catch (IOException e) {
-			logerr("IOException inside makeTurn() while sending/receiving data",e,printStackTrace);
+			logerr("IOException inside makeTurn() while sending/receiving data", e, printStackTrace);
 			reset = true;
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException inside makeTurn() while getting move\\n\n",e,printStackTrace);
+			logerr("ClassNotFoundException inside makeTurn() while getting move\\n\n", e, printStackTrace);
 			reset = true;
 		}
 
@@ -255,14 +264,15 @@ public class GameServer extends Server {
 
 	/**
 	 * Resets everything in case something goes wrong while getting connections.<br>
-	 * Closes connections and empties <code>symbols</code> array.
+	 * Closes connections, empties <code>symbols</code> array and resets the
+	 * <code>{@link Server#gameConnected gameConnected}</code> counter.
 	 */
 	private void reset() {
 		gameBoard.clear();
 		try {
 			server.close();
 		} catch (IOException e) {
-			logerr("IOException while closing server while reset",e,printStackTrace);
+			logerr("IOException while closing server while reset", e, printStackTrace);
 		}
 		for (int i = 0; i < playerCount; i++) {
 			try {
@@ -272,11 +282,12 @@ public class GameServer extends Server {
 				symbols[i] = '\u0000';
 				colors[i] = new Color(0, 0, 0);
 			} catch (SocketException e) {
-				logerr(String.format("SocketException inside reset() %d\n", i),e,printStackTrace);
+				logerr(String.format("SocketException inside reset() %d\n", i), e, printStackTrace);
 			} catch (IOException e) {
-				logerr(String.format("IOException in reset() %d; player disconnected\n", i),e,printStackTrace);
+				logerr(String.format("IOException in reset() %d; player disconnected\n", i), e, printStackTrace);
 			} catch (NullPointerException e) {
-				logerr(String.format("NullPointerException in reset() %d; player never joined\n", i),e,printStackTrace);
+				logerr(String.format("NullPointerException in reset() %d; player never joined\n", i), e,
+						printStackTrace);
 			}
 		}
 		log("Done resetting");
@@ -304,8 +315,7 @@ public class GameServer extends Server {
 		try {
 			outputs[currentPlayer].writeObject(newBoard);
 		} catch (IOException e) {
-			logerr("Error while sending board",e,printStackTrace);
+			logerr("Error while sending board", e, printStackTrace);
 		}
 	}
-
 }
