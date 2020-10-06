@@ -79,7 +79,7 @@ public class ChatServer extends Server {
 			logerr("IOException in InitializeServer()", e, printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
-			// TODO maybe display pop-up so user knows what is going on
+			// TODO maybe display pop-up so user knows what is going on before exiting
 			System.exit(1);
 		}
 	}
@@ -89,7 +89,7 @@ public class ChatServer extends Server {
 	 * connection. If there is, wait to accept a connection and assign it this slot.
 	 * Get its input and output streams. Create a new ChatServerThread with the
 	 * slot's index and start it. Finally increment the
-	 * <code>{@link Server#chatConnected}</code> counter.
+	 * <code>{@link Server#chatConnected chatConnected}</code> counter.
 	 * 
 	 * @see ChatServer#available available
 	 * @see ChatServer#getAvailable() getAvailable()
@@ -162,7 +162,7 @@ public class ChatServer extends Server {
 	 * When an Exception occurs, this Thread terminates execution, the client's
 	 * Streams are closed, the <code>available</code> slot specified by
 	 * <code>index</code> is freed up and the
-	 * <code>{@link Server#chatConnected}</code> counter is decremented
+	 * <code>{@link Server#chatConnected chatConnected}</code> counter is decremented
 	 *
 	 * @see ChatServer#broadcast(String, Object[]) broadcast()
 	 * @see ChatServer#closeStreams(int) closeOutputStream()
@@ -234,7 +234,7 @@ public class ChatServer extends Server {
 	 * Closes the Streams bound to client <code>index</code>, frees up the
 	 * <code>available</code> slot this Thread occupied (specified by
 	 * <code>index</code>) and decrements the
-	 * <code>{@link Server#chatConnected}</code> counter.
+	 * <code>{@link Server#chatConnected chatConnected}</code> counter.
 	 * 
 	 * @param index int, the index of the client
 	 * @see ChatServer#available available
