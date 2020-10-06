@@ -58,25 +58,25 @@ public class ChatServer extends Server{
 	 * After these methods are done, only the threads listening for input are
 	 * running.
 	 * 
-	 * @see ChatServer#initialiseServer() initialiseServer()
+	 * @see ChatServer#InitializeServer() InitializeServer()
 	 * @see ChatServer#getConnections() getConnections()
 	 */
 	@Override
 	public void run() {
-		initialiseServer();
+		InitializeServer();
 		getConnections();
 	}
 
 	/**
-	 * Initialises the Chat Server on port <code>CHAT_PORT</code> with
+	 * Initializes the Chat Server on port <code>CHAT_PORT</code> with
 	 * <code>playerCount</code> total possible connections.
 	 */
-	protected void initialiseServer() {
+	protected void InitializeServer() {
 		try {
 			server = new ServerSocket(CHAT_PORT);
-			log(String.format("\n\nChat Server ready, listening for up to %d players", playerCount));
+			log(String.format("Chat Server ready, listening for up to %d players", playerCount));
 		} catch (IOException e) {
-			logerr("IOException in initialiseServer()");
+			logerr("IOException in InitializeServer()",e,printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
 			System.exit(1);
@@ -141,13 +141,9 @@ public class ChatServer extends Server{
 				screen.updateChatConnectionCounter(1);
 			}
 		} catch (IOException e) {
-			logerr("IOException in getConnections()\nidkwhatishappeningplshelp...");
-			if (printStackTrace)
-				e.printStackTrace();
+			logerr("IOException in getConnections()",e,printStackTrace);
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException in getConnections()\nSomething went very wrong...");
-			if (printStackTrace)
-				e.printStackTrace();
+			logerr("ClassNotFoundException in getConnections()",e,printStackTrace);
 		}
 	}
 
@@ -209,21 +205,15 @@ public class ChatServer extends Server{
 				try {
 					broadcast((String) inputs[index].readObject());
 				} catch (SocketException e) {
-					logerr(String.format("SocketException in ChatServerThread.run(); connection #%d closed by user\n", index));
-					if (printStackTrace)
-						e.printStackTrace();
+					logerr(String.format("SocketException in ChatServerThread.run(); connection #%d closed by user\n"),e,printStackTrace);
 					closeStreams(index);
 					break;
 				} catch (IOException e) {
-					logerr("IOException in ChatServerThread.run()\nidkwhatishappeningplshelp...");
-					if (printStackTrace)
-						e.printStackTrace();
+					logerr("IOException in ChatServerThread.run()",e,printStackTrace);
 					closeStreams(index);
 					break;
 				} catch (ClassNotFoundException e) {
-					logerr("ClassNotFoundException in ChatServerThread.run()\nidkwhatishappeningplshelp...");
-					if (printStackTrace)
-						e.printStackTrace();
+					logerr("ClassNotFoundException in ChatServerThread.run()",e,printStackTrace);
 					closeStreams(index);
 					break;
 				}
@@ -246,7 +236,7 @@ public class ChatServer extends Server{
 			outputs[index].close();
 			inputs[index].close();
 		} catch (IOException e) {
-			logerr("IOException in closeStreams()");
+			logerr("IOException in closeStreams()",e,printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
 		} finally {
