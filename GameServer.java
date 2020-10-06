@@ -27,7 +27,7 @@ public class GameServer extends Server {
 	private int currentPlayer = 0;
 
 	/**
-	 * Constructor to initialise fields.
+	 * Constructor to Initialize fields.
 	 * 
 	 * @see Server#Server() Server()
 	 */
@@ -56,13 +56,13 @@ public class GameServer extends Server {
 	/**
 	 * Main method that calls other methods to actually run the server
 	 * 
-	 * @see GameServer#initialiseServer() initialiseServer()
+	 * @see GameServer#InitializeServer() InitializeServer()
 	 * @see GameServer#getConnections() getConnections()
 	 * @see GameServer#makeTurn() makeTurn()
 	 */
 	@Override
 	public void run() {
-		initialiseServer();
+		InitializeServer();
 		getConnections();
 
 		log("Starting game");
@@ -72,24 +72,23 @@ public class GameServer extends Server {
 	}
 
 	/**
-	 * Initialises the server on port <code>GAME_PORT</code> with
+	 * Initializes the server on port <code>GAME_PORT</code> with
 	 * <code>playerCount</code> total connections.
 	 */
-	protected void initialiseServer() {
+	protected void InitializeServer() {
 		try {
 			server = new ServerSocket(GAME_PORT, playerCount);
-			log(String.format("\n\nGame Server ready, waiting for %d players", playerCount));
+			log(String.format("Game Server ready, waiting for %d players", playerCount));
 		} catch (BindException e) {
-			logerr("BindException while setting up server; a server is already running on this port\n"+ (printStackTrace ?e.toString():""));
+			logerr("BindException while setting up server; a server is already running on this port",e,printStackTrace);
 			System.exit(1);
 		} catch (IOException e) {
-			//logerr("IOException while setting up server; if you don't know why this happened, please inform the developers");
-			logerr("IOException while setting up server\n"+ (printStackTrace ?e.toString():""));
+			logerr("IOException while setting up server",e,printStackTrace);
 		}
 	}
 
 	/**
-	 * Initialises <code>playerCount</code> connections.<br>
+	 * Initializes <code>playerCount</code> connections.<br>
 	 * Gets their input and output streams.<br>
 	 * Exchanges some messages.<br>
 	 * <br>
@@ -152,10 +151,10 @@ public class GameServer extends Server {
 			}
 
 		} catch (IOException e) {
-			logerr("\"IOException inside getConnections() while getting connections or sending messages\n"+ (printStackTrace ?e.toString():""));
+			logerr("IOException inside getConnections() while getting connections or sending messages",e,printStackTrace);
 			reset = true;
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException inside getConnections() while getting player symbol\n"+ (printStackTrace ?e.toString():""));
+			logerr("ClassNotFoundException inside getConnections() while getting player symbol",e,printStackTrace);
 			reset = true;
 		}
 
@@ -238,13 +237,13 @@ public class GameServer extends Server {
 			currentPlayer = (currentPlayer + 1) % playerCount;
 
 		} catch (SocketException e) {
-			logerr("SocketException inside makeTurn()\n"+ (printStackTrace ?e.toString():""));
+			logerr("SocketException inside makeTurn()",e,printStackTrace);
 			reset = true;
 		} catch (IOException e) {
-			logerr("IOException inside makeTurn() while sending/receiving data"+ (printStackTrace ?e.toString():""));
+			logerr("IOException inside makeTurn() while sending/receiving data",e,printStackTrace);
 			reset = true;
 		} catch (ClassNotFoundException e) {
-			logerr("ClassNotFoundException inside makeTurn() while getting move\\n\n"+ (printStackTrace ?e.toString():""));
+			logerr("ClassNotFoundException inside makeTurn() while getting move\\n\n",e,printStackTrace);
 			reset = true;
 		}
 
@@ -263,7 +262,7 @@ public class GameServer extends Server {
 		try {
 			server.close();
 		} catch (IOException e) {
-			logerr("IOException while closing server while reset"+ (printStackTrace ?e.toString():""));
+			logerr("IOException while closing server while reset",e,printStackTrace);
 		}
 		for (int i = 0; i < playerCount; i++) {
 			try {
@@ -273,11 +272,11 @@ public class GameServer extends Server {
 				symbols[i] = '\u0000';
 				colors[i] = new Color(0, 0, 0);
 			} catch (SocketException e) {
-				logerr(String.format("SocketException inside reset() %d\n", i));
+				logerr(String.format("SocketException inside reset() %d\n", i),e,printStackTrace);
 			} catch (IOException e) {
-				logerr(String.format("IOException in reset() %d; player disconnected\n", i));
+				logerr(String.format("IOException in reset() %d; player disconnected\n", i),e,printStackTrace);
 			} catch (NullPointerException e) {
-				logerr(String.format("NullPointerException in reset() %d; player never joined\n", i));
+				logerr(String.format("NullPointerException in reset() %d; player never joined\n", i),e,printStackTrace);
 			}
 		}
 		log("Done resetting");
@@ -305,7 +304,7 @@ public class GameServer extends Server {
 		try {
 			outputs[currentPlayer].writeObject(newBoard);
 		} catch (IOException e) {
-			logerr("Error while sending board"+ (printStackTrace ?e.toString():""));
+			logerr("Error while sending board",e,printStackTrace);
 		}
 	}
 
