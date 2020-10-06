@@ -99,7 +99,7 @@ public abstract class Server implements Logging,Runnable {
 	 * @see GameServer#initialiseServer()
 	 * @see ChatServer#initialiseServer()
 	 */
-	protected abstract void initialiseServer();
+	protected abstract void initializeServer();
 
 	/**
 	 * Abstract method; initialises connections to clients.
@@ -205,9 +205,9 @@ public abstract class Server implements Logging,Runnable {
 			try {
 				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
-				logerr("Error in broadcast()\n"+ (printStackTrace ?e.toString():""));
+				logerr("Error in broadcast()\n", e, printStackTrace);
 			} catch (NullPointerException e) {
-				if(printStackTrace) logerr(e.toString());
+				;
 			}
 		}
 
