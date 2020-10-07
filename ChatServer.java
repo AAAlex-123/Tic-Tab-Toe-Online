@@ -10,6 +10,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.swing.JOptionPane;
+
 /**
  * Server-side application to handle chat between players.
  */
@@ -79,7 +81,9 @@ public class ChatServer extends Server {
 			logerr("IOException in InitializeServer()", e, printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
-			// TODO maybe display pop-up so user knows what is going on before exiting
+			JOptionPane.showMessageDialog(this.screen,
+					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit", CHAT_PORT), "Error",
+					JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		}
 	}
@@ -96,6 +100,7 @@ public class ChatServer extends Server {
 	 * @see ChatServerThread
 	 */
 	protected void getConnections() {
+		ExecutorService exec = Executors.newCachedThreadPool();
 		try {
 			int index = -1;
 			Socket chatConnection = null;
@@ -141,8 +146,6 @@ public class ChatServer extends Server {
 
 				log(String.format("\nChat Connection #%d established with '%c'", index, symbols[index]));
 
-				// TODO maybe not create the ExecutorService every time someone joins
-				ExecutorService exec = Executors.newCachedThreadPool();
 				exec.execute(new ChatServerThread(index));
 				index++;
 				screen.updateChatConnectionCounter(1);
