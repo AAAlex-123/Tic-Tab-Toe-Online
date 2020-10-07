@@ -12,6 +12,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.swing.JOptionPane;
+
 /**
  * Server-side application to handle communications with the clients
  */
@@ -85,7 +87,9 @@ public class GameServer extends Server {
 		} catch (BindException e) {
 			logerr("BindException while setting up server; a server is already running on this port", e,
 					printStackTrace);
-			// TODO (SAME AS CHATSERVER) maybe display pop-up so user knows what is going on before exiting
+			JOptionPane.showMessageDialog(this.screen,
+					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit", GAME_PORT), "Error",
+					JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		} catch (IOException e) {
 			logerr("IOException while setting up server", e, printStackTrace);
@@ -97,7 +101,8 @@ public class GameServer extends Server {
 	 * <li>Initializes <code>playerCount</code> connections.
 	 * <li>Gets their input and output streams.
 	 * <li>Exchanges some messages.
-	 * <li>Increments the <code>{@link Server#gameConnected gameConnected}</code> counter.
+	 * <li>Increments the <code>{@link Server#gameConnected gameConnected}</code>
+	 * counter.
 	 * </ul>
 	 * If two or more players have the same symbol, the server allocates them
 	 * special unique chess pieces and the clients interpret the message
@@ -210,7 +215,7 @@ public class GameServer extends Server {
 				log("Final board:\n" + gameBoard);
 				broadcast("Player '%c' resigned", symbols[currentPlayer]);
 				log(String.format("Player '%c' resigned!\nGame over", symbols[currentPlayer]));
-				for (int i = 0; i < playerCount; i++) 
+				for (int i = 0; i < playerCount; i++)
 					sendBoard(i);
 				log("Server will now reset");
 				reset();
