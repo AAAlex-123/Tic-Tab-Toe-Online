@@ -619,8 +619,6 @@ public class GameEngine implements Logging { // aka client
 	/**
 	 * A class with a set of static utility methods to be used throughout the
 	 * project.
-	 * 
-	 * TODO make myStrip just one method
 	 */
 	abstract static class Utility {
 
