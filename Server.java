@@ -173,11 +173,11 @@ public abstract class Server implements Logging, Runnable {
 
 		optWind.add(optPanel);
 		optWind.revalidate();
-  }
-/*
-	**
+	}
+	
+	/**
 	 * Sets up the <code>screen</code> used for logging purposes
-	 *
+	 */
 	private void setupScreen() {
 		screen = new Screen();
 		screen.updateGameConnectionCounter(0);
@@ -187,7 +187,7 @@ public abstract class Server implements Logging, Runnable {
 		screen.setResizable(true);
 		screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
-*/
+
 	/**
 	 * Logs <code>text</code> on the <code>screen</code> because instead of the
 	 * command line
