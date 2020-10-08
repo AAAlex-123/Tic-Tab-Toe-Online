@@ -1,6 +1,10 @@
 package ttt_online;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -11,20 +15,19 @@ import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import javax.swing.*;
 
 /**
- * Server-side application to handle communications with the clients
+ * Server implementation that allows its users to play a game of Tic Tac Toe. By default always runs a ChatServer
  */
 public class GameServer extends Server {
 	// port of the Game Server
 	private static final int GAME_PORT = 10001;
-
 	private final Socket[] sockets;
-
 	private final Color[] colors;
-	
 	private final GameBoard gameBoard;
-	private int currentPlayer = 0;
+	private int currentPlayer = 0,winCondition,boardSize;
+
 
 	/**
 	 * Constructor to Initialize fields.
@@ -35,7 +38,7 @@ public class GameServer extends Server {
 		super();
 		sockets = new Socket[playerCount];
 		colors = new Color[playerCount];
-		gameBoard = new GameBoard(boardSize);
+		gameBoard = new GameBoard(boardSize,winCondition);
 	}
 	
 	/**
@@ -70,7 +73,83 @@ public class GameServer extends Server {
 			makeTurn();
 		}
 	}
+	
+	@Override
+	protected void getServerOptions() {
+		super.getServerOptions();
+		while (!argumentsPassed) {
+			try {Thread.sleep(500);}
+			catch (InterruptedException e) {e.printStackTrace();}
+		}
+		argumentsPassed = false;
 
+		JFrame optWind = new JFrame("Select Game Options");
+		optWind.setVisible(true);
+		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		optWind.setSize(new Dimension(500, 300));
+		optWind.setResizable(false);
+		//mainPanel = listPanel + submitBut
+		JPanel mainPanel = new JPanel();
+		mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.PAGE_AXIS));
+		Font font = new Font("Serif", Font.BOLD, 25);
+		
+		//listPanel = boardPanel+winCondPanel
+		JPanel listPanel = new JPanel();
+		listPanel.setLayout(new BoxLayout(listPanel,BoxLayout.X_AXIS));
+		
+		//boardPanel = boardLabel + (scroll) boardList
+		JPanel boardPanel = new JPanel();
+		boardPanel.setLayout(new BoxLayout(boardPanel,BoxLayout.Y_AXIS));
+		JLabel boardLabel= new JLabel("Choose the boards size");
+		String[] boardOptions = {"3x3","4x4","5x5","6x6","7x7","8x8"};
+		JList<String>boardLs = new JList<String>(boardOptions);
+		boardLs.setBackground(Color.BLUE);
+		boardLs.setFont(font);
+		boardLs.setSelectedIndex(2);
+		JScrollPane scrollList = new JScrollPane(boardLs);
+		scrollList.setPreferredSize(new Dimension(100,100));
+		boardPanel.add(boardLabel);
+		boardPanel.add(scrollList);
+		
+		//winCondPanel = winLabel + autismPanel
+		JPanel winCondPanel = new JPanel();
+		winCondPanel.setLayout(new BoxLayout(winCondPanel,BoxLayout.Y_AXIS));
+		//autismPanel = centered winList
+		JPanel autismPanel = new JPanel();
+		JLabel winLabel = new JLabel("Select how many marks are needed to win");
+		String[] winOptions= {"3 marks","4 marks","5 marks"};
+		JList<String>winLs = new JList<String>(winOptions);
+		winLs.setBackground(Color.BLUE);
+		winLs.setFont(font);
+		winLs.setSelectedIndex(0);
+		autismPanel.add(Box.createRigidArea(new Dimension (25,25)));
+		autismPanel.add(winLs);
+		winCondPanel.add(winLabel);
+		winCondPanel.add(autismPanel);
+		
+		listPanel.add(boardPanel);
+		listPanel.add(winCondPanel);
+		
+		JButton submitBut = new JButton("Submit");
+		mainPanel.add(listPanel);
+		mainPanel.add(submitBut);
+		optWind.add(mainPanel);
+		submitBut.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boardSize = boardLs.getSelectedIndex()+3;
+				winCondition = winLs.getSelectedIndex()+3;
+				if(winCondition>boardSize) {
+					JOptionPane.showMessageDialog(optWind, "The current configuration would lead to an unwinnable game.", "Invalid Options", JOptionPane.ERROR_MESSAGE);
+				}else {
+					optWind.setVisible(false);
+					argumentsPassed = true;
+				}
+			}
+		});
+		optWind.revalidate();
+	}
 	/**
 	 * Initializes the server on port <code>GAME_PORT</code> with
 	 * <code>playerCount</code> total connections.
