@@ -10,73 +10,84 @@ import java.time.LocalDateTime;
 import java.util.Scanner;
 
 /**
- * An interface for <code>log</code> and <code>logerr</code> methods providing an easily changeable print and error stream.
- * Default log method implements System.out.println.
- * Default logerr method writes the errors data in a file.
+ * An Interface for <code>log</code> and <code>logerr</code> methods providing
+ * easily changeable print and error streams.Default log method uses
+ * <code>System.out.println()</code>. Default logerr method writes the errors
+ * data in a file.
  */
 public interface Logging {
 
 	/**
-	 * Same as <code>System.out.printf(text, args)</code>
+	 * Same as <code>System.out.println(text)</code>
 	 * 
 	 * @param text String, text to send
-	 * @param args Object[], arguments
 	 */
 	default void log(String text) {
 		System.out.println(text);
 	}
 
 	/**
-	 * Prints the error message to an external "error_log.txt" file.
-	 * Includes information about the date/time and class where the error occurred.
+	 * Prints the error message to an external "error_log.txt" file. Includes
+	 * information about the date/time and class where the error occurred.
 	 * 
-	 * @param error_msg String, a summary of the error
-	 * @param e Exception
-	 * @param printFull, whether or not to print the full error message
+	 * @param error_msg  String, a summary of the error
+	 * @param exc        Exception, the exception that caused the logged error
+	 * @param printFull  boolean, whether or not to print the full error message
 	 */
-	default void logerr(String error_msg, Exception e, boolean printFull) {
-		
-		log("Error logged to file: "+error_msg);
+	default void logerr(String error_msg, Exception exc, boolean printFull) {
+
+		log("Error logged to file: " + error_msg);
+
 		File file = new File("error_log.txt");
 		try {
-			if (!file.exists()) file.createNewFile();
-		}catch(IOException ex) {
-			ex.printStackTrace();
+			if (!file.exists())
+				file.createNewFile();
+		} catch (IOException e) {
+			e.printStackTrace();
 			return;
 		}
-		
+
+		// get the Stack Trace as a String
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
-		e.printStackTrace(pw);
-		
-		synchronized(file){
-			Scanner in;
-			StringBuffer old_data = new StringBuffer("");
+		exc.printStackTrace(pw);
+
+		// make sure file is synchronized across many different threads
+		synchronized (file) {
+
+			// read the old data
+			Scanner errorFile;
+			StringBuffer oldData = new StringBuffer("");
 			try {
-				 in = new Scanner(file);
-			}catch(IOException ex) {
+				errorFile = new Scanner(file);
+			} catch (IOException ex) {
 				ex.printStackTrace();
 				return;
 			}
-			while (in.hasNext()) {
-				old_data.append(in.nextLine()+"\n");
-			}
-			in.close();
-			
-			BufferedWriter writer;
+
+			while (errorFile.hasNext())
+				oldData.append(errorFile.nextLine() + "\n");
+
+			errorFile.close();
+
+			// get date/time and create crash message
 			LocalDateTime now = LocalDateTime.now();
-			String dateTime = String.format("%d/%d/%d %d:%d:%d",now.getDayOfMonth(),now.getMonthValue(),now.getYear(),now.getHour(),now.getMinute(),now.getSecond());
+			String dateTime = String.format("%d/%d/%d %d:%d:%d", now.getDayOfMonth(), now.getMonthValue(),
+					now.getYear(), now.getHour(), now.getMinute(), now.getSecond());
+			String crashReport = String.format(
+					"Crash at %s || Class %s\nSummary:%s %s\n#########################################\n", dateTime,
+					this.getClass().getName(), error_msg, printFull ? "Full report:\n" + sw.toString() : "");
+
+			// write the data
+			BufferedWriter writer;
 			try {
 				writer = new BufferedWriter(new FileWriter("error_log.txt"));
-				writer.write(old_data+String.format("Crash at %s\nClass %s\nSummary:%s %s\n#########################################\n",dateTime,this.getClass().getName(),
-						error_msg, printFull? "Full report:\n"+sw.toString() :""));
+				writer.write(oldData + crashReport);
 				writer.close();
-			}catch (IOException ex) {
-				ex.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 				return;
 			}
 		}
 	}
-
-	
 }
