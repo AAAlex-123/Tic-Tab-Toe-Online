@@ -17,13 +17,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.swing.*;
 
 /**
- * Client-side application to handle communications with the server
+ * Client-side application to handle communications with the server. Uses a GameUI instance as input/output to the user.
  */
-public class GameEngine implements Logging { // aka client
+public class GameEngine implements Logging { 
 
 	// ports of the Game and Chat Servers
 	// Constants
