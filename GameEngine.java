@@ -12,7 +12,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -25,8 +24,8 @@ import javax.swing.*;
  */
 public class GameEngine implements Logging { // aka client
 
-	// ports of the Game and Chat Servers
 	// Constants
+	// ports of the Game and Chat Servers
 	private static final int GAME_PORT = 10001;
 	private static final int CHAT_PORT = 10002;
 
@@ -79,26 +78,28 @@ public class GameEngine implements Logging { // aka client
 				e.printStackTrace();
 			}
 		}
-		log(String.format("Started client for %s", serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"));
-		
+		log(String.format("Started client for %s",
+				serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"));
+
 		this.ui = new GameUI(color, character, GameEngine.HEIGHT_MULTIPLIER);
 		setupUI();
 	}
-	
 
 	/**
-	 * Main method. Run to create and run a client
+	 * Main method. Run to create and run a client.
 	 */
 	public static void main(String[] args) {
 		GameEngine gameEngine = new GameEngine();
 		gameEngine.run();
 	}
-	
+
 	/**
 	 * Runs the GameEngine initializing connections to Game and Chat servers
 	 * according to the <code>serverCode</code>field
 	 */
 	private void run() {
+		// use return codes of each method to determine success or failure
+		// and continue execution accordingly
 		if (serverCode == CHAT_GAME || serverCode == CHAT) {
 			if (getChatConnection() == 0) {
 				initChat();
@@ -164,7 +165,8 @@ public class GameEngine implements Logging { // aka client
 			m.find();
 			int connectionToServerIndex = Integer.parseInt(m.group(1));
 
-			log(String.format("Connected to Game Server successfully as player '%c' with number #%d with color (r, g, b): (%d, %d %d)",
+			log(String.format(
+					"Connected to Game Server successfully as player '%c' with number #%d with color (r, g, b): (%d, %d %d)",
 					ui.getSymbol(), connectionToServerIndex, ui.getColor().getRed(), ui.getColor().getGreen(),
 					ui.getColor().getBlue()));
 
@@ -186,7 +188,8 @@ public class GameEngine implements Logging { // aka client
 
 		} catch (IOException e) {
 			exit("Couldn't connect to Game Server; if you're connected to chat server you may still chat.\n\nIf you don't know why this happened, please inform the developers",
-					"!game! IOException in getServerConnection()\n", WARNING, e, serverCode == GAME, "Connection Error");
+					"!game! IOException in getServerConnection()\n", WARNING, e, serverCode == GAME,
+					"Connection Error");
 			return 1;
 		} catch (ClassNotFoundException e) {
 			exit("Something went very wrong; please exit and inform the developers",
@@ -251,7 +254,7 @@ public class GameEngine implements Logging { // aka client
 				return 1;
 			}
 
-			log("Got response: "+response);
+			log("Got response: " + response);
 			ui.pushMessage(response);
 
 			// update board
@@ -285,7 +288,7 @@ public class GameEngine implements Logging { // aka client
 	 * @return int, 0 or 1, indicating success or fail
 	 */
 	private int play() {
-		
+
 		// get the move in the worst possible way (:
 		int move = -1;
 		while (move == -1) {
@@ -315,7 +318,7 @@ public class GameEngine implements Logging { // aka client
 			return 1;
 		}
 		log(String.format("Got and sent move: [%d, %d]", move / 10, move % 10));
-		
+
 		return 0;
 	}
 
@@ -355,14 +358,15 @@ public class GameEngine implements Logging { // aka client
 			}
 
 			ui.pushMessage("\nChat Server said: %s", response);
-			
+
 			ui.focusChat();
 
-			log("Connected to Chat Server successfully as player "+ ui.getSymbol());
+			log("Connected to Chat Server successfully as player " + ui.getSymbol());
 
 		} catch (IOException e) {
 			exit("Couldn't connect to Chat Server; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
-					"!chat! IOException in getChatConnection()\nExiting...\n", WARNING, e, serverCode == CHAT, "Connection Error");
+					"!chat! IOException in getChatConnection()\nExiting...\n", WARNING, e, serverCode == CHAT,
+					"Connection Error");
 			return 1;
 		} catch (ClassNotFoundException e) {
 			exit("Something went very wrong; please exit and inform the developers.",
@@ -384,22 +388,22 @@ public class GameEngine implements Logging { // aka client
 		exec.execute(chatWriter);
 	}
 
-	
 	/**
 	 * Exits the program when an Exception occurs.<br>
 	 * Logs the error and informs the player with a pop-up which, when closed, exits
-	 * the program.
+	 * the program or not, depending on <code>terminate</code> parameter.
 	 * 
 	 * @param error_msg String, the message to show the user
 	 * @param log_msg   String, the message to log to the console
 	 * @param type      int, ERROR, WARNING or INFORMATION, the type of the message
 	 * @param e         Exception, the exception that occurred
-	 * @param terminate boolean, whether or not an error has occured and the
+	 * @param terminate boolean, whether or not an error has occurred and the
 	 *                  application has to exit
+	 * @param title     String, the title of the pop-up
 	 */
 	private void exit(String error_msg, String log_msg, int type, Exception e, boolean terminate, String title) {
 		if (terminate)
-			logerr(log_msg,e,printStackTrace);
+			logerr(log_msg, e, printStackTrace);
 		else
 			log(log_msg);
 
@@ -433,9 +437,10 @@ public class GameEngine implements Logging { // aka client
 		localGameBoard = new GameBoard(localGameBoardConstructor);
 		ui.setScreen(localGameBoard);
 	}
-	
+
 	/**
-	 * Creates a UI to get the GameEngine options.
+	 * Creates a UI to get the GameEngine options. TODO make it more readable TODO
+	 * possibly add checkboxes instead of radio buttons to select servers
 	 */
 	private void getClientOptions() {
 
@@ -537,8 +542,8 @@ public class GameEngine implements Logging { // aka client
 				optWind.setVisible(false);
 			}
 		});
-	}//class
-	
+	} // main GameEngine class stuff
+
 	/**
 	 * Pushes any message it receives from Chat Server to the UI.
 	 */
@@ -549,11 +554,12 @@ public class GameEngine implements Logging { // aka client
 				try {
 					// wait to receive a chat message and push it to the log JTextArea
 					String msg = (String) chatInput.readObject();
-					log("!chat! received message: "+ msg);
+					log("!chat! received message: " + msg);
 					ui.pushMessage(msg);
 				} catch (IOException e) {
 					exit("Connection to Chat Server lost; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
-							"!chat! IOException in chatReader.run()", WARNING, e, serverCode == CHAT, "Connection Error");
+							"!chat! IOException in chatReader.run()", WARNING, e, serverCode == CHAT,
+							"Connection Error");
 					return;
 				} catch (ClassNotFoundException e) {
 					exit("Something went very wrong; please exit and inform the developers.",
@@ -561,7 +567,7 @@ public class GameEngine implements Logging { // aka client
 				}
 			}
 		}
-	}//private class
+	} // ChatReader class
 
 	/**
 	 * Private inner class that, whenever there is chat text to send, sends it to
@@ -597,29 +603,29 @@ public class GameEngine implements Logging { // aka client
 				} else {
 					try {
 						String msg = String.format("%c: %s", ui.getSymbol(), chatText);
-						log("!chat! sent message:     "+ msg);
+						log("!chat! sent message:     " + msg);
 						chatOutput.writeObject(msg);
 					} catch (IOException e) {
 						exit("Connection to Chat Server lost; if you're connected to game server you may still play.\n\nIf you don't know why this happened, please inform the developers",
-								"!chat! IOException in chatWriter.run()", WARNING, e, serverCode == CHAT, "Connection Error");
+								"!chat! IOException in chatWriter.run()", WARNING, e, serverCode == CHAT,
+								"Connection Error");
 						return;
 					}
 				}
 			}
 		}
-	}//private class
-	
+	} // ChatWriter class
+
 	/**
 	 * A class with a set of static utility methods to be used throughout the
 	 * project.
 	 */
 	abstract static class Utility {
 
-		
 		/**
 		 * Returns a string, stripped by <code>chars</code>.<br>
-		 * Similar to python's <code>str.strip(string)</code>.
-		 * Needed to make the program compatible with Java8+
+		 * Similar to python's <code>str.strip(string)</code>. Needed to make the
+		 * program compatible with Java8+
 		 * 
 		 * @param string String, the string to strip
 		 * @param chars  char[], the characters to strip from the string
@@ -628,42 +634,34 @@ public class GameEngine implements Logging { // aka client
 		public static String myStrip(String string, char... chars) {
 			if (string.equals(""))
 				return "";
-			return string.substring(firstIndexOfNonChars(string, chars), lastIndexofNonChars(string, chars) + 1);
-		}
+			int firstNonCharsIndex = -1;
+			int lastNonCharsIndex = -1;
+			boolean inChars;
+			char curr;
 
-		/**
-		 * Returns true or false indicating if <code>item</code> is an item of
-		 * <code>array</code>.<br>
-		 * Same as <code>ArrayList.contains()</code>
-		 * Needed to make the program compatible with Java8+
-		 * 
-		 * @param array char[], the array of items
-		 * @param item  char, the item to check if it is in the array
-		 * @return boolean, whether or not <code>item</code> is in <code>array</code>
-		 * 
-		 * @see ArrayList#contains(Object)
-		 */
-		public static boolean myContains(char[] array, char item) {
-			for (int i = 0; i < array.length; i++)
-				if (array[i] == item)
-					return true;
-			return false;
-		}
+			for (int i = 0; i < string.length(); i++) {
+				inChars = false;
+				curr = string.charAt(i);
+				for (char c : chars)
+					inChars |= curr == c;
+				if (!inChars) {
+					firstNonCharsIndex = i;
+					break;
+				}
+			}
 
-		private static int firstIndexOfNonChars(String string, char... chars) {
-			for (int i = 0; i < string.length(); i++)
-				if (!myContains(chars, string.charAt(i)))
-					return i;
-			return -1;
-		}
+			for (int i = string.length() - 1; i > -1; i--) {
+				inChars = false;
+				curr = string.charAt(i);
+				for (char c : chars)
+					inChars |= curr == c;
+				if (!inChars) {
+					lastNonCharsIndex = i;
+					break;
+				}
+			}
 
-		private static int lastIndexofNonChars(String string, char... chars) {
-			for (int i = string.length() - 1; i > -1; i--)
-				if (!myContains(chars, string.charAt(i)))
-					return i;
-			return -1;
+			return string.substring(firstNonCharsIndex, lastNonCharsIndex + 1);
 		}
 	}
-
-
 }
