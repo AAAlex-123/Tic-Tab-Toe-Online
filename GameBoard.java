@@ -6,32 +6,34 @@ package ttt_online;
 public class GameBoard {
 
 	final static char EMPTY = GameEngine.DASH;
-	private final int consecutive = 3;
-	public final int size;
+	public final int CONSECUTIVE;
+	public final int SIZE;
 	private final char[][] board;
 
 	/**
-	 * Initialise board of size <code>dimension</code> with <code>EMPTY</code>
+	 * Initialize board of size <code>dimension</code> with <code>EMPTY</code>
 	 * characters
 	 */
-	public GameBoard(int boardSize) {
-		this.size = boardSize;
-		this.board = new char[size][size];
+	public GameBoard(int boardSize,int winningCondition) {
+		this.SIZE = boardSize;
+		this.CONSECUTIVE = winningCondition;
+		this.board = new char[SIZE][SIZE];
 		for (int i = 0; i < boardSize; i++)
 			for (int j = 0; j < boardSize; j++)
 				board[i][j] = EMPTY;
 	}
 
 	/**
-	 * Initialise board by copying board <code>table</code>
+	 * Initialize board by copying board <code>table</code>
 	 * 
 	 * @param table char[][], the table to be copied
 	 */
 	public GameBoard(char[][] table) {
-		this.size = table.length;
-		this.board = new char[size][size];
-		for (int i = 0; i < size; i++)
-			for (int j = 0; j < size; j++)
+		this.SIZE = table.length;
+		this.CONSECUTIVE = 5;//max value, doesn't matter as the check only happens on the GameServer
+		this.board = new char[SIZE][SIZE];
+		for (int i = 0; i < SIZE; i++)
+			for (int j = 0; j < SIZE; j++)
 				board[i][j] = table[i][j];
 	}
 
@@ -67,8 +69,8 @@ public class GameBoard {
 	 * Clears the board; fills all squares with <code>EMPTY</code>
 	 */
 	public void clear() {
-		for (int i = 0; i < size; i++)
-			for (int j = 0; j < size; j++)
+		for (int i = 0; i < SIZE; i++)
+			for (int j = 0; j < SIZE; j++)
 				board[i][j] = EMPTY;
 	}
 
@@ -109,7 +111,7 @@ public class GameBoard {
 						// assume it's a winning sequence
 						boolean res = true;
 						char target = board[x][y];
-						for (int i = 0; i < consecutive; i++) {
+						for (int i = 0; i < CONSECUTIVE; i++) {
 							// for <consecutive> squares in that direction,
 							// "and" square==target and the result
 							// so if once 'square != target', res is false
@@ -133,8 +135,8 @@ public class GameBoard {
 	 * @return boolean, true if there is a tie, false otherwise
 	 */
 	public boolean hasTied() {
-		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
+		for (int i = 0; i < SIZE; i++) {
+			for (int j = 0; j < SIZE; j++) {
 				if (board[i][j] == EMPTY)
 					return false;
 			}

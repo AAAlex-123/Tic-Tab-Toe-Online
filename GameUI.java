@@ -179,8 +179,8 @@ public class GameUI extends JFrame {
 		});
 		
 		// initialize with empty board so the Screen can render
-		// Screen uses screen.board.size so we need to inisialize it
-		screen.board = new GameBoard(0);
+		// Screen uses screen.board.size so we need to initialize it
+		screen.board = new GameBoard(0,5);
 	}
 	
 
@@ -197,7 +197,7 @@ public class GameUI extends JFrame {
 		// for some reason maybe doesn't work as expected (?)
 		// maybe because `screen.setPreferredSize()` is called at constructor?
 		screen.board = gboard;
-		screen.setPreferredSize(new Dimension(100*gboard.size, 100*gboard.size));
+		screen.setPreferredSize(new Dimension(100*gboard.SIZE, 100*gboard.SIZE));
 		screen.repaint();
 		
 		// Wait until it loads then update the whole thing.
@@ -312,7 +312,7 @@ public class GameUI extends JFrame {
 					return;
 			}
       String input = GameEngine.Utility.myStrip(moveTextArea.getText().toUpperCase(), ' ', '\t');
-      if (!input.matches(String.format("[A-%s][1-%d]",letters[screen.board.size-1], screen.board.size))) {
+      if (!input.matches(String.format("[A-%s][1-%d]",letters[screen.board.SIZE-1], screen.board.SIZE))) {
         error_msg.setVisible(true);
         return;
       }
@@ -340,9 +340,9 @@ public class GameUI extends JFrame {
 			g.setFont(new Font("Serif", Font.PLAIN, 30*HEIGHT_MULTIPLIER));
 
 			// paint board
-			for (int i = 1; i < board.size+1; i++) {
+			for (int i = 1; i < board.SIZE+1; i++) {
 				g.drawString(Integer.toString(i), i * 26*HEIGHT_MULTIPLIER, 25*HEIGHT_MULTIPLIER);// 53 instead of 50 to compensate for character width
-				for (int j = 1; j < board.size+1; j++) {
+				for (int j = 1; j < board.SIZE+1; j++) {
 					g.drawString(letters[j - 1], 0, (j + 1) * 25*HEIGHT_MULTIPLIER);
 					g.drawRect(i * 25*HEIGHT_MULTIPLIER, j * 25*HEIGHT_MULTIPLIER, 25*HEIGHT_MULTIPLIER, 25*HEIGHT_MULTIPLIER); //kill me
 				}
@@ -350,8 +350,8 @@ public class GameUI extends JFrame {
 
 			// paint marks
 			g.setFont(new Font("Monospaced", Font.BOLD, 32*HEIGHT_MULTIPLIER));
-			for (int i = 0; i < board.size; i++) {
-				for (int j = 0; j < board.size; j++) {
+			for (int i = 0; i < board.SIZE; i++) {
+				for (int j = 0; j < board.SIZE; j++) {
 					char c = board.getBoard()[i][j];
 					if (c != GameEngine.DASH) {
 						g.setColor(colorMap.get(c));

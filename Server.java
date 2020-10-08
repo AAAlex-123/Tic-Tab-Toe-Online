@@ -17,7 +17,8 @@ import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
 /**
- * Abstract class to run a server; GameServer and ChatServer inherit from it.
+ * Abstract class to run a server, a thread that handles ad hoc connections and reports its activity to the user.
+ * GameServer and ClientServer inherit from it.
  */
 public abstract class Server implements Logging, Runnable {
 
@@ -39,8 +40,7 @@ public abstract class Server implements Logging, Runnable {
 	protected ServerSocket server;
 
 	protected final char[] symbols;
-	protected int boardSize;
-
+ 
 	// array of chess piece characters used to replace duplicates
 	protected final ArrayList<Character> chessPieces = new ArrayList<Character>(
 			Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
@@ -127,17 +127,13 @@ public abstract class Server implements Logging, Runnable {
 	 */
 	protected void getServerOptions() {
 
-		JFrame optWind = new JFrame(String.format("Select %s Options", this.getClass().getSimpleName()));
+		JFrame optWind = new JFrame("Select Server Options");
 		JPanel optPanel = new JPanel();
 		optPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
 		optWind.setVisible(true);
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		optWind.setSize(new Dimension(500, 300));
 		optWind.setResizable(false);
-
-		// listPanel = playerPanel + board Panel
-		JPanel listPanel = new JPanel();
-		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.X_AXIS));
 
 		// ------ playerPanel = playerLabel + playerList
 		JPanel playerPanel = new JPanel();
@@ -155,50 +151,19 @@ public abstract class Server implements Logging, Runnable {
 		playerList.setFont(font);
 		playerList.setSelectedIndex(0);
 		playerPanel.add(playerList);
-
-		// ------ boardPanel = boardLabel + (scroll) boardList
-		JPanel boardPanel = new JPanel();
-		boardPanel.setLayout(new BoxLayout(boardPanel, BoxLayout.Y_AXIS));
-
-		// ---------------- boardLabel
-		JLabel boardLabel = new JLabel("Choose the boards size");
-		boardPanel.add(boardLabel);
-
-		// ---------------- (scroll) boardList
-		String[] boardOptions = { "3x3", "4x4", "5x5", "6x6", "7x7", "8x8" };
-		JList<String> boardLs = new JList<String>(boardOptions);
-		boardLs.setBackground(Color.BLUE);
-		boardLs.setFont(font);
-		boardLs.setSelectedIndex(2);
-		JScrollPane scrollList = new JScrollPane(boardLs);
-		scrollList.setPreferredSize(new Dimension(100, 100));
-		boardPanel.add(scrollList);
-
-		// compose listPanel
-		listPanel.add(playerPanel);
-		listPanel.add(Box.createRigidArea(new Dimension(50, 50)));
-		if (this.getClass().getSimpleName().equals("GameServer")) {
-			listPanel.add(boardPanel);
-		} else {
-			listPanel.add(Box.createRigidArea(new Dimension(150, 150)));
-		}
-
-		optPanel.add(Box.createRigidArea(new Dimension(20, 20)));
-		optPanel.add(listPanel);
-
-		// crash report checkbox
-		JCheckBox crashCheckBox = new JCheckBox("I would like to receive crash reports on my command line");
-		optPanel.add(Box.createRigidArea(new Dimension(50, 50)));
-		optPanel.add(crashCheckBox);
+		
+		optPanel.add(Box.createRigidArea(new Dimension(20,20)));
+		optPanel.add(playerPanel);
+		JCheckBox b1 = new JCheckBox("I would like to receive crash reports on my command line"); 
+		optPanel.add(b1);
 
 		// submit Button
 		JButton submitButton = new JButton("Submit");
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playerCount = playerList.getSelectedIndex() + 2;
-				printStackTrace = crashCheckBox.isSelected();
-				boardSize = boardLs.getSelectedIndex() + 3;
+				playerCount = playerList.getSelectedIndex()+2;
+				printStackTrace = b1.isSelected();
 				optWind.setVisible(false);
 				argumentsPassed = true;
 			}
@@ -207,11 +172,12 @@ public abstract class Server implements Logging, Runnable {
 		optPanel.add(submitButton);
 
 		optWind.add(optPanel);
-	}
-
-	/**
+		optWind.revalidate();
+  }
+/*
+	**
 	 * Sets up the <code>screen</code> used for logging purposes
-	 */
+	 *
 	private void setupScreen() {
 		screen = new Screen();
 		screen.updateGameConnectionCounter(0);
@@ -221,7 +187,7 @@ public abstract class Server implements Logging, Runnable {
 		screen.setResizable(true);
 		screen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
-
+*/
 	/**
 	 * Logs <code>text</code> on the <code>screen</code> because instead of the
 	 * command line
