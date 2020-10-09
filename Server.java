@@ -177,7 +177,7 @@ public abstract class Server implements Logging, Runnable {
 	/**
 	 * Sets up the <code>screen</code> used for logging purposes
 	 */
-	private void setupScreen() {
+	private static void setupScreen() {
 		screen.updateGameConnectionCounter(0);
 		screen.updateChatConnectionCounter(0);
 		screen.setVisible(true);
@@ -192,7 +192,7 @@ public abstract class Server implements Logging, Runnable {
 	 */
 	@Override
 	public void log(String text) {
-		screen.pushMessage(text);
+		screen.pushMessage(String.format("!%10s! %s", this.getClass().getSimpleName(), text));
 	}
 
 	/**
@@ -241,6 +241,7 @@ public abstract class Server implements Logging, Runnable {
 
 			logTextArea = new JTextArea();
 			logTextArea.setEditable(false);
+			logTextArea.setFont(new Font("Consolas", Font.PLAIN, 13));
 			((DefaultCaret) logTextArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 			scrollPane = new JScrollPane(logTextArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 					JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
