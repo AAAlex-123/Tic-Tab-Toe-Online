@@ -183,13 +183,22 @@ public class GameUI extends JFrame {
 		screen.board = new GameBoard(0,5);
 	}
 	
-
-	public void pushMessage(String mes, Object... args) {//Use String.format instead of this
+	//Use String.format instead of this /// nope
+	public void pushMessage(String mes, Object... args) {
 		logTextArea.setText(String.format(String.format("%s%s\n", logTextArea.getText(), mes), args));
 	}
-
-	public void pushMessage(String mes, boolean newline) {//Append \n instead of this
-		logTextArea.setText(String.format("%s%s%s", logTextArea.getText(), mes, newline ? "\n" : ""));
+	
+	//Append \n instead of this /// nope
+	/* Yes we need `boolean newline` even though it's always false            
+	 * because otherwise when `Object... args` is null (i.e. a simple message,
+	 * `pushMessage("owo")` instead of `pushMessage("%s pog", "text")`),      
+	 * this method is called and we don't get a newline when we need it       
+	 * However, for some reason, `pushMessage("text", true)` calls this method
+	 * instead of the other one, even though both fit.
+	 * Maybe the compiler looks for the "most matching"?
+	 */
+	public void pushMessage(String mes, boolean newline) {
+		logTextArea.setText(String.format("%s%s%s ", logTextArea.getText(), mes, newline ? "\n" : ""));
 	}
 
 	public void setScreen(GameBoard gboard) {
