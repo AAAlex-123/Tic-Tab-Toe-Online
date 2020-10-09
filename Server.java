@@ -23,20 +23,21 @@ import javax.swing.text.DefaultCaret;
 public abstract class Server implements Logging, Runnable {
 
 	// server fields
-	protected int playerCount;
-	protected boolean printStackTrace;
+	protected static int playerCount;
+	protected static boolean printStackTrace;
 
 	/**
 	 * Counter to keep track of the number of players connected. Used to correctly
 	 * display that number in the <code>{@link Screen#playerLabel}</code>
 	 */
-	protected int gameConnected, chatConnected;
+	protected static int gameConnected;
+	protected static int chatConnected;
 
 	protected final ObjectInputStream[] inputs;
 	protected final ObjectOutputStream[] outputs;
 
 	// screen is essentially a JTextArea for log messages
-	protected Screen screen;
+	protected static final Screen screen= new Screen() ;
 	protected ServerSocket server;
 
 	protected final char[] symbols;
@@ -71,7 +72,6 @@ public abstract class Server implements Logging, Runnable {
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
-
 		setupScreen();
 	}
 
@@ -89,7 +89,7 @@ public abstract class Server implements Logging, Runnable {
 		gameConnected = 0;
 		chatConnected = 0;
 
-		this.printStackTrace = printStackTrace;
+		Server.printStackTrace = printStackTrace;
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
@@ -179,7 +179,6 @@ public abstract class Server implements Logging, Runnable {
 	 * Sets up the <code>screen</code> used for logging purposes
 	 */
 	private void setupScreen() {
-		screen = new Screen();
 		screen.updateGameConnectionCounter(0);
 		screen.updateChatConnectionCounter(0);
 		screen.setVisible(true);
@@ -221,7 +220,7 @@ public abstract class Server implements Logging, Runnable {
 	 * A simple UI to display log messages.
 	 */
 	@SuppressWarnings("serial")
-	protected final class Screen extends JFrame {
+	protected final static class Screen extends JFrame {
 		private final JTextArea logTextArea;
 		private final JScrollPane scrollPane;
 		private final JPanel windowPanel;
