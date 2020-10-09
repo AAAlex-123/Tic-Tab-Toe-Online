@@ -438,12 +438,12 @@ public class GameEngine implements Logging {
 	}
 
 	/**
-	 * Creates a UI to get the GameEngine options. TODO make it more readable TODO
-	 * possibly add checkboxes instead of radio buttons to select servers
+	 * Creates a UI to get the GameEngine options. 
+	 * 
 	 */
 	private void getClientOptions() {
 
-		JFrame optWind = new JFrame("Select Server Options");
+		JFrame optWind = new JFrame("Select Player Options");
 
 		JPanel optPanel = new JPanel();
 		optPanel.setLayout(new BoxLayout(optPanel, BoxLayout.PAGE_AXIS));
