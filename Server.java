@@ -30,8 +30,7 @@ public abstract class Server implements Logging, Runnable {
 	 * Counter to keep track of the number of players connected. Used to correctly
 	 * display that number in the <code>{@link Screen#playerLabel}</code>
 	 */
-	protected static int gameConnected;
-	protected static int chatConnected;
+	protected static int gameConnected, chatConnected;
 
 	protected final ObjectInputStream[] inputs;
 	protected final ObjectOutputStream[] outputs;
