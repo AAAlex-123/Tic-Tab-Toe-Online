@@ -185,7 +185,7 @@ public class GameUI extends JFrame {
 	
 
 	public void pushMessage(String mes, Object... args) {//Use String.format instead of this
-		logTextArea.setText(String.format("%s%s\n", logTextArea.getText(), mes, args));
+		logTextArea.setText(String.format(String.format("%s%s\n", logTextArea.getText(), mes), args));
 	}
 
 	public void pushMessage(String mes, boolean newline) {//Append \n instead of this
