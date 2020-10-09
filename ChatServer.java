@@ -81,7 +81,7 @@ public class ChatServer extends Server {
 			logerr("IOException in InitializeServer()", e, printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
-			JOptionPane.showMessageDialog(this.screen,
+			JOptionPane.showMessageDialog(Server.screen,
 					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit", CHAT_PORT), "Error",
 					JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
@@ -261,17 +261,6 @@ public class ChatServer extends Server {
 		}
 	}
 
-	/**
-	 * Sets the Chat Server's <code>screen</code> to the one in the parameter. Used
-	 * when ran together with Game Server to have the same screen
-	 * 
-	 * @param screen Screen, the screen to set the screen to.
-	 * 
-	 * @see GameServer#main(String[]) GameServer.main()
-	 */
-	public void setScreen(Screen screen) {
-		this.screen = screen;
-	}
 
 	/**
 	 * Main method. Run to create and run a Chat Server.
