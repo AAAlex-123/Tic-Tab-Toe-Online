@@ -47,16 +47,14 @@ public class GameServer extends Server {
 	/**
 	 * Main method. Run to create and run a Game Server. Also creates and runs a
 	 * Chat Server with the same parameters as the Game Server.
-	 * 
-	 * TODO maybe chat server has separate parameters
 	 *
 	 * @param args not used
 	 * @see Server#Server() Server()
 	 */
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
-		ChatServer chatServer = new ChatServer(server.playerCount, server.printStackTrace);
-		chatServer.setScreen(server.screen);
+		ChatServer chatServer = new ChatServer(Server.playerCount, Server.printStackTrace);
+		chatServer.setScreen(Server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
 		exec.execute(server);
 		exec.execute(chatServer);
@@ -167,7 +165,7 @@ public class GameServer extends Server {
 		} catch (BindException e) {
 			logerr("BindException while setting up server; a server is already running on this port", e,
 					printStackTrace);
-			JOptionPane.showMessageDialog(this.screen,
+			JOptionPane.showMessageDialog(Server.screen,
 					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit", GAME_PORT), "Error",
 					JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
