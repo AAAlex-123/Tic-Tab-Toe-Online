@@ -306,7 +306,7 @@ public class GameEngine implements Logging {
 		}
 
 		if (move != -2)
-			ui.pushMessage("You played %c%s", 65 + move / 10, move % 10 + 1, false);
+			ui.pushMessage(String.format("You played %c%s", 65 + move / 10, move % 10 + 1), false);
 
 		// send the move
 		try {
