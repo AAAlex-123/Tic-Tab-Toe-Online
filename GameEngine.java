@@ -19,24 +19,25 @@ import java.util.regex.Pattern;
 import javax.swing.*;
 
 /**
- * Client-side application to handle communications with the server. Uses a GameUI instance as input/output to the user.
+ * Client-side application to handle communications with the server. Uses a
+ * GameUI instance as input/output to the user.
  */
-public class GameEngine implements Logging { 
+final class GameEngine implements Logging {
 
 	// Constants
-	// ports of the Game and Chat Servers
+	// default ports of the Game and Chat Servers
 	private static final int GAME_PORT = 10001;
 	private static final int CHAT_PORT = 10002;
 
-	public final static char DASH = '-';
+	final static char DASH = '-';
 
 	private static final int INFORMATION = JOptionPane.INFORMATION_MESSAGE;
 	private static final int WARNING = JOptionPane.WARNING_MESSAGE;
 	private static final int ERROR = JOptionPane.ERROR_MESSAGE;
 
-	private static final int CHAT = 0;
-	private static final int GAME = 1;
-	private static final int CHAT_GAME = 2;
+	private static final int CHAT = 1;
+	private static final int GAME = 2;
+	private static final int CHAT_GAME = 3;
 
 	// variables Initialized from UI
 	private String address;
@@ -44,6 +45,8 @@ public class GameEngine implements Logging {
 	// used to determine UI and graphics size
 	private static final int HEIGHT_MULTIPLIER = Toolkit.getDefaultToolkit().getScreenSize().height < 750 ? 1 : 2;
 
+	// technically einai final, an anti gia `getClientOptions()` grafame olon ton
+	// kwdika sotn constructor xd
 	private int serverCode;
 	private Color color = Color.BLACK;
 	private char character;
@@ -51,7 +54,6 @@ public class GameEngine implements Logging {
 	private boolean argumentsPassed = false;
 
 	private final GameUI ui;
-	private boolean gameEnded = false;
 
 	private Socket serverSocket, chatSocket;
 	private ObjectOutputStream serverOutput, chatOutput;
@@ -68,7 +70,7 @@ public class GameEngine implements Logging {
 	 * 
 	 * @see GameEngine#getClientOptions() getClientOptions
 	 */
-	public GameEngine() {
+	GameEngine() {
 		getClientOptions();
 		while (!argumentsPassed) {
 			try {
@@ -80,7 +82,7 @@ public class GameEngine implements Logging {
 		log(String.format("Started client for %s",
 				serverCode == 0 ? "chat" : serverCode == 1 ? "game" : "game and chat"));
 
-		this.ui = new GameUI(color, character, GameEngine.HEIGHT_MULTIPLIER);
+		ui = new GameUI(color, character, GameEngine.HEIGHT_MULTIPLIER);
 		setupUI();
 	}
 
@@ -94,7 +96,7 @@ public class GameEngine implements Logging {
 
 	/**
 	 * Runs the GameEngine initializing connections to Game and Chat servers
-	 * according to the <code>serverCode</code>field
+	 * according to the {@code serverCode}field
 	 */
 	private void run() {
 		// use return codes of each method to determine success or failure
@@ -108,12 +110,16 @@ public class GameEngine implements Logging {
 		if (serverCode == CHAT_GAME || serverCode == GAME) {
 			if (getServerConnection() == 1)
 				return;
-			while (!gameEnded) {
-				if (setup(true) == 1)
+
+			// this loops exits when:
+			// - any method does not execute normally (return code 1)
+			// - game ends normally inside setup() (return code 2)
+			while (true) {
+				if (setup(true) != 0)
 					break;
-				if (play() == 1)
+				if (play() != 0)
 					break;
-				if (setup(false) == 1)
+				if (setup(false) != 0)
 					break;
 			}
 		}
@@ -206,7 +212,8 @@ public class GameEngine implements Logging {
 	 * @param starting boolean, whether or not it is the start or the end of the
 	 *                 player's turn
 	 * @see GameEngine#exit(String, String, int, Exception, boolean) exit()
-	 * @return int, 0 or 1, indicating success or fail
+	 * @return int, 0, 1 or 2 indicating success, fail or normal game ending
+	 *         respectively
 	 */
 	private int setup(boolean starting) {
 		try {
@@ -225,14 +232,13 @@ public class GameEngine implements Logging {
 			// get ready message
 			String response = ((String) serverInput.readObject());
 
-			// if message is "won" or "resigned" or "tie" display some messages and stop
-			// game thread
+			// if message is "won" or "resigned" or "tie"
+			// display some messages and stop game thread (return code 2)
 			if (response.matches("Player.*resigned") || response.matches("Player.*won!")) {
 				if (response.charAt(8) == ui.getSymbol())
 					ui.pushMessage("%c", '\u2713');
 				updateBoard();
 				ui.setEnableTurn(false);
-				gameEnded = true;
 
 				// trust the spaghetti, it just makes the correct message without 4 if
 				// statements
@@ -242,15 +248,14 @@ public class GameEngine implements Logging {
 								: response.matches("Player.*resigned") ? response + " :)" : response + " :(",
 						serverCode == GAME ? "please exit" : "you can still chat, or exit to play another game");
 				exit(msg, "!game! game ended", INFORMATION, null, serverCode == GAME, "Game Over");
-				return 1;
+				return 2;
 			} else if (response.equals("It's a tie!")) {
 				updateBoard();
 				ui.setEnableTurn(false);
-				gameEnded = true;
 				String msg = String.format("\n\n%s\n\nGame ended; %s", "It's a tie!",
 						serverCode == GAME ? "please exit" : "you can still chat, or exit to play another game");
 				exit(msg, "!game! game ended", INFORMATION, null, serverCode == GAME, "Game Over");
-				return 1;
+				return 2;
 			}
 
 			log("Got response: " + response);
@@ -306,7 +311,7 @@ public class GameEngine implements Logging {
 		}
 
 		if (move != -2)
-			ui.pushMessage("You played %c%s", 65 + move / 10, move % 10 + 1, false);
+			ui.pushMessage(String.format("You played %c%s", 65 + move / 10, move % 10 + 1), false);
 
 		// send the move
 		try {
@@ -390,10 +395,10 @@ public class GameEngine implements Logging {
 	/**
 	 * Exits the program when an Exception occurs.<br>
 	 * Logs the error and informs the player with a pop-up which, when closed, exits
-	 * the program or not, depending on <code>terminate</code> parameter.
+	 * the program or not, depending on {@code terminate} parameter.
 	 * 
 	 * @param error_msg String, the message to show the user
-	 * @param log_msg   String, the message to log to the console
+	 * @param log_msg   String, the message to log in the Error Stream
 	 * @param type      int, ERROR, WARNING or INFORMATION, the type of the message
 	 * @param e         Exception, the exception that occurred
 	 * @param terminate boolean, whether or not an error has occurred and the
@@ -401,17 +406,7 @@ public class GameEngine implements Logging {
 	 * @param title     String, the title of the pop-up
 	 */
 	private void exit(String error_msg, String log_msg, int type, Exception e, boolean terminate, String title) {
-		if (terminate)
-			logerr(log_msg, e, printStackTrace);
-		else
-			log(log_msg);
-
-		try {
-			if (printStackTrace)
-				e.printStackTrace();
-		} catch (NullPointerException exc) {
-			;
-		}
+		logerr(log_msg, e, printStackTrace);
 
 		JOptionPane.showMessageDialog(this.ui, error_msg, title, type);
 		if (terminate)
@@ -422,7 +417,7 @@ public class GameEngine implements Logging {
 	 * Updates the board on the UI.
 	 * <p>
 	 * It works by de-constructing the GameBoard at the server and re-constructing
-	 * it here using the <code>char[][] array</code> because there is a problem when
+	 * it here using the {@code char[][] array} because there is a problem when
 	 * sending GameBoard objects.
 	 * 
 	 * @see GameBoard#GameBoard(char[][]) GameBoard(char[][])
@@ -438,12 +433,12 @@ public class GameEngine implements Logging {
 	}
 
 	/**
-	 * Creates a UI to get the GameEngine options. TODO make it more readable TODO
-	 * possibly add checkboxes instead of radio buttons to select servers
+	 * Creates a UI to get the GameEngine options.
+	 * 
 	 */
 	private void getClientOptions() {
 
-		JFrame optWind = new JFrame("Select Server Options");
+		JFrame optWind = new JFrame("Select Player Options");
 
 		JPanel optPanel = new JPanel();
 		optPanel.setLayout(new BoxLayout(optPanel, BoxLayout.PAGE_AXIS));
@@ -458,6 +453,9 @@ public class GameEngine implements Logging {
 
 		JPanel addressPanel = new JPanel();
 		addressPanel.setLayout(new BoxLayout(addressPanel, BoxLayout.Y_AXIS));
+		// TODO maybe separate addresses to game and chat servers
+		// fancy checkbox: same address for both servers
+		// that on KeyEvent copies the address from one server to the other (:
 		JLabel addressLabel = new JLabel("Server IP:");
 		addressLabel.setPreferredSize(new Dimension(100, 50));
 		JTextField addressField = new JTextField("127.0.0.1");
@@ -468,7 +466,7 @@ public class GameEngine implements Logging {
 		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
 		String[] chars = { "X", "O", "!", "#", "$", "%", "*", "+", "A", "B", "C", "D", "E", "F", "G", "H", "I", "P",
 				"Q", "R", "S", "T", "U", "V", "W", "<", "?", "~" };
-		JList<String> charList = new JList<String>(chars); // JList forces me to use strings here
+		JList<String> charList = new JList<String>(chars);
 		charList.setBackground(Color.BLUE);
 		charList.setSelectedIndex(0);
 		JScrollPane scrollList = new JScrollPane(charList);
@@ -538,7 +536,7 @@ public class GameEngine implements Logging {
 				else
 					serverCode = CHAT;
 				argumentsPassed = true;
-				optWind.setVisible(false);
+				optWind.dispose();
 			}
 		});
 	} // main GameEngine class stuff
@@ -622,9 +620,9 @@ public class GameEngine implements Logging {
 	abstract static class Utility {
 
 		/**
-		 * Returns a string, stripped by <code>chars</code>.<br>
-		 * Similar to python's <code>str.strip(string)</code>. Needed to make the
-		 * program compatible with Java8+
+		 * Returns a string, stripped by {@code chars}.<br>
+		 * Similar to python's {@code str.strip(string)}. Needed to make the program
+		 * compatible with Java8+
 		 * 
 		 * @param string String, the string to strip
 		 * @param chars  char[], the characters to strip from the string
