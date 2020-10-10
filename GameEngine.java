@@ -89,7 +89,7 @@ final class GameEngine implements Logging {
 	/**
 	 * Main method. Run to create and run a client.
 	 */
-	static void main(String[] args) {
+	public static void main(String[] args) {
 		GameEngine gameEngine = new GameEngine();
 		gameEngine.run();
 	}
