@@ -117,8 +117,7 @@ final class GameUI extends JFrame {
 /*ADD*/ autismPanel.add(playerTextArea);
 
 		// error_msg
-		errorMsg = new JLabel(String.format("Invalid input! Please insert: [A-%s][1-%d]",
-				letters[screen.board.SIZE - 1], screen.board.SIZE));
+		errorMsg = new JLabel("");
 		errorMsg.setVisible(false);
 
 		// inputPanel
@@ -189,13 +188,13 @@ final class GameUI extends JFrame {
 		screen.board = new GameBoard(0, 5);
 	}
 
-	// TODO DELETME comments below if not necessary
+	// TODO DELETEME comments below if not necessary
 	// Use String.format instead of this /// nope
 	void pushMessage(String mes, Object... args) {
 		logTextArea.setText(String.format(String.format("%s%s\n", logTextArea.getText(), mes), args));
 	}
 
-	// TODO DELETME comments below if not necessary
+	// TODO DELETEME comments below if not necessary
 	// Append \n instead of this /// nope
 	/*
 	 * Yes we need `boolean newline` even though it's always false because otherwise
@@ -210,16 +209,18 @@ final class GameUI extends JFrame {
 	}
 
 	void setScreen(GameBoard gameBoard) {
-		// TODO DELETME comments below if not necessary
+		// TODO DELETEME comments below if not necessary
 		// set size now that we know how big the board is
 		// for some reason maybe doesn't work as expected (?)
 		// maybe because `screen.setPreferredSize()` is called at constructor?
 		screen.board = gameBoard;
 		screen.setPreferredSize(new Dimension(100 * gameBoard.SIZE, 100 * gameBoard.SIZE));
 		screen.repaint();
+		errorMsg.setText(String.format("Invalid input! Please insert: [A-%s][1-%d]",
+				letters[screen.board.SIZE - 1], screen.board.SIZE));
 
 		// Wait until it loads then update the whole thing.
-		// TODO DELETME comments below if not necessary
+		// TODO DELETEME comments below if not necessary
 		// JVM has forced my hand
 		// yes, this.revalidate() doesn't work here
 		try {
@@ -240,7 +241,7 @@ final class GameUI extends JFrame {
 			moveTextArea.setText("Your next move");
 		else {
 			moveTextArea.setText("");
-			// TODO DELETME comments below if not necessary
+			// TODO DELETEME comments below if not necessary
 			// bring window to front and
 			// get focus when it's your turn
 			toFront();
