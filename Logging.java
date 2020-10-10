@@ -10,15 +10,15 @@ import java.time.LocalDateTime;
 import java.util.Scanner;
 
 /**
- * An Interface for <code>log</code> and <code>logerr</code> methods providing
+ * An Interface for {@code log} and {@code logerr} methods providing
  * easily changeable print and error streams.Default log method uses
- * <code>System.out.println()</code>. Default logerr method writes the errors
+ * {@code System.out.println()}. Default logerr method writes the errors
  * data in a file.
  */
 public interface Logging {
 
 	/**
-	 * Same as <code>System.out.println(text)</code>
+	 * Same as {@code System.out.println(text)}
 	 * 
 	 * @param text String, text to send
 	 */
@@ -66,7 +66,7 @@ public interface Logging {
 			}
 
 			while (errorFile.hasNext())
-				oldData.append(errorFile.nextLine() + "\n");
+				oldData.append(errorFile.nextLine() + "%n");
 
 			errorFile.close();
 
@@ -75,8 +75,10 @@ public interface Logging {
 			String dateTime = String.format("%d/%d/%d %d:%d:%d", now.getDayOfMonth(), now.getMonthValue(),
 					now.getYear(), now.getHour(), now.getMinute(), now.getSecond());
 			String crashReport = String.format(
-					"Crash at %s || Class %s\nSummary:%s %s\n#########################################\n", dateTime,
-					this.getClass().getName(), error_msg, printFull ? "Full report:\n" + sw.toString() : "");
+					"Crash at %s || Class %s%nSummary: %s %s%n#########################################%n", dateTime,
+					this.getClass().getName(), error_msg, printFull ? "%nFull report:%n" + sw.toString() : "");
+			
+			System.out.println(System.lineSeparator());
 
 			// write the data
 			BufferedWriter writer;
