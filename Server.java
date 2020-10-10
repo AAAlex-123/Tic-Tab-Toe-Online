@@ -20,7 +20,7 @@ import javax.swing.text.DefaultCaret;
  * Abstract class to run a server, a thread that handles ad hoc connections and reports its activity to the user.
  * GameServer and ClientServer inherit from it.
  */
-public abstract class Server implements Logging, Runnable {
+abstract class Server implements Logging, Runnable {
 
 	// server fields
 	protected static int playerCount;
@@ -28,7 +28,7 @@ public abstract class Server implements Logging, Runnable {
 
 	/**
 	 * Counter to keep track of the number of players connected. Used to correctly
-	 * display that number in the <code>{@link Screen#playerLabel}</code>
+	 * display that number in the {@code {@link Screen#playerLabel}}
 	 */
 	protected static int gameConnected, chatConnected;
 
@@ -36,7 +36,7 @@ public abstract class Server implements Logging, Runnable {
 	protected final ObjectOutputStream[] outputs;
 
 	// screen is essentially a JTextArea for log messages
-	protected static final Screen screen= new Screen() ;
+	protected static final Screen screen = new Screen() ;
 	protected ServerSocket server;
 
 	protected final char[] symbols;
@@ -45,8 +45,7 @@ public abstract class Server implements Logging, Runnable {
 	protected final ArrayList<Character> chessPieces = new ArrayList<Character>(
 			Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
 
-	// used to determine when user has entered options to the UI
-	protected static boolean argumentsPassed = false;
+	protected boolean argumentsPassed = false;
 
 	/**
 	 * Constructor of Server superclass. <br>
@@ -55,7 +54,7 @@ public abstract class Server implements Logging, Runnable {
 	 * @see Server#getServerOptions() getServerOptions
 	 * @see Server#setupScreen() setupScreen()
 	 */
-	public Server() {
+	Server() {
 		getServerOptions();
 		while (!argumentsPassed) {
 			try {
@@ -84,7 +83,7 @@ public abstract class Server implements Logging, Runnable {
 	 * @see Server#getServerOptions() getServerOptions
 	 * @see Server#setupScreen() setupScreen()
 	 */
-	public Server(int playerCount, boolean printStackTrace) {
+	Server(int playerCount, boolean printStackTrace) {
 		gameConnected = 0;
 		chatConnected = 0;
 
@@ -163,7 +162,7 @@ public abstract class Server implements Logging, Runnable {
 			public void actionPerformed(ActionEvent e) {
 				playerCount = playerList.getSelectedIndex()+2;
 				printStackTrace = b1.isSelected();
-				optWind.setVisible(false);
+				optWind.dispose();
 				argumentsPassed = true;
 			}
 		});
@@ -175,7 +174,7 @@ public abstract class Server implements Logging, Runnable {
 	}
 	
 	/**
-	 * Sets up the <code>screen</code> used for logging purposes
+	 * Sets up the {@code screen} used for logging purposes
 	 */
 	private static void setupScreen() {
 		screen.updateGameConnectionCounter(0);
@@ -187,7 +186,7 @@ public abstract class Server implements Logging, Runnable {
 	}
 
 	/**
-	 * Logs <code>text</code> on the <code>screen</code> because instead of the
+	 * Logs {@code text} on the {@code screen} because instead of the
 	 * command line
 	 */
 	@Override
@@ -196,7 +195,7 @@ public abstract class Server implements Logging, Runnable {
 	}
 
 	/**
-	 * Sends message <code>msg</code> to every client connected
+	 * Sends message {@code msg} to every client connected
 	 * 
 	 * @param msg  String, text to send
 	 * @param args Object[], arguments
@@ -219,7 +218,7 @@ public abstract class Server implements Logging, Runnable {
 	 * A simple UI to display log messages.
 	 */
 	@SuppressWarnings("serial")
-	protected final static class Screen extends JFrame {
+	protected static final class Screen extends JFrame {
 		private final JTextArea logTextArea;
 		private final JScrollPane scrollPane;
 		private final JPanel windowPanel;
@@ -229,11 +228,11 @@ public abstract class Server implements Logging, Runnable {
 		private final JLabel playerLabel;
 
 		/**
-		 * Initializes the <code>screen</code> used for logging purposes
+		 * Initializes the {@code screen} used for logging purposes
 		 */
 		public Screen() {
 			super("Server Log");
-			windowPanel = new JPanel(); // used for layout
+			windowPanel = new JPanel();
 			windowPanel.setLayout(new BoxLayout(windowPanel, BoxLayout.PAGE_AXIS));
 
 			playerLabel = new JLabel();
@@ -252,7 +251,7 @@ public abstract class Server implements Logging, Runnable {
 		}
 
 		/**
-		 * Appends <code>msg</code> to the screen
+		 * Appends {@code msg} to the screen
 		 * 
 		 * @param msg String, the message to append
 		 */
@@ -269,10 +268,10 @@ public abstract class Server implements Logging, Runnable {
 		}
 
 		/**
-		 * Changes the <code>gameConnected</code> variable by <code>i</code>.<br>
-		 * <code>i=0</code> resets the variable to 0.<br>
+		 * Changes the {@code gameConnected} variable by {@code i}.<br>
+		 * {@code i=0} resets the variable to 0.<br>
 		 * 
-		 * Afterwards updates the <code>playerLabel</code>
+		 * Afterwards updates the {@code playerLabel}
 		 * 
 		 * @param i int, the amount by which to change the gameConnected variable
 		 * 
@@ -286,10 +285,10 @@ public abstract class Server implements Logging, Runnable {
 		}
 
 		/**
-		 * Changes the <code>chatConnected</code> variable by <code>i</code>.<br>
-		 * <code>i=0</code> resets the variable to 0.<br>
+		 * Changes the {@code chatConnected} variable by {@code i}.<br>
+		 * {@code i=0} resets the variable to 0.<br>
 		 * 
-		 * Afterwards updates the <code>playerLabel</code>
+		 * Afterwards updates the {@code playerLabel}
 		 * 
 		 * @param i int, the amount by which to change the chatConnected variable
 		 * 
