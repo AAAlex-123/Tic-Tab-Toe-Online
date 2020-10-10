@@ -205,7 +205,7 @@ abstract class Server implements Logging, Runnable {
 			try {
 				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
-				logerr("Error in broadcast()\n", e, printStackTrace);
+				logerr("Error in broadcast()%n", e, printStackTrace);
 			} catch (NullPointerException e) {
 				;
 			}
@@ -256,7 +256,7 @@ abstract class Server implements Logging, Runnable {
 		 * @param msg String, the message to append
 		 */
 		public final void pushMessage(String msg) {
-			logTextArea.setText(logTextArea.getText() + "\n" + msg);
+			logTextArea.setText(logTextArea.getText() + "%n" + msg);
 		}
 
 		/**
