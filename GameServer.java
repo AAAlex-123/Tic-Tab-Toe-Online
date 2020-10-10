@@ -164,8 +164,8 @@ final class GameServer extends Server {
 	}
 
 	/**
-	 * Initializes the server on port <code>GAME_PORT</code> with
-	 * <code>playerCount</code> total connections.
+	 * Initializes the server on port {@code GAME_PORT} with
+	 * {@code playerCount} total connections.
 	 */
 	protected void initializeServer() {
 		try {
@@ -186,10 +186,10 @@ final class GameServer extends Server {
 
 	/**
 	 * <ul>
-	 * <li>Initializes <code>playerCount</code> connections.
+	 * <li>Initializes {@code playerCount} connections.
 	 * <li>Gets their input and output streams.
 	 * <li>Exchanges some messages.
-	 * <li>Increments the <code>{@link Server#gameConnected gameConnected}</code>
+	 * <li>Increments the {@code {@link Server#gameConnected gameConnected}}
 	 * counter.
 	 * </ul>
 	 * If two or more players have the same symbol, the server allocates them
@@ -357,8 +357,8 @@ final class GameServer extends Server {
 
 	/**
 	 * Resets everything in case something goes wrong while getting connections.<br>
-	 * Closes connections, empties <code>symbols</code> array and resets the
-	 * <code>{@link Server#gameConnected gameConnected}</code> counter.
+	 * Closes connections, empties {@code symbols} array and resets the
+	 * {@code {@link Server#gameConnected gameConnected}} counter.
 	 */
 	private void reset() {
 		gameBoard.clear();
@@ -391,7 +391,7 @@ final class GameServer extends Server {
 	 * Sends the board to the currentPlayer.
 	 * <p>
 	 * It works by de-constructing the GameBoard here and re-constructing it at the
-	 * client using the GameBoard's <code>char[][] array</code> because there is a
+	 * client using the GameBoard's {@code char[][] array} because there is a
 	 * problem when sending GameBoard objects.
 	 * 
 	 * @see GameBoard#getBoard() getBoard()
