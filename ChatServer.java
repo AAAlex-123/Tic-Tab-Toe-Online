@@ -15,7 +15,7 @@ import javax.swing.JOptionPane;
 /**
  * Server-side application to handle chat between players.
  */
-public class ChatServer extends Server {
+final class ChatServer extends Server {
 
 	// port of the Chat Server
 	private static final int CHAT_PORT = 10002;
@@ -26,7 +26,7 @@ public class ChatServer extends Server {
 	 * When one is created, give it a slot. When one is stopped, free up its slot.
 	 * <p>
 	 * No it's not spaghetti, yes we need it to keep track of which
-	 * <code>outputs</code> indexes are empty and can have an Output Stream
+	 * {@code outputs} indexes are empty and can have an Output Stream
 	 */
 	private final boolean[] available;
 
@@ -35,7 +35,7 @@ public class ChatServer extends Server {
 	 * 
 	 * @see Server#Server() Server()
 	 */
-	public ChatServer() {
+	ChatServer() {
 		super();
 		this.available = new boolean[playerCount];
 		for (int i = 0; i < playerCount; i++)
@@ -50,7 +50,7 @@ public class ChatServer extends Server {
 	 *                        Exceptions
 	 * @see Server#Server() Server()
 	 */
-	public ChatServer(int playerCount, boolean printStackTrace) {
+	ChatServer(int playerCount, boolean printStackTrace) {
 		super(playerCount, printStackTrace);
 		this.available = new boolean[playerCount];
 		for (int i = 0; i < playerCount; i++)
@@ -70,8 +70,8 @@ public class ChatServer extends Server {
 	}
 
 	/**
-	 * Initializes the Chat Server on port <code>CHAT_PORT</code> with
-	 * <code>playerCount</code> total possible connections.
+	 * Initializes the Chat Server on port {@code CHAT_PORT} with
+	 * {@code playerCount} total possible connections.
 	 */
 	protected void initializeServer() {
 		try {
@@ -89,11 +89,11 @@ public class ChatServer extends Server {
 	}
 
 	/**
-	 * Every 2 seconds check if there is an <code>available</code> slot to get a
+	 * Every 2 seconds check if there is an {@code available} slot to get a
 	 * connection. If there is, wait to accept a connection and assign it this slot.
 	 * Get its input and output streams. Create a new ChatServerThread with the
 	 * slot's index and start it. Finally increment the
-	 * <code>{@link Server#chatConnected chatConnected}</code> counter.
+	 * {@code {@link Server#chatConnected chatConnected}} counter.
 	 * 
 	 * @see ChatServer#available available
 	 * @see ChatServer#getAvailable() getAvailable()
@@ -159,13 +159,13 @@ public class ChatServer extends Server {
 
 	/**
 	 * Private inner class that listens to a specific client's Output Stream and
-	 * upon receiving a message, <code>broadcasts</code> it to every client
+	 * upon receiving a message, {@code broadcasts} it to every client
 	 * connected to the Chat Server.
 	 * <p>
 	 * When an Exception occurs, this Thread terminates execution, the client's
-	 * Streams are closed, the <code>available</code> slot specified by
-	 * <code>index</code> is freed up and the
-	 * <code>{@link Server#chatConnected chatConnected}</code> counter is decremented
+	 * Streams are closed, the {@code available} slot specified by
+	 * {@code index} is freed up and the
+	 * {@code {@link Server#chatConnected chatConnected}} counter is decremented
 	 *
 	 * @see ChatServer#broadcast(String, Object[]) broadcast()
 	 * @see ChatServer#closeStreams(int) closeOutputStream()
@@ -176,10 +176,10 @@ public class ChatServer extends Server {
 		private final int index;
 
 		/**
-		 * Constructs the Thread to listen to <code>index</code> input Stream
+		 * Constructs the Thread to listen to {@code index} input Stream
 		 * 
 		 * @param count int, used to keep track the slot this thread occupies in the
-		 *              <code>available</code> table
+		 *              {@code available} table
 		 */
 		public ChatServerThread(int count) {
 			this.index = count;
@@ -218,8 +218,8 @@ public class ChatServer extends Server {
 	// Utility methods for ChatServer below
 
 	/**
-	 * Returns the first slot of the <code>available</code> that is available to get
-	 * a connection and sets it to <code>false</code>.
+	 * Returns the first slot of the {@code available} that is available to get
+	 * a connection and sets it to {@code false}.
 	 * 
 	 * @return int, the available slot, -1 when no slot is available.
 	 * @see ChatServer#available available
@@ -234,10 +234,10 @@ public class ChatServer extends Server {
 	}
 
 	/**
-	 * Closes the Streams bound to client <code>index</code>, frees up the
-	 * <code>available</code> slot this Thread occupied (specified by
-	 * <code>index</code>) and decrements the
-	 * <code>{@link Server#chatConnected chatConnected}</code> counter.
+	 * Closes the Streams bound to client {@code index}, frees up the
+	 * {@code available} slot this Thread occupied (specified by
+	 * {@code index}) and decrements the
+	 * {@code {@link Server#chatConnected chatConnected}} counter.
 	 * 
 	 * @param index int, the index of the client
 	 * @see ChatServer#available available
