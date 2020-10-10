@@ -66,7 +66,7 @@ public interface Logging {
 			}
 
 			while (errorFile.hasNext())
-				oldData.append(errorFile.nextLine() + "%n");
+				oldData.append(errorFile.nextLine() + "\n");
 
 			errorFile.close();
 
