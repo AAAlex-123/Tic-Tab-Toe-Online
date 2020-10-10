@@ -20,20 +20,21 @@ import javax.swing.*;
 import javax.swing.JOptionPane;
 
 /**
- * Server implementation that allows its users to play a game of Tic Tac Toe. By default always runs a ChatServer
+ * Server implementation that allows its users to play a game of Tic Tac Toe. By
+ * default always runs a ChatServer
  */
-public class GameServer extends Server {
+final class GameServer extends Server {
 	// port of the Game Server
 	private static final int GAME_PORT = 10001;
+
 	private final Socket[] sockets;
 	private final Color[] colors;
-  
-	private final GameBoard gameBoard;
-	private int currentPlayer = 0,winCondition,boardSize;
 
+	private final GameBoard gameBoard;
+	private int currentPlayer = 0, boardSize, winCondition;
 
 	/**
-	 * Constructor to Initialize fields.
+	 * Constructor to initialize fields.
 	 * 
 	 * @see Server#Server() Server()
 	 */
@@ -41,7 +42,7 @@ public class GameServer extends Server {
 		super();
 		sockets = new Socket[playerCount];
 		colors = new Color[playerCount];
-		gameBoard = new GameBoard(boardSize,winCondition);
+		gameBoard = new GameBoard(boardSize, winCondition);
 	}
 
 	/**
@@ -54,7 +55,6 @@ public class GameServer extends Server {
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
 		ChatServer chatServer = new ChatServer(Server.playerCount, Server.printStackTrace);
-		chatServer.setScreen(Server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
 		exec.execute(server);
 		exec.execute(chatServer);
@@ -77,14 +77,19 @@ public class GameServer extends Server {
 			makeTurn();
 		}
 	}
-	
+
 	@Override
 	protected void getServerOptions() {
 		super.getServerOptions();
 		while (!argumentsPassed) {
-			try {Thread.sleep(500);}
-			catch (InterruptedException e) {e.printStackTrace();}
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
+
+		// why set to false again?
 		argumentsPassed = false;
 
 		JFrame optWind = new JFrame("Select Game Options");
@@ -92,48 +97,49 @@ public class GameServer extends Server {
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		optWind.setSize(new Dimension(500, 300));
 		optWind.setResizable(false);
-		//mainPanel = listPanel + submitBut
+
+		// mainPanel = listPanel + submitBut
 		JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.PAGE_AXIS));
+		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 		Font font = new Font("Serif", Font.BOLD, 25);
-		
-		//listPanel = boardPanel+winCondPanel
+
+		// listPanel = boardPanel+winCondPanel
 		JPanel listPanel = new JPanel();
-		listPanel.setLayout(new BoxLayout(listPanel,BoxLayout.X_AXIS));
-		
-		//boardPanel = boardLabel + (scroll) boardList
+		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.X_AXIS));
+
+		// boardPanel = boardLabel + (scroll) boardList
 		JPanel boardPanel = new JPanel();
-		boardPanel.setLayout(new BoxLayout(boardPanel,BoxLayout.Y_AXIS));
-		JLabel boardLabel= new JLabel("Choose the boards size");
-		String[] boardOptions = {"3x3","4x4","5x5","6x6","7x7","8x8"};
-		JList<String>boardLs = new JList<String>(boardOptions);
+		boardPanel.setLayout(new BoxLayout(boardPanel, BoxLayout.Y_AXIS));
+		JLabel boardLabel = new JLabel("Choose the boards size");
+		String[] boardOptions = { "3x3", "4x4", "5x5", "6x6", "7x7", "8x8" };
+		JList<String> boardLs = new JList<String>(boardOptions);
 		boardLs.setBackground(Color.BLUE);
 		boardLs.setFont(font);
 		boardLs.setSelectedIndex(2);
 		JScrollPane scrollList = new JScrollPane(boardLs);
-		scrollList.setPreferredSize(new Dimension(100,100));
+		scrollList.setPreferredSize(new Dimension(100, 100));
 		boardPanel.add(boardLabel);
 		boardPanel.add(scrollList);
-		
-		//winCondPanel = winLabel + autismPanel
+
+		// winCondPanel = winLabel + autismPanel
 		JPanel winCondPanel = new JPanel();
-		winCondPanel.setLayout(new BoxLayout(winCondPanel,BoxLayout.Y_AXIS));
-		//autismPanel = centered winList
+		winCondPanel.setLayout(new BoxLayout(winCondPanel, BoxLayout.Y_AXIS));
+		// autismPanel = centered winList
 		JPanel autismPanel = new JPanel();
 		JLabel winLabel = new JLabel("Select how many marks are needed to win");
-		String[] winOptions= {"3 marks","4 marks","5 marks"};
-		JList<String>winLs = new JList<String>(winOptions);
+		String[] winOptions = { "3 marks", "4 marks", "5 marks" };
+		JList<String> winLs = new JList<String>(winOptions);
 		winLs.setBackground(Color.BLUE);
 		winLs.setFont(font);
 		winLs.setSelectedIndex(0);
-		autismPanel.add(Box.createRigidArea(new Dimension (25,25)));
+		autismPanel.add(Box.createRigidArea(new Dimension(25, 25)));
 		autismPanel.add(winLs);
 		winCondPanel.add(winLabel);
 		winCondPanel.add(autismPanel);
-		
+
 		listPanel.add(boardPanel);
 		listPanel.add(winCondPanel);
-		
+
 		JButton submitBut = new JButton("Submit");
 		mainPanel.add(listPanel);
 		mainPanel.add(submitBut);
@@ -142,21 +148,24 @@ public class GameServer extends Server {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				boardSize = boardLs.getSelectedIndex()+3;
-				winCondition = winLs.getSelectedIndex()+3;
-				if(winCondition>boardSize) {
-					JOptionPane.showMessageDialog(optWind, "The current configuration would lead to an unwinnable game.", "Invalid Options", JOptionPane.ERROR_MESSAGE);
-				}else {
-					optWind.setVisible(false);
+				boardSize = boardLs.getSelectedIndex() + 3;
+				winCondition = winLs.getSelectedIndex() + 3;
+				if (winCondition > boardSize) {
+					JOptionPane.showMessageDialog(optWind,
+							"The current configuration would lead to an unwinnable game.", "Invalid Options",
+							JOptionPane.ERROR_MESSAGE);
+				} else {
+					optWind.dispose();
 					argumentsPassed = true;
 				}
 			}
 		});
 		optWind.revalidate();
 	}
+
 	/**
-	 * Initializes the server on port <code>GAME_PORT</code> with
-	 * <code>playerCount</code> total connections.
+	 * Initializes the server on port {@code GAME_PORT} with
+	 * {@code playerCount} total connections.
 	 */
 	protected void initializeServer() {
 		try {
@@ -166,8 +175,9 @@ public class GameServer extends Server {
 			logerr("BindException while setting up server; a server is already running on this port", e,
 					printStackTrace);
 			JOptionPane.showMessageDialog(Server.screen,
-					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit", GAME_PORT), "Error",
-					JOptionPane.ERROR_MESSAGE);
+					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit",
+							GAME_PORT),
+					"Error", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		} catch (IOException e) {
 			logerr("IOException while setting up server", e, printStackTrace);
@@ -176,10 +186,10 @@ public class GameServer extends Server {
 
 	/**
 	 * <ul>
-	 * <li>Initializes <code>playerCount</code> connections.
+	 * <li>Initializes {@code playerCount} connections.
 	 * <li>Gets their input and output streams.
 	 * <li>Exchanges some messages.
-	 * <li>Increments the <code>{@link Server#gameConnected gameConnected}</code>
+	 * <li>Increments the {@code {@link Server#gameConnected gameConnected}}
 	 * counter.
 	 * </ul>
 	 * If two or more players have the same symbol, the server allocates them
@@ -347,8 +357,8 @@ public class GameServer extends Server {
 
 	/**
 	 * Resets everything in case something goes wrong while getting connections.<br>
-	 * Closes connections, empties <code>symbols</code> array and resets the
-	 * <code>{@link Server#gameConnected gameConnected}</code> counter.
+	 * Closes connections, empties {@code symbols} array and resets the
+	 * {@code {@link Server#gameConnected gameConnected}} counter.
 	 */
 	private void reset() {
 		gameBoard.clear();
@@ -381,7 +391,7 @@ public class GameServer extends Server {
 	 * Sends the board to the currentPlayer.
 	 * <p>
 	 * It works by de-constructing the GameBoard here and re-constructing it at the
-	 * client using the GameBoard's <code>char[][] array</code> because there is a
+	 * client using the GameBoard's {@code char[][] array} because there is a
 	 * problem when sending GameBoard objects.
 	 * 
 	 * @see GameBoard#getBoard() getBoard()

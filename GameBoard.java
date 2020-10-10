@@ -3,18 +3,17 @@ package ttt_online;
 /**
  * Represents the board where Tic-Tac-Toe is played.
  */
-public class GameBoard {
+final class GameBoard {
 
-	final static char EMPTY = GameEngine.DASH;
-	public final int CONSECUTIVE;
-	public final int SIZE;
+	final int CONSECUTIVE;
+	final int SIZE;
+	private final static char EMPTY = GameEngine.DASH;
 	private final char[][] board;
 
 	/**
-	 * Initialize board of size <code>dimension</code> with <code>EMPTY</code>
-	 * characters
+	 * Initialize board of size {@code dimension} with {@code EMPTY} characters.
 	 */
-	public GameBoard(int boardSize,int winningCondition) {
+	GameBoard(int boardSize, int winningCondition) {
 		this.SIZE = boardSize;
 		this.CONSECUTIVE = winningCondition;
 		this.board = new char[SIZE][SIZE];
@@ -24,13 +23,13 @@ public class GameBoard {
 	}
 
 	/**
-	 * Initialize board by copying board <code>table</code>
+	 * Initialize board by copying board {@code table}.
 	 * 
 	 * @param table char[][], the table to be copied
 	 */
-	public GameBoard(char[][] table) {
+	GameBoard(char[][] table) {
 		this.SIZE = table.length;
-		this.CONSECUTIVE = 5;//max value, doesn't matter as the check only happens on the GameServer
+		this.CONSECUTIVE = 5;// max value, doesn't matter as the check only happens on the GameServer
 		this.board = new char[SIZE][SIZE];
 		for (int i = 0; i < SIZE; i++)
 			for (int j = 0; j < SIZE; j++)
@@ -38,8 +37,7 @@ public class GameBoard {
 	}
 
 	/**
-	 * Marks square a square <code>coord</code> of the board with
-	 * <code>mark</code>.<br>
+	 * Marks square a square {@code coord} of the board with {@code mark}.<br>
 	 * Returns boolean indicating success or failure.
 	 * 
 	 * @param coord int, the coordinate of the square to be marked, in the form of
@@ -48,7 +46,7 @@ public class GameBoard {
 	 * @return boolean, true if square is empty, false if full (can't be marked).
 	 * @see GameBoard#isValid(int) isValid()
 	 */
-	public boolean markSquare(int coord, char mark) {
+	boolean markSquare(int coord, char mark) {
 		if (!isValid(coord))
 			return false;
 		board[coord / 10][coord % 10] = mark;
@@ -56,19 +54,19 @@ public class GameBoard {
 	}
 
 	/**
-	 * Checks if a move can be played at square <code>coord</code>
+	 * Checks if a move can be played at square {@code coord}.
 	 * 
 	 * @param coord int, the coordinate to check
 	 * @return boolean, true if valid, false if not
 	 */
-	public boolean isValid(int coord) {
+	boolean isValid(int coord) {
 		return (board[coord / 10][coord % 10] == EMPTY) && (0 <= coord) && (coord <= 55);
 	}
 
 	/**
-	 * Clears the board; fills all squares with <code>EMPTY</code>
+	 * Clears the board; fills all squares with {@code EMPTY}
 	 */
-	public void clear() {
+	void clear() {
 		for (int i = 0; i < SIZE; i++)
 			for (int j = 0; j < SIZE; j++)
 				board[i][j] = EMPTY;
@@ -92,13 +90,12 @@ public class GameBoard {
 
 	/**
 	 * Checks if the game is over.<br>
-	 * Supports custom <code>directions</code> (i.e. steps to take on the
-	 * board).<br>
-	 * Supports any amount of <code>consecutive</code> squares.
+	 * Supports custom {@code directions} (i.e. steps to take on the board) and any
+	 * amount of {@code consecutive} squares.
 	 * 
-	 * @return boolean, true if someone has won.
+	 * @return boolean, true if someone has won, false otherwise
 	 */
-	public boolean hasWon() {
+	boolean hasWon() {
 		int[][] directions = { { 1, 0 }, { 0, 1 }, { 1, -1 }, { 1, 1 } };
 		for (int[] direction : directions) {
 			// for every direction...
@@ -112,11 +109,11 @@ public class GameBoard {
 						boolean res = true;
 						char target = board[x][y];
 						for (int i = 0; i < CONSECUTIVE; i++) {
-							// for <consecutive> squares in that direction,
+							// for <CONSECUTIVE> squares in that direction,
 							// "and" square==target and the result
 							// so if once 'square != target', res is false
 							char boardSquare = board[x + i * dx][y + i * dy];
-							res = res && (target == boardSquare) && (boardSquare != EMPTY);
+							res = res && (boardSquare == target) && (boardSquare != EMPTY);
 						}
 						if (res)
 							return true; // winner
@@ -134,14 +131,14 @@ public class GameBoard {
 	 * 
 	 * @return boolean, true if there is a tie, false otherwise
 	 */
-	public boolean hasTied() {
+	boolean hasTied() {
 		for (int i = 0; i < SIZE; i++) {
 			for (int j = 0; j < SIZE; j++) {
 				if (board[i][j] == EMPTY)
 					return false;
 			}
 		}
-		return true;
+		return !hasWon();
 	}
 
 	/**
@@ -149,7 +146,7 @@ public class GameBoard {
 	 * 
 	 * @return char[][], the board
 	 */
-	public char[][] getBoard() {
+	char[][] getBoard() {
 		return board;
 	}
 }
