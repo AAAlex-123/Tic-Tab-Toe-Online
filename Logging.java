@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 import java.util.Scanner;
 
 /**
- * An Interface for {@code log} and {@code logerr} methods providing easily
- * changeable print and error streams.Default log method uses
- * {@code System.out.println()}. Default logerr method writes the errors data in
- * a file.
+ * An Interface for {@code log} and {@code logerr} methods providing
+ * easily changeable print and error streams.Default log method uses
+ * {@code System.out.println()}. Default logerr method writes the errors
+ * data in a file.
  */
 public interface Logging {
 
@@ -30,9 +30,9 @@ public interface Logging {
 	 * Prints the error message to an external "error_log.txt" file. Includes
 	 * information about the date/time and class where the error occurred.
 	 * 
-	 * @param error_msg String, a summary of the error
-	 * @param exc       Exception, the exception that caused the logged error
-	 * @param printFull boolean, whether or not to print the full error message
+	 * @param error_msg  String, a summary of the error
+	 * @param exc        Exception, the exception that caused the logged error
+	 * @param printFull  boolean, whether or not to print the full error message
 	 */
 	default void logerr(String error_msg, Exception exc, boolean printFull) {
 
