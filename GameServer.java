@@ -33,6 +33,8 @@ final class GameServer extends Server {
 	private final GameBoard gameBoard;
 	private int currentPlayer = 0, boardSize, winCondition;
 
+	private static ChatServer chatServer;
+
 	/**
 	 * Constructor to initialize fields.
 	 * 
@@ -54,7 +56,9 @@ final class GameServer extends Server {
 	 */
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
-		ChatServer chatServer = new ChatServer(Server.playerCount, Server.printStackTrace);
+		chatServer = new ChatServer();
+		server.setupScreen();
+		chatServer.setScreen(server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
 		exec.execute(server);
 		exec.execute(chatServer);
@@ -89,7 +93,6 @@ final class GameServer extends Server {
 			}
 		}
 
-		// why set to false again?
 		argumentsPassed = false;
 
 		JFrame optWind = new JFrame("Select Game Options");
@@ -164,8 +167,8 @@ final class GameServer extends Server {
 	}
 
 	/**
-	 * Initializes the server on port {@code GAME_PORT} with
-	 * {@code playerCount} total connections.
+	 * Initializes the server on port {@code GAME_PORT} with {@code playerCount}
+	 * total connections.
 	 */
 	protected void initializeServer() {
 		try {
@@ -174,10 +177,9 @@ final class GameServer extends Server {
 		} catch (BindException e) {
 			logerr("BindException while setting up server; a server is already running on this port", e,
 					printStackTrace);
-			JOptionPane.showMessageDialog(Server.screen,
+			JOptionPane.showMessageDialog(screen,
 					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit",
-							GAME_PORT),
-					"Error", JOptionPane.ERROR_MESSAGE);
+							GAME_PORT), "Error", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		} catch (IOException e) {
 			logerr("IOException while setting up server", e, printStackTrace);
@@ -219,7 +221,7 @@ final class GameServer extends Server {
 						String.format("Hi player '%c', you're now connected as #%d.\nPlease wait for others to join.",
 								symbols[i], i));
 
-				log(String.format("\nPlayer #%d connected as '%c'", i, symbols[i]));
+				log(String.format("Player #%d connected as '%c'", i, symbols[i]));
 				screen.updateGameConnectionCounter(1);
 			}
 
@@ -283,21 +285,21 @@ final class GameServer extends Server {
 	 */
 	private void makeTurn() {
 		boolean reset = false;
-		log(String.format("\nPlayer #%d starts their turn", currentPlayer));
+		log(String.format("Player #%d starts their turn", currentPlayer));
 		try {
 			log(String.format("Sent board:\n%s", gameBoard));
 			int move;
-			String response;
 
 			// send ok to start
+			// pog
 			outputs[currentPlayer].writeObject("Make your move!");
+			log("sent once");
 
 			// send board
 			sendBoard(currentPlayer);
 
 			// get, register and respond to move
 			move = (int) inputs[currentPlayer].readObject();
-			log("Just got " + move);
 
 			if (move == -2) {
 				log("Final board:\n" + gameBoard);
@@ -317,7 +319,7 @@ final class GameServer extends Server {
 				String msg = gameBoard.hasTied() ? "It's a tie!"
 						: String.format("Player '%c' won!", symbols[currentPlayer]);
 				broadcast(msg);
-				log(msg + "\nGame over");
+				log(msg + " Game over");
 				for (int i = 0; i < playerCount; i++) {
 					sendBoard(i);
 				}
@@ -327,14 +329,15 @@ final class GameServer extends Server {
 				run();
 			}
 
-			// send response to move
-			response = (String.format("Move received: [%c, %d]", 65 + move / 10, move % 10 + 1));
+			// send acknowledgement
 			outputs[currentPlayer].writeObject(String.format("%c", '\u2713'));
 
-			log(String.format("Move received: '%d', response sent '%s'", move, response));
+			log(String.format("Move received: '%d'", move));
 
 			// send board again
-			sendBoard(currentPlayer);
+			for (int i = 0; i < playerCount; i++) {
+				sendBoard(i);
+			}
 
 			currentPlayer = (currentPlayer + 1) % playerCount;
 
@@ -410,5 +413,15 @@ final class GameServer extends Server {
 		} catch (IOException e) {
 			logerr("Error while sending board", e, printStackTrace);
 		}
+	}
+
+	@Override
+	protected int getGameCount() {
+		return playerCount;
+	}
+
+	@Override
+	protected int getChatCount() {
+		return chatServer.playerCount;
 	}
 }
