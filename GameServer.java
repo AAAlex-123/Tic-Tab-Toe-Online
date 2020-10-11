@@ -17,8 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.swing.*;
 
-import javax.swing.JOptionPane;
-
 /**
  * Server implementation that allows its users to play a game of Tic Tac Toe. By
  * default always runs a ChatServer
@@ -34,6 +32,10 @@ final class GameServer extends Server {
 	private int currentPlayer = 0, boardSize, winCondition;
 
 	private static ChatServer chatServer;
+	// TODO this is the variable that the getServerOptions method will change
+	// and the variable that will be used in the chatServer constructor in main
+	// delete these comments
+	private int chatCount;
 
 	/**
 	 * Constructor to initialize fields.
@@ -56,7 +58,11 @@ final class GameServer extends Server {
 	 */
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
-		chatServer = new ChatServer();
+		// TODO chatserver constructor uses same printStackTrace as GameServer
+		// it uses chatCount, which will be determined from the getServerOptions JSlider
+		// that's your part (:
+		// delete these comments
+		chatServer = new ChatServer(server.chatCount, server.printStackTrace);
 		server.setupScreen();
 		chatServer.setScreen(server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
@@ -139,6 +145,20 @@ final class GameServer extends Server {
 		autismPanel.add(winLs);
 		winCondPanel.add(winLabel);
 		winCondPanel.add(autismPanel);
+
+		// TODO add JSlider for # of chat players (i think 2-10 is fine)
+
+		/* copy-pastsed code from server idk maybe it will help
+		 * 
+		 * JSlider playerNumbers = new JSlider(JSlider.HORIZONTAL, 2, 6, 2);
+		 * playerNumbers.setFont(new Font("Serif", Font.BOLD, 25));
+		 * playerNumbers.setMajorTickSpacing(2);
+		 * playerNumbers.setMinorTickSpacing(1);
+		 * playerNumbers.setPaintTicks(true);
+		 * playerNumbers.setPaintLabels(true);
+		 * playerPanel.add(playerNumbers);
+		 * 
+		 */
 
 		listPanel.add(boardPanel);
 		listPanel.add(winCondPanel);
