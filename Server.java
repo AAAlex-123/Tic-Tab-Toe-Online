@@ -1,6 +1,5 @@
 package ttt_online;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -140,42 +139,27 @@ abstract class Server implements Logging, Runnable {
 		JLabel playerLabel = new JLabel("Choose the number of players");
 		playerPanel.add(playerLabel);
 
-		// ---------------- playerList
-		JList<String> playerList = new JList<String>(new String[]{"2 players", "3 players", "4 players" });
-		JSlider chatSlider = new JSlider(JSlider.HORIZONTAL, 2, 10, 2);
+		// ---------------- playerNumbers
+		JSlider playerNumbers = new JSlider(JSlider.HORIZONTAL, 2, 6, 2);
 
-		if (this.getClass().getSimpleName().equals("GameServer")) {
-			playerList.setBackground(Color.BLUE);
-			playerList.setFont(new Font("Serif", Font.BOLD, 25));
-			playerList.setSelectedIndex(0);
-			playerPanel.add(playerList);
-
-		} else {
-			chatSlider.setFont(new Font("Serif", Font.BOLD, 25));
-			chatSlider.setMajorTickSpacing(2);
-			chatSlider.setMinorTickSpacing(1);
-			chatSlider.setPaintTicks(true);
-			chatSlider.setPaintLabels(true);
-			playerPanel.add(chatSlider);
-		}
+		playerNumbers.setFont(new Font("Serif", Font.BOLD, 25));
+		playerNumbers.setMajorTickSpacing(2);
+		playerNumbers.setMinorTickSpacing(1);
+		playerNumbers.setPaintTicks(true);
+		playerNumbers.setPaintLabels(true);
+		playerPanel.add(playerNumbers);
 
 		optPanel.add(Box.createRigidArea(new Dimension(20, 20)));
 		optPanel.add(playerPanel);
 		JCheckBox b1 = new JCheckBox("I would like to receive crash reports on my command line");
 		optPanel.add(b1);
-		
-		// if you call getClass().getSimpleName() inside anonymous class below
-		// result will be "" so we get this outside and use it inside
-		String currentClassName = this.getClass().getSimpleName();
 
 		// submit Button
 		JButton submitButton = new JButton("Submit");
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playerCount = ((currentClassName.equals("GameServer"))
-						? (playerList.getSelectedIndex() + 2)
-						: (chatSlider.getValue()));
+				playerCount = playerNumbers.getValue();
 				printStackTrace = b1.isSelected();
 				optWind.dispose();
 				argumentsPassed = true;
