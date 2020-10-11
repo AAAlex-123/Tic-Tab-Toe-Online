@@ -287,16 +287,15 @@ final class GameServer extends Server {
 		boolean reset = false;
 		log(String.format("Player #%d starts their turn", currentPlayer));
 		try {
-			log(String.format("Sent board:\n%s", gameBoard));
 			int move;
 
 			// send ok to start
-			// pog
 			outputs[currentPlayer].writeObject("Make your move!");
 			log("sent once");
 
 			// send board
 			sendBoard(currentPlayer);
+			log(String.format("Sent board:\n%s", gameBoard));
 
 			// get, register and respond to move
 			move = (int) inputs[currentPlayer].readObject();
