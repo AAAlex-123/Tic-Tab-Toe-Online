@@ -25,8 +25,8 @@ final class ChatServer extends Server {
 	 * accepted.<br>
 	 * When one is created, give it a slot. When one is stopped, free up its slot.
 	 * <p>
-	 * No it's not spaghetti, yes we need it to keep track of which
-	 * {@code outputs} indexes are empty and can have an Output Stream
+	 * No it's not spaghetti, yes we need it to keep track of which {@code outputs}
+	 * indexes are empty and can have an Output Stream
 	 */
 	private final boolean[] available;
 
@@ -40,6 +40,7 @@ final class ChatServer extends Server {
 		this.available = new boolean[playerCount];
 		for (int i = 0; i < playerCount; i++)
 			available[i] = true;
+		setupScreen();
 	}
 
 	/**
@@ -81,9 +82,10 @@ final class ChatServer extends Server {
 			logerr("IOException in InitializeServer()", e, printStackTrace);
 			if (printStackTrace)
 				e.printStackTrace();
-			JOptionPane.showMessageDialog(Server.screen,
-					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit", CHAT_PORT), "Error",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(screen,
+					String.format("Error while setting up server:\nPort %d already in use\n\nServer will now exit",
+							CHAT_PORT),
+					"Error", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		}
 	}
@@ -92,8 +94,8 @@ final class ChatServer extends Server {
 	 * Every 2 seconds check if there is an {@code available} slot to get a
 	 * connection. If there is, wait to accept a connection and assign it this slot.
 	 * Get its input and output streams. Create a new ChatServerThread with the
-	 * slot's index and start it. Finally increment the
-	 * {@code {@link Server#chatConnected chatConnected}} counter.
+	 * slot's index and start it. Finally increment the {@code {@link
+	 * Server#chatConnected chatConnected}} counter.
 	 * 
 	 * @see ChatServer#available available
 	 * @see ChatServer#getAvailable() getAvailable()
@@ -144,7 +146,7 @@ final class ChatServer extends Server {
 				outputs[index].writeObject(
 						String.format("Hi player '%c', you're now connected.\nStart chatting!", symbols[index]));
 
-				log(String.format("\nChat Connection #%d established with '%c'", index, symbols[index]));
+				log(String.format("Chat Connection #%d established with '%c'", index, symbols[index]));
 
 				exec.execute(new ChatServerThread(index));
 				index++;
@@ -159,13 +161,13 @@ final class ChatServer extends Server {
 
 	/**
 	 * Private inner class that listens to a specific client's Output Stream and
-	 * upon receiving a message, {@code broadcasts} it to every client
-	 * connected to the Chat Server.
+	 * upon receiving a message, {@code broadcasts} it to every client connected to
+	 * the Chat Server.
 	 * <p>
 	 * When an Exception occurs, this Thread terminates execution, the client's
-	 * Streams are closed, the {@code available} slot specified by
-	 * {@code index} is freed up and the
-	 * {@code {@link Server#chatConnected chatConnected}} counter is decremented
+	 * Streams are closed, the {@code available} slot specified by {@code index} is
+	 * freed up and the {@code {@link Server#chatConnected chatConnected}} counter
+	 * is decremented
 	 *
 	 * @see ChatServer#broadcast(String, Object[]) broadcast()
 	 * @see ChatServer#closeStreams(int) closeOutputStream()
@@ -198,8 +200,8 @@ final class ChatServer extends Server {
 				try {
 					broadcast((String) inputs[index].readObject());
 				} catch (SocketException e) {
-					logerr(String.format("SocketException in ChatServerThread.run(); connection #%d closed by user\n"),
-							e, printStackTrace);
+					logerr(String.format("SocketException in ChatServerThread.run(); connection #%d closed by user\n",
+							index), e, printStackTrace);
 					closeStreams(index);
 					break;
 				} catch (IOException e) {
@@ -218,8 +220,8 @@ final class ChatServer extends Server {
 	// Utility methods for ChatServer below
 
 	/**
-	 * Returns the first slot of the {@code available} that is available to get
-	 * a connection and sets it to {@code false}.
+	 * Returns the first slot of the {@code available} that is available to get a
+	 * connection and sets it to {@code false}.
 	 * 
 	 * @return int, the available slot, -1 when no slot is available.
 	 * @see ChatServer#available available
@@ -235,9 +237,8 @@ final class ChatServer extends Server {
 
 	/**
 	 * Closes the Streams bound to client {@code index}, frees up the
-	 * {@code available} slot this Thread occupied (specified by
-	 * {@code index}) and decrements the
-	 * {@code {@link Server#chatConnected chatConnected}} counter.
+	 * {@code available} slot this Thread occupied (specified by {@code index}) and
+	 * decrements the {@code {@link Server#chatConnected chatConnected}} counter.
 	 * 
 	 * @param index int, the index of the client
 	 * @see ChatServer#available available
@@ -250,8 +251,6 @@ final class ChatServer extends Server {
 			inputs[index].close();
 		} catch (IOException e) {
 			logerr("IOException in closeStreams()", e, printStackTrace);
-			if (printStackTrace)
-				e.printStackTrace();
 		} finally {
 			outputs[index] = null;
 			inputs[index] = null;
@@ -260,7 +259,19 @@ final class ChatServer extends Server {
 			screen.updateChatConnectionCounter(-1);
 		}
 	}
+	
+	void setScreen(Screen screen) {
+		this.screen.dispose();
+		this.screen = screen;
+	}
+	
+	protected int getGameCount() {
+		return 0;
+	}	
 
+	protected int getChatCount() {
+		return playerCount;
+	}
 
 	/**
 	 * Main method. Run to create and run a Chat Server.
