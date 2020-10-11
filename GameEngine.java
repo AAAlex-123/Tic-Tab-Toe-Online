@@ -63,7 +63,6 @@ final class GameEngine implements Logging {
 	private ChatWriter chatWriter;
 
 	private GameBoard localGameBoard;
-	private char[][] localGameBoardConstructor;
 
 	/**
 	 * Constructs the GameEngine and sets up the UI.
@@ -229,15 +228,26 @@ final class GameEngine implements Logging {
 				ui.setEnableTurn(false);
 			}
 
+			// update boards till your turn
+			Object serverMessage = serverInput.readObject();
+			if (starting) {
+				do {
+					try {updateBoard((char[][]) serverMessage);}
+					catch (ClassCastException e) {break;}
+					serverMessage = serverInput.readObject();
+				} while (serverMessage instanceof char[][]);
+			}
+			log("done reading boards");
+
 			// get ready message
-			String response = ((String) serverInput.readObject());
+			String response = (String) serverMessage;
 
 			// if message is "won" or "resigned" or "tie"
 			// display some messages and stop game thread (return code 2)
 			if (response.matches("Player.*resigned") || response.matches("Player.*won!")) {
 				if (response.charAt(8) == ui.getSymbol())
 					ui.pushMessage("%c", '\u2713');
-				updateBoard();
+				updateBoard((char[][]) serverInput.readObject());
 				ui.setEnableTurn(false);
 
 				// trust the spaghetti, it just makes the correct message without 4 if
@@ -250,7 +260,7 @@ final class GameEngine implements Logging {
 				exit(msg, "!game! game ended", INFORMATION, null, serverCode == GAME, "Game Over");
 				return 2;
 			} else if (response.equals("It's a tie!")) {
-				updateBoard();
+				updateBoard((char[][]) serverInput.readObject());
 				ui.setEnableTurn(false);
 				String msg = String.format("\n\n%s\n\nGame ended; %s", "It's a tie!",
 						serverCode == GAME ? "please exit" : "you can still chat, or exit to play another game");
@@ -262,7 +272,7 @@ final class GameEngine implements Logging {
 			ui.pushMessage(response);
 
 			// update board
-			updateBoard();
+			updateBoard((char[][]) serverInput.readObject());
 
 			// enable buttons/text
 			ui.setEnableTurn(starting);
@@ -406,7 +416,10 @@ final class GameEngine implements Logging {
 	 * @param title     String, the title of the pop-up
 	 */
 	private void exit(String error_msg, String log_msg, int type, Exception e, boolean terminate, String title) {
-		logerr(log_msg, e, printStackTrace);
+		if (e == null) 
+			log(log_msg);
+		else
+			logerr(log_msg, e, printStackTrace);
 
 		JOptionPane.showMessageDialog(this.ui, error_msg, title, type);
 		if (terminate)
@@ -426,8 +439,7 @@ final class GameEngine implements Logging {
 	 * @throws IOException            thrown when server disconnects
 	 * @throws EOFException           thrown when server closes connection
 	 */
-	private void updateBoard() throws ClassNotFoundException, IOException, EOFException {
-		localGameBoardConstructor = (char[][]) serverInput.readObject();
+	private void updateBoard(char[][] localGameBoardConstructor) throws ClassNotFoundException, IOException, EOFException {
 		localGameBoard = new GameBoard(localGameBoardConstructor);
 		ui.setScreen(localGameBoard);
 	}

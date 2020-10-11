@@ -17,14 +17,15 @@ import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
 /**
- * Abstract class to run a server, a thread that handles ad hoc connections and reports its activity to the user.
- * GameServer and ClientServer inherit from it.
+ * Abstract class to run a server, a thread that handles ad hoc connections and
+ * reports its activity to the user. GameServer and ClientServer inherit from
+ * it.
  */
 abstract class Server implements Logging, Runnable {
 
 	// server fields
-	protected static int playerCount;
-	protected static boolean printStackTrace;
+	protected int playerCount;
+	protected boolean printStackTrace;
 
 	/**
 	 * Counter to keep track of the number of players connected. Used to correctly
@@ -36,11 +37,11 @@ abstract class Server implements Logging, Runnable {
 	protected final ObjectOutputStream[] outputs;
 
 	// screen is essentially a JTextArea for log messages
-	protected static final Screen screen = new Screen() ;
+	protected Screen screen = new Screen();
 	protected ServerSocket server;
 
 	protected final char[] symbols;
- 
+
 	// array of chess piece characters used to replace duplicates
 	protected final ArrayList<Character> chessPieces = new ArrayList<Character>(
 			Arrays.asList('\u2654', '\u2655', '\u2656', '\u2657', '\u2658'));
@@ -70,7 +71,6 @@ abstract class Server implements Logging, Runnable {
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
-		setupScreen();
 	}
 
 	/**
@@ -87,11 +87,10 @@ abstract class Server implements Logging, Runnable {
 		gameConnected = 0;
 		chatConnected = 0;
 
-		Server.printStackTrace = printStackTrace;
+		this.printStackTrace = printStackTrace;
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
-		setupScreen();
 	}
 
 	/**
@@ -125,7 +124,7 @@ abstract class Server implements Logging, Runnable {
 	 */
 	protected void getServerOptions() {
 
-		JFrame optWind = new JFrame("Select Server Options");
+		JFrame optWind = new JFrame(String.format("Select %s Options", this.getClass().getSimpleName()));
 		JPanel optPanel = new JPanel();
 		optPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
 		optWind.setVisible(true);
@@ -142,25 +141,41 @@ abstract class Server implements Logging, Runnable {
 		playerPanel.add(playerLabel);
 
 		// ---------------- playerList
-		String[] playerNumberOptions = { "2 players", "3 players", "4 players" };
-		JList<String> playerList = new JList<String>(playerNumberOptions);
-		playerList.setBackground(Color.BLUE);
-		Font font = new Font("Serif", Font.BOLD, 25);
-		playerList.setFont(font);
-		playerList.setSelectedIndex(0);
-		playerPanel.add(playerList);
-		
-		optPanel.add(Box.createRigidArea(new Dimension(20,20)));
+		JList<String> playerList = new JList<String>(new String[]{"2 players", "3 players", "4 players" });
+		JSlider chatSlider = new JSlider(JSlider.HORIZONTAL, 2, 10, 2);
+
+		if (this.getClass().getSimpleName().equals("GameServer")) {
+			playerList.setBackground(Color.BLUE);
+			playerList.setFont(new Font("Serif", Font.BOLD, 25));
+			playerList.setSelectedIndex(0);
+			playerPanel.add(playerList);
+
+		} else {
+			chatSlider.setFont(new Font("Serif", Font.BOLD, 25));
+			chatSlider.setMajorTickSpacing(2);
+			chatSlider.setMinorTickSpacing(1);
+			chatSlider.setPaintTicks(true);
+			chatSlider.setPaintLabels(true);
+			playerPanel.add(chatSlider);
+		}
+
+		optPanel.add(Box.createRigidArea(new Dimension(20, 20)));
 		optPanel.add(playerPanel);
-		JCheckBox b1 = new JCheckBox("I would like to receive crash reports on my command line"); 
+		JCheckBox b1 = new JCheckBox("I would like to receive crash reports on my command line");
 		optPanel.add(b1);
+		
+		// if you call getClass().getSimpleName() inside anonymous class below
+		// result will be "" so we get this outside and use it inside
+		String currentClassName = this.getClass().getSimpleName();
 
 		// submit Button
 		JButton submitButton = new JButton("Submit");
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playerCount = playerList.getSelectedIndex()+2;
+				playerCount = ((currentClassName.equals("GameServer"))
+						? (playerList.getSelectedIndex() + 2)
+						: (chatSlider.getValue()));
 				printStackTrace = b1.isSelected();
 				optWind.dispose();
 				argumentsPassed = true;
@@ -172,11 +187,11 @@ abstract class Server implements Logging, Runnable {
 		optWind.add(optPanel);
 		optWind.revalidate();
 	}
-	
+
 	/**
 	 * Sets up the {@code screen} used for logging purposes
 	 */
-	private static void setupScreen() {
+	protected void setupScreen() {
 		screen.updateGameConnectionCounter(0);
 		screen.updateChatConnectionCounter(0);
 		screen.setVisible(true);
@@ -186,8 +201,8 @@ abstract class Server implements Logging, Runnable {
 	}
 
 	/**
-	 * Logs {@code text} on the {@code screen} because instead of the
-	 * command line
+	 * Logs {@code text} on the {@code screen} because instead of the command line.
+	 * Inserts the class name as a prefix.
 	 */
 	@Override
 	public void log(String text) {
@@ -205,7 +220,7 @@ abstract class Server implements Logging, Runnable {
 			try {
 				outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
-				logerr("Error in broadcast()%n", e, printStackTrace);
+				logerr("Error in broadcast()\n", e, printStackTrace);
 			} catch (NullPointerException e) {
 				;
 			}
@@ -214,11 +229,15 @@ abstract class Server implements Logging, Runnable {
 		log(String.format(String.format("Broadcasted: %s", msg), args));
 	}
 
+	protected abstract int getGameCount();
+
+	protected abstract int getChatCount();
+
 	/**
 	 * A simple UI to display log messages.
 	 */
 	@SuppressWarnings("serial")
-	protected static final class Screen extends JFrame {
+	protected final class Screen extends JFrame {
 		private final JTextArea logTextArea;
 		private final JScrollPane scrollPane;
 		private final JPanel windowPanel;
@@ -256,7 +275,7 @@ abstract class Server implements Logging, Runnable {
 		 * @param msg String, the message to append
 		 */
 		public final void pushMessage(String msg) {
-			logTextArea.setText(logTextArea.getText() + "%n" + msg);
+			logTextArea.setText(logTextArea.getText() + "\n" + msg);
 		}
 
 		/**
@@ -264,7 +283,7 @@ abstract class Server implements Logging, Runnable {
 		 */
 		private void updatePlayerLabel() {
 			playerLabel.setText(String.format("Game connections: %d/%d\t\tChat connections: %d/%d", gameConnected,
-					playerCount, chatConnected, playerCount));
+					getGameCount(), chatConnected, getChatCount()));
 		}
 
 		/**

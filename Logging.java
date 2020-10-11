@@ -66,7 +66,7 @@ public interface Logging {
 			}
 
 			while (errorFile.hasNext())
-				oldData.append(errorFile.nextLine() + "%n");
+				oldData.append(errorFile.nextLine() + "\n");
 
 			errorFile.close();
 
@@ -77,8 +77,6 @@ public interface Logging {
 			String crashReport = String.format(
 					"Crash at %s || Class %s%nSummary: %s %s%n#########################################%n", dateTime,
 					this.getClass().getName(), error_msg, printFull ? "%nFull report:%n" + sw.toString() : "");
-			
-			System.out.println(System.lineSeparator());
 
 			// write the data
 			BufferedWriter writer;
