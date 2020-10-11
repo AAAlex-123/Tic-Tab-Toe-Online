@@ -163,13 +163,17 @@ abstract class Server implements Logging, Runnable {
 		optPanel.add(playerPanel);
 		JCheckBox b1 = new JCheckBox("I would like to receive crash reports on my command line");
 		optPanel.add(b1);
+		
+		// if you call getClass().getSimpleName() inside anonymous class below
+		// result will be "" so we get this outside and use it inside
+		String currentClassName = this.getClass().getSimpleName();
 
 		// submit Button
 		JButton submitButton = new JButton("Submit");
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playerCount = ((this.getClass().getSimpleName().equals("GameServer"))
+				playerCount = ((currentClassName.equals("GameServer"))
 						? (playerList.getSelectedIndex() + 2)
 						: (chatSlider.getValue()));
 				printStackTrace = b1.isSelected();
