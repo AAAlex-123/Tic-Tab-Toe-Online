@@ -1,7 +1,7 @@
 package ttt_online;
 
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,7 +24,7 @@ abstract class Server implements Logging, Runnable {
 
 	// server fields
 	protected int playerCount;
-	protected boolean printStackTrace;
+	protected static boolean printStackTrace;
 
 	/**
 	 * Counter to keep track of the number of players connected. Used to correctly
@@ -70,6 +70,7 @@ abstract class Server implements Logging, Runnable {
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
+		setupScreen();
 	}
 
 	/**
@@ -79,14 +80,14 @@ abstract class Server implements Logging, Runnable {
 	 * @param playerCount     int the number of connections
 	 * @param printStackTrace boolean whether to show detailed crash reports
 	 * 
-	 * @see Server#getServerOptions() getServerOptions
 	 * @see Server#setupScreen() setupScreen()
 	 */
 	Server(int playerCount, boolean printStackTrace) {
 		gameConnected = 0;
 		chatConnected = 0;
-
-		this.printStackTrace = printStackTrace;
+		
+		this.playerCount = playerCount;
+		Server.printStackTrace = printStackTrace;
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
@@ -125,41 +126,41 @@ abstract class Server implements Logging, Runnable {
 
 		JFrame optWind = new JFrame(String.format("Select %s Options", this.getClass().getSimpleName()));
 		JPanel optPanel = new JPanel();
-		optPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
 		optWind.setVisible(true);
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		optWind.setSize(new Dimension(500, 300));
 		optWind.setResizable(false);
-
+		Font font = new Font("Serif", Font.BOLD, 25);
+		
 		// ------ playerPanel = playerLabel + playerList
 		JPanel playerPanel = new JPanel();
 		playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
 
 		// ---------------- playerLabel
 		JLabel playerLabel = new JLabel("Choose the number of players");
+		playerLabel.setFont(font);
 		playerPanel.add(playerLabel);
 
-		// ---------------- playerNumbers
-		JSlider playerNumbers = new JSlider(JSlider.HORIZONTAL, 2, 6, 2);
-
-		playerNumbers.setFont(new Font("Serif", Font.BOLD, 25));
-		playerNumbers.setMajorTickSpacing(2);
-		playerNumbers.setMinorTickSpacing(1);
-		playerNumbers.setPaintTicks(true);
-		playerNumbers.setPaintLabels(true);
-		playerPanel.add(playerNumbers);
+		// ---------------- playerList
+		JList<String> playerList = new JList<String>(new String[]{"2 players", "3 players", "4 players" });
+		playerList.setBackground(Color.BLUE);
+		playerList.setFont(font);
+		playerList.setSelectedIndex(0);
+		playerList.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		playerPanel.add(playerList);
 
 		optPanel.add(Box.createRigidArea(new Dimension(20, 20)));
 		optPanel.add(playerPanel);
+		optPanel.add(Box.createRigidArea(new Dimension(20,20)));
 		JCheckBox b1 = new JCheckBox("I would like to receive crash reports on my command line");
 		optPanel.add(b1);
-
+	
 		// submit Button
 		JButton submitButton = new JButton("Submit");
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playerCount = playerNumbers.getValue();
+				playerCount = playerList.getSelectedIndex()+3;
 				printStackTrace = b1.isSelected();
 				optWind.dispose();
 				argumentsPassed = true;
@@ -206,7 +207,7 @@ abstract class Server implements Logging, Runnable {
 			} catch (IOException e) {
 				logerr("Error in broadcast()\n", e, printStackTrace);
 			} catch (NullPointerException e) {
-				;
+				return;
 			}
 		}
 
@@ -224,11 +225,15 @@ abstract class Server implements Logging, Runnable {
 	protected final class Screen extends JFrame {
 		private final JTextArea logTextArea;
 		private final JScrollPane scrollPane;
-		private final JPanel windowPanel;
+		private final JPanel windowPanel,labelPanel;
 		/**
-		 * Displays the number of connected players
+		 * Displays the number of epic gamers
 		 */
 		private final JLabel playerLabel;
+		/**
+		 * Displays the number of players connected to chat
+		 */
+		private final JLabel chatLabel;
 
 		/**
 		 * Initializes the {@code screen} used for logging purposes
@@ -237,10 +242,16 @@ abstract class Server implements Logging, Runnable {
 			super("Server Log");
 			windowPanel = new JPanel();
 			windowPanel.setLayout(new BoxLayout(windowPanel, BoxLayout.PAGE_AXIS));
-
+			
+			//labelPanel = playerLabel +chatLabel
+			labelPanel = new JPanel();
 			playerLabel = new JLabel();
-			windowPanel.add(playerLabel);
-
+			chatLabel = new JLabel();
+			labelPanel.add(playerLabel);
+			labelPanel.add(Box.createRigidArea(new Dimension(100,1)));
+			labelPanel.add(chatLabel);
+			windowPanel.add(labelPanel);
+		
 			logTextArea = new JTextArea();
 			logTextArea.setEditable(false);
 			logTextArea.setFont(new Font("Consolas", Font.PLAIN, 13));
@@ -263,11 +274,12 @@ abstract class Server implements Logging, Runnable {
 		}
 
 		/**
-		 * Updates the player count label according to the number of players connected
+		 * Updates the player count label according to the number of players connected.
+		 * Call the method again once {@code chatConnected} and/or {@code gameConnected} variables have been initialized.
 		 */
 		private void updatePlayerLabel() {
-			playerLabel.setText(String.format("Game connections: %d/%d\t\tChat connections: %d/%d", gameConnected,
-					getGameCount(), chatConnected, getChatCount()));
+			playerLabel.setText(String.format("Game connections: %d/%d", gameConnected,getGameCount()));
+			chatLabel.setText(String.format("Chat connections: %d/%d", chatConnected, getChatCount()));
 		}
 
 		/**
