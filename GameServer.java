@@ -32,10 +32,6 @@ final class GameServer extends Server {
 	private int currentPlayer = 0, boardSize, winCondition;
 
 	private static ChatServer chatServer;
-	// TODO this is the variable that the getServerOptions method will change
-	// and the variable that will be used in the chatServer constructor in main
-	// delete these comments
-	private int chatCount;
 
 	/**
 	 * Constructor to initialize fields.
@@ -58,12 +54,8 @@ final class GameServer extends Server {
 	 */
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
-		// TODO chatserver constructor uses same printStackTrace as GameServer
-		// it uses chatCount, which will be determined from the getServerOptions JSlider
-		// that's your part (:
-		// delete these comments
-		chatServer = new ChatServer(server.chatCount, server.printStackTrace);
-		server.setupScreen();
+		System.out.println("GameServer main: "+chatConnected);
+		chatServer = new ChatServer(chatConnected,printStackTrace);
 		chatServer.setScreen(server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
 		exec.execute(server);
@@ -104,12 +96,11 @@ final class GameServer extends Server {
 		JFrame optWind = new JFrame("Select Game Options");
 		optWind.setVisible(true);
 		optWind.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		optWind.setSize(new Dimension(500, 300));
+		optWind.setSize(new Dimension(500, 350));
 		optWind.setResizable(false);
 
 		// mainPanel = listPanel + submitBut
 		JPanel mainPanel = new JPanel();
-		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 		Font font = new Font("Serif", Font.BOLD, 25);
 
 		// listPanel = boardPanel+winCondPanel
@@ -130,41 +121,46 @@ final class GameServer extends Server {
 		boardPanel.add(boardLabel);
 		boardPanel.add(scrollList);
 
-		// winCondPanel = winLabel + autismPanel
+		// winCondPanel = winLabel + centered winList
 		JPanel winCondPanel = new JPanel();
 		winCondPanel.setLayout(new BoxLayout(winCondPanel, BoxLayout.Y_AXIS));
-		// autismPanel = centered winList
-		JPanel autismPanel = new JPanel();
+		JPanel centerPanel = new JPanel();
 		JLabel winLabel = new JLabel("Select how many marks are needed to win");
 		String[] winOptions = { "3 marks", "4 marks", "5 marks" };
 		JList<String> winLs = new JList<String>(winOptions);
 		winLs.setBackground(Color.BLUE);
 		winLs.setFont(font);
 		winLs.setSelectedIndex(0);
-		autismPanel.add(Box.createRigidArea(new Dimension(25, 25)));
-		autismPanel.add(winLs);
+		winLs.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		centerPanel.add(Box.createRigidArea(new Dimension(25, 25)));
+		centerPanel.add(winLs);
 		winCondPanel.add(winLabel);
-		winCondPanel.add(autismPanel);
-
-		// TODO add JSlider for # of chat players (i think 2-10 is fine)
-
-		/* copy-pastsed code from server idk maybe it will help
-		 * 
-		 * JSlider playerNumbers = new JSlider(JSlider.HORIZONTAL, 2, 6, 2);
-		 * playerNumbers.setFont(new Font("Serif", Font.BOLD, 25));
-		 * playerNumbers.setMajorTickSpacing(2);
-		 * playerNumbers.setMinorTickSpacing(1);
-		 * playerNumbers.setPaintTicks(true);
-		 * playerNumbers.setPaintLabels(true);
-		 * playerPanel.add(playerNumbers);
-		 * 
-		 */
-
+		winCondPanel.add(centerPanel);
+		
+		//chatPanel =  centered chatLabel + chatSlider
+		JPanel chatPanel = new JPanel();
+		chatPanel.setLayout(new BoxLayout(chatPanel,BoxLayout.Y_AXIS));
+		JLabel chatLabel = new JLabel("Select the chat user limit");
+		chatLabel.setFont(font);
+		JPanel centerPanel2 = new JPanel();
+		centerPanel2.add(Box.createRigidArea(new Dimension(30,1)));
+		centerPanel2.add(chatLabel);
+		JSlider chatSlider = new JSlider(2,10,2);
+		chatSlider.setFont(font);
+		chatSlider.setMajorTickSpacing(2);
+		chatSlider.setMinorTickSpacing(1);
+		chatSlider.setPaintLabels(true);
+		chatSlider.setPaintTicks(true);
+		chatPanel.add(centerPanel2);
+		chatPanel.add(chatSlider);
+		
 		listPanel.add(boardPanel);
 		listPanel.add(winCondPanel);
 
 		JButton submitBut = new JButton("Submit");
 		mainPanel.add(listPanel);
+		mainPanel.add(Box.createRigidArea(new Dimension(50,50)));
+		mainPanel.add(chatPanel);
 		mainPanel.add(submitBut);
 		optWind.add(mainPanel);
 		submitBut.addActionListener(new ActionListener() {
@@ -178,6 +174,8 @@ final class GameServer extends Server {
 							"The current configuration would lead to an unwinnable game.", "Invalid Options",
 							JOptionPane.ERROR_MESSAGE);
 				} else {
+					chatConnected = chatSlider.getValue();
+					System.out.println("GetServerOptions: "+ chatConnected);
 					optWind.dispose();
 					argumentsPassed = true;
 				}
@@ -438,9 +436,20 @@ final class GameServer extends Server {
 	protected int getGameCount() {
 		return playerCount;
 	}
-
+	
+	/**
+	 * Returns the maximum player count for the internal chat server instance
+	 * Returns 0 if said count hasn't been initialized
+	 */
 	@Override
 	protected int getChatCount() {
-		return chatServer.playerCount;
+		int playerCount;
+		try {
+			playerCount = chatServer.playerCount;
+		}catch(NullPointerException e) {
+			System.err.println("owo");
+			playerCount = 0;
+		}
+		return playerCount;
 	}
 }
