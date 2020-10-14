@@ -32,6 +32,7 @@ final class GameServer extends Server {
 	private int currentPlayer = 0, boardSize, winCondition;
 
 	private static ChatServer chatServer;
+	private int chatCount;
 
 	/**
 	 * Constructor to initialize fields.
@@ -54,8 +55,8 @@ final class GameServer extends Server {
 	 */
 	public static void main(String[] args) {
 		GameServer server = new GameServer();
-		System.out.println("GameServer main: "+chatConnected);
-		chatServer = new ChatServer(chatConnected,printStackTrace);
+		chatServer = new ChatServer(server.chatCount, Server.printStackTrace);
+		server.setupScreen();
 		chatServer.setScreen(server.screen);
 		ExecutorService exec = Executors.newCachedThreadPool();
 		exec.execute(server);
@@ -174,8 +175,8 @@ final class GameServer extends Server {
 							"The current configuration would lead to an unwinnable game.", "Invalid Options",
 							JOptionPane.ERROR_MESSAGE);
 				} else {
-					chatConnected = chatSlider.getValue();
-					System.out.println("GetServerOptions: "+ chatConnected);
+					chatCount = chatSlider.getValue();
+					// System.out.println("GetServerOptions: "+ chatConnected);
 					optWind.dispose();
 					argumentsPassed = true;
 				}
@@ -439,17 +440,10 @@ final class GameServer extends Server {
 	
 	/**
 	 * Returns the maximum player count for the internal chat server instance
-	 * Returns 0 if said count hasn't been initialized
+	 * It is never called when chatserver is not setup so all good
 	 */
 	@Override
 	protected int getChatCount() {
-		int playerCount;
-		try {
-			playerCount = chatServer.playerCount;
-		}catch(NullPointerException e) {
-			System.err.println("owo");
-			playerCount = 0;
-		}
-		return playerCount;
+		return chatServer.playerCount;
 	}
 }
