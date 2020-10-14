@@ -70,7 +70,8 @@ abstract class Server implements Logging, Runnable {
 		inputs = new ObjectInputStream[playerCount];
 		outputs = new ObjectOutputStream[playerCount];
 		symbols = new char[playerCount];
-		setupScreen();
+		// don't setup screen here because gameserver's screen needs data from chatesrver
+		// first setup both servers, then set the screen
 	}
 
 	/**
@@ -160,7 +161,8 @@ abstract class Server implements Logging, Runnable {
 		submitButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				playerCount = playerList.getSelectedIndex()+3;
+				// typo xd
+				playerCount = playerList.getSelectedIndex()+2;
 				printStackTrace = b1.isSelected();
 				optWind.dispose();
 				argumentsPassed = true;
@@ -207,7 +209,7 @@ abstract class Server implements Logging, Runnable {
 			} catch (IOException e) {
 				logerr("Error in broadcast()\n", e, printStackTrace);
 			} catch (NullPointerException e) {
-				return;
+				;
 			}
 		}
 
