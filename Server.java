@@ -205,7 +205,10 @@ abstract class Server implements Logging, Runnable {
 	protected void broadcast(String msg, Object... args) {
 		for (int i = 0; i < playerCount; i++) {
 			try {
-				outputs[i].writeObject(String.format(msg, args));
+				if (args == null)
+					outputs[i].writeObject(msg);
+				else
+					outputs[i].writeObject(String.format(msg, args));
 			} catch (IOException e) {
 				logerr("Error in broadcast()\n", e, printStackTrace);
 			} catch (NullPointerException e) {
