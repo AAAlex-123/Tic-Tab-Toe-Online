@@ -40,7 +40,6 @@ final class ChatServer extends Server {
 		this.available = new boolean[playerCount];
 		for (int i = 0; i < playerCount; i++)
 			available[i] = true;
-		setupScreen();
 	}
 
 	/**
@@ -53,6 +52,7 @@ final class ChatServer extends Server {
 	 */
 	ChatServer(int playerCount, boolean printStackTrace) {
 		super(playerCount, printStackTrace);
+		// System.out.println(this.playerCount);
 		this.available = new boolean[playerCount];
 		for (int i = 0; i < playerCount; i++)
 			available[i] = true;
@@ -281,6 +281,7 @@ final class ChatServer extends Server {
 	 */
 	public static void main(String[] args) {
 		ChatServer server = new ChatServer();
+		server.setupScreen();
 		server.run();
 	}
 }
