@@ -1,5 +1,5 @@
 ### Summary
-A Tic-Tac-Toe game playable over any local network connection. Features a custom UI (using the standard Java swing library) and a variety of avatars and colors that players can use in-game. The game can be played with 2-4 players and on a 3x3 to 8x8 board. Includes a built-in chat for the players which can serve 2-10 connections, which can be run in conjunction with a Tic-Tac-Toe game or independently. All errors are automatically logged in a local txt file, which the user can send to the developers in case of an error to aid bugfixing.
+A Tic-Tac-Toe game playable over any local network connection. Features a custom UI (using the standard Java swing library) and a variety of avatars and colors that players can use in-game. The game can be played with 2-4 players and on a 3x3 to 8x8 board. Includes a built-in chat for the players which can serve 2-10 connections, which can be run in conjunction with a Tic-Tac-Toe game or independently. All errors are automatically logged in a local txt file, which the user can send to the developers in case of an error.
 
 ### Files of the Project
 - **.java** source files, to admire the ingenious code design
@@ -23,7 +23,7 @@ To run the project you need to first start a Server, then run any amount of Clie
 1. *Java Development Kit*: **Compile** and then **Run** the .java files using the .bat files located in the *scripts* directory.
 2. *Java Runtime Enironment*: **Run** the .jar files located in the *executables* directory.
 3. *Windows PC, and no Java* (no clue how you managed this): **Run** the .exe files also located in the *executables* directory.
-4. *None of the above*: tough luck B) // tf is B)
+4. *None of the above*: tough luck B)
 
 *Note that running a Game Server also runs a Chat Server so you don't need to run both for the full immersive experience*
 
