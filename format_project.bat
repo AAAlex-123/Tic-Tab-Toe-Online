@@ -18,5 +18,9 @@ echo java -cp ..\bin ttt_online.ChatServer > scripts\run_server_chat.bat
 rem create TODO file
 echo Nothing left to do. You're set! > TODO.txt
 
-rem delete this file
+rem create README.txt file
+type README.md >> README.txt
+
+rem delete unnecessary files
+rem del README.md
 rem del format_project.bat
