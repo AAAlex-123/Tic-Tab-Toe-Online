@@ -24,7 +24,6 @@ final class GameUI extends JFrame {
 	// UI variables
 	private final Color color;
 	private char name;
-	private String chatText = "";
 	private boolean dataReceived = false;
 	private int answer = -1;
 
@@ -32,9 +31,9 @@ final class GameUI extends JFrame {
 	private final JLabel errorMsg;
 	private final Screen screen;
 	private final JTextArea logTextArea;
-	private final JTextField playerTextArea, moveTextArea, chatTextArea;
-	private final JButton moveButton, resignButton, chatButton;
-	private final JPanel autismPanel, movePanel, chatPanel, logPanel;
+	private final JTextField playerTextArea, moveTextArea;
+	private final JButton moveButton, resignButton;
+	private final JPanel autismPanel, movePanel, logPanel;
 	private final JScrollPane scroll;
 	private static final String[] letters = { "A", "B", "C", "D", "E", "F", "G", "H" };
 
@@ -73,38 +72,7 @@ final class GameUI extends JFrame {
 				JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scroll.setPreferredSize(new Dimension(100, 250));
 
-/*ADD*/ logPanel.add(scroll);
-
-		// logPanel -- chatPanel
-		chatPanel = new JPanel();
-		chatPanel.setLayout(new BoxLayout(chatPanel, BoxLayout.X_AXIS));
-
-		// logPanel -- chatPanel -- chatField / chatButton
-		chatTextArea = new JTextField();
-		chatTextArea.addKeyListener(new KeyListener() {
-			@Override
-			public void keyTyped(KeyEvent e) {;}
-
-			@Override
-			public void keyReleased(KeyEvent e) {;}
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER)
-					sendChat();
-			}
-		});
-		chatButton = new JButton("Send");
-		chatButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				sendChat();
-			}
-		});
-
-/*ADD*/ chatPanel.add(chatTextArea);
-/*ADD*/ chatPanel.add(chatButton);
-/*ADD*/ logPanel.add(chatPanel);
+		/* ADD */ logPanel.add(scroll);
 
 		// autismPanel
 		autismPanel = new JPanel();
@@ -114,7 +82,7 @@ final class GameUI extends JFrame {
 		playerTextArea = new JTextField("You are player " + name);
 		playerTextArea.setEditable(false);
 
-/*ADD*/ autismPanel.add(playerTextArea);
+		/* ADD */ autismPanel.add(playerTextArea);
 
 		// error_msg
 		errorMsg = new JLabel("");
@@ -146,8 +114,8 @@ final class GameUI extends JFrame {
 				submitMove();
 			}
 		});
-/*ADD*/ movePanel.add(moveTextArea);
-/*ADD*/ movePanel.add(moveButton);
+		/* ADD */ movePanel.add(moveTextArea);
+		/* ADD */ movePanel.add(moveButton);
 
 		// disconnectB
 		resignButton = new JButton("Resign");
@@ -159,12 +127,12 @@ final class GameUI extends JFrame {
 					JOptionPane.showMessageDialog(getContentPane(),
 							"Please wait for the other players to finish picking their characters", "Error",
 							JOptionPane.ERROR_MESSAGE);
-				else 
+				else
 					answer = -2;
 			}
 		});
 
-/* ADD TO JFRAME */
+		/* ADD TO JFRAME */
 		add(Box.createRigidArea(new Dimension(50, 35)));
 		add(autismPanel);
 		add(screen);
@@ -188,41 +156,21 @@ final class GameUI extends JFrame {
 		screen.board = new GameBoard(0, 5);
 	}
 
-	// TODO DELETEME comments below if not necessary
-	// Use String.format instead of this /// nope
 	void pushMessage(String mes, Object... args) {
 		logTextArea.setText(String.format(String.format("%s%s\n", logTextArea.getText(), mes), args));
 	}
 
-	// TODO DELETEME comments below if not necessary
-	// Append \n instead of this /// nope
-	/*
-	 * Yes we need `boolean newline` even though it's always false because otherwise
-	 * when `Object... args` is null (i.e. a simple message, `pushMessage("owo")`
-	 * instead of `pushMessage("%s pog", "text")`), this method is called and we
-	 * don't get a newline when we need it. However, for some reason,
-	 * `pushMessage("text", true)` calls this method instead of the other one, even
-	 * though both fit. Maybe the compiler looks for the "most matching"?
-	 */
 	void pushMessage(String mes, boolean newline) {
 		logTextArea.setText(String.format("%s%s%s ", logTextArea.getText(), mes, newline ? "\n" : ""));
 	}
 
 	void setScreen(GameBoard gameBoard) {
-		// TODO DELETEME comments below if not necessary
-		// set size now that we know how big the board is
-		// for some reason maybe doesn't work as expected (?)
-		// maybe because `screen.setPreferredSize()` is called at constructor?
 		screen.board = gameBoard;
 		screen.setPreferredSize(new Dimension(100 * gameBoard.SIZE, 100 * gameBoard.SIZE));
 		screen.repaint();
-		errorMsg.setText(String.format("Invalid input! Please insert: [A-%s][1-%d]",
-				letters[screen.board.SIZE - 1], screen.board.SIZE));
+		errorMsg.setText(String.format("Invalid input! Please insert: [A-%s][1-%d]", letters[screen.board.SIZE - 1],
+				screen.board.SIZE));
 
-		// Wait until it loads then update the whole thing.
-		// TODO DELETEME comments below if not necessary
-		// JVM has forced my hand
-		// yes, this.revalidate() doesn't work here
 		try {
 			Thread.sleep(100);
 		} catch (InterruptedException e) {
@@ -232,7 +180,7 @@ final class GameUI extends JFrame {
 		this.update(this.getGraphics());
 	}
 
-	// ----- CHAT FIELDS ENABLE METHODS -----
+	// ----- MOVE FIELDS ENABLE METHOD -----
 	void setEnableTurn(boolean enable) {
 		moveButton.setEnabled(enable);
 		resignButton.setEnabled(enable);
@@ -241,32 +189,15 @@ final class GameUI extends JFrame {
 			moveTextArea.setText("Your next move");
 		else {
 			moveTextArea.setText("");
-			// TODO DELETEME comments below if not necessary
-			// bring window to front and
-			// get focus when it's your turn
 			toFront();
 			moveTextArea.requestFocusInWindow();
 		}
-	}
-
-	void setEnableChat(boolean enable) {
-		chatButton.setEnabled(enable);
-		chatTextArea.setEnabled(enable);
-		if (!enable)
-			chatTextArea.setText("You're not connected to chat server");
-		else
-			chatTextArea.setText("");
 	}
 
 	// ----- FOCUS METHODS -----
 	void focusMove() {
 		focusWindow();
 		moveTextArea.requestFocusInWindow();
-	}
-
-	void focusChat() {
-		focusWindow();
-		chatTextArea.requestFocusInWindow();
 	}
 
 	void focusWindow() {
@@ -296,15 +227,6 @@ final class GameUI extends JFrame {
 		return ans;
 	}
 
-	String getChatText() {
-		String ans = "";
-		if (!chatText.equals("")) {
-			ans = chatText;
-			chatText = "";
-		}
-		return ans;
-	}
-
 	void setCustomOptions(char[] chars, Color[] colors) {
 		// Is this ever thrown though?
 		// Server manages everything and the clients send correct data (hopefully)
@@ -320,11 +242,11 @@ final class GameUI extends JFrame {
 	// ----- PRIVATE METHODS / CLASSES -----
 
 	/**
-	 * Converts the player's input from {@code Char-Int} to {@code Int-Int} so that
+	 * Converts the player's input from {@code char-int} to {@code int-int} so that
 	 * the GameBoard can understand it
 	 * 
 	 * @param str String, the player's input
-	 * @return int, the data the GameBoard understands
+	 * @return the data the GameBoard understands
 	 */
 	private static int convertInput(String str) {
 		String characters = "ABCDEFGH";
@@ -345,11 +267,6 @@ final class GameUI extends JFrame {
 			answer = convertInput(input);
 			moveTextArea.setText("");
 		}
-	}
-
-	private void sendChat() {
-		chatText += (chatText.equals("") ? "" : "\n") + chatTextArea.getText();
-		chatTextArea.setText("");
 	}
 
 	private class Screen extends JPanel {
