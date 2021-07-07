@@ -120,10 +120,9 @@ final class ChatServer extends Server {
 					continue;
 				}
 
-				// get Input Stream.
-				// get output Stream after broadcasting so that this player doesn't get the
-				// message that he joined
+				// get Input Stream and Output Stream
 				inputs[index] = new ObjectInputStream(chatConnection.getInputStream());
+				outputs[index] = new ObjectOutputStream(chatConnection.getOutputStream());
 
 				// get symbol, send ack back
 				symbols[index] = (char) inputs[index].readObject();
@@ -141,8 +140,6 @@ final class ChatServer extends Server {
 				// inform everyone that someone has joined
 				broadcast("Chat Server: '%c' just joined. Say hi!", symbols[index]);
 
-				// finally get Output Stream
-				outputs[index] = new ObjectOutputStream(chatConnection.getOutputStream());
 				outputs[index].writeObject(
 						String.format("Hi player '%c', you're now connected.\nStart chatting!", symbols[index]));
 
