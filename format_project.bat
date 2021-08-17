@@ -19,7 +19,7 @@ rem create TODO file
 echo Nothing left to do. You're set! > TODO.txt
 
 rem create README.txt file
-type README.md >> README.txt
+type README.md > README.txt
 
 rem delete unnecessary files
 rem del README.md
